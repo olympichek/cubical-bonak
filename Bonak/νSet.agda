@@ -320,49 +320,20 @@ mkCohPaintingType {p} {k} {dc} eDC =
   (c : Dom (mkPainting
          (AddRestrDep (mkDepsRestr (π₁C dc))
            (mkExtraDeps (AddCohDep dc eDC))) d))
-  → subst (λ x → Dom (snd (dPaintings (cDeps dc)) x))
-      (snd (cCohs dc) q Hq r Hr ε ω d)
+  → PathP (λ i → Dom (snd (dPaintings (cDeps dc))
+                        (snd (cCohs dc) q Hq r Hr ε ω d i)))
       (snd (cRestrPaintings dc) q Hq ε
         (snd (mkRestrFramesC (π₁C dc)) r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
         (mkRestrPainting (AddCohDep dc eDC) r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d c))
-    ≡ snd (cRestrPaintings dc) r (le-trans r q k Hr Hq) ω
+      (snd (cRestrPaintings dc) r (le-trans r q k Hr Hq) ω
         (snd (mkRestrFramesC (π₁C dc)) (suc q) Hq ε d)
-        (mkRestrPainting (AddCohDep dc eDC) (suc q) Hq ε d c)
+        (mkRestrPainting (AddCohDep dc eDC) (suc q) Hq ε d c))
 
 mkCohPaintingTypes : {p k : ℕ} {dc : DepsCohs p k}
                      (eDC : DepsCohsExtension p k dc) → Set
 mkCohPaintingTypes {zero} _ = ⊤
 mkCohPaintingTypes {suc p} {k} {dc} eDC =
   Σ[ _ ∈ mkCohPaintingTypes (AddCohDep dc eDC) ] mkCohPaintingType eDC
-
--- The 2-dimensional frame coherence, from the frames being HSets
--- (Rocq's mkCoh2Frame, proved by UIP) -----------------------------------------
-
-mkCoh2Frame : {p k : ℕ} {dc : DepsCohs (suc p) k}
-  (eDC : DepsCohsExtension (suc p) k dc)
-  (prevCohFrames : mkCohFrameTypes
-     (AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC))
-     (mkRestrPaintingsPrefix eDC))
-  (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω θ : arity)
-  (d : Dom (mkFrame (π₁D (mkDepsRestr (toDepsCohs (fst prevCohFrames))))))
-  → cong (λ x → snd (dRestrFrames (cDeps dc)) q Hq ε x)
-      (snd prevCohFrames r (le-trans r q (suc k) Hr (le-up q k Hq)) 0 tt
-        ω θ d)
-    ∙ (snd (cCohs dc) q Hq 0 tt ε θ
-         (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) (suc r)
-           (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
-    ∙ cong (λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x)
-        (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d))
-  ≡ snd (cCohs dc) q Hq r Hr ε ω
-      (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) 0 tt θ d)
-    ∙ (cong (λ x → snd (dRestrFrames (cDeps dc)) r (le-trans r q k Hr Hq)
-              ω x)
-        (snd prevCohFrames (suc q) Hq 0 tt ε θ d)
-    ∙ snd (cCohs dc) r (le-trans r q k Hr Hq) 0 tt ω θ
-        (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames)))
-          (suc (suc q)) Hq ε d))
-mkCoh2Frame {dc = dc} eDC prevCohFrames q Hq r Hr ε ω θ d =
-  isSetDom (snd (dFrames (cDeps dc))) _ _ _ _
 
 -- The layer coherence (Rocq's mkCohLayer): a Π-layer bridge step, then
 -- the fused rew-cohLayer33 with the painting coherence and mkCoh2Frame
@@ -399,37 +370,44 @@ module _ {p k : ℕ} {dc : DepsCohs (suc p) k}
     (l : Dom (mkLayer p (suc (suc k)) (mkFramesD (cDeps dcI))
                 (mkPaintings (cExtraDeps dcI))
                 (fst prevRF) (snd prevRF) d))
-    → subst (λ x → Dom (mkLayer p k (dFrames (cDeps dc))
+    → PathP (λ i → Dom (mkLayer p k (dFrames (cDeps dc))
                           (dPaintings (cDeps dc))
                           (fst (dRestrFrames (cDeps dc)))
-                          (snd (dRestrFrames (cDeps dc))) x))
-        (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
+                          (snd (dRestrFrames (cDeps dc)))
+                          (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d i)))
         (outerRL q Hq ε
           (snd prevRF (suc r) (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
           (innerRL r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d l))
-      ≡ outerRL r (le-trans r q k Hr Hq) ω
+        (outerRL r (le-trans r q k Hr Hq) ω
           (snd prevRF (suc (suc q)) Hq ε d)
-          (innerRL (suc q) Hq ε d l)
-  mkCohLayer q Hq r Hr ε ω d l =
-    Π-subst-ext
-      {B = λ ω' x → Dom (snd (dPaintings (cDeps dc))
-                      (snd (dRestrFrames (cDeps dc)) 0 tt ω' x))}
-      (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
-      (λ θ → rew-cohLayer33
-        {P = λ x → Dom (snd (dPaintings (cDeps dc)) x)}
-        {S2 = λ m → Dom (mkPainting
-                (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
-        {S3 = λ m → Dom (mkPainting
-                (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
-        {rf0 = λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x}
-        {rfF = λ m → snd (dRestrFrames (cDeps dc)) q Hq ε m}
-        {rfG = λ m → snd (dRestrFrames (cDeps dc)) r
-                       (le-trans r q k Hr Hq) ω m}
-        {F = λ m c → snd (cRestrPaintings dc) q Hq ε m c}
-        {G = λ m c → snd (cRestrPaintings dc) r
-                       (le-trans r q k Hr Hq) ω m c}
-        (snd cohPaintings q Hq r Hr ε ω (snd prevRF 0 tt θ d) (l θ))
-        (mkCoh2Frame eDC prevCohFrames q Hq r Hr ε ω θ d))
+          (innerRL (suc q) Hq ε d l))
+  mkCohLayer q Hq r Hr ε ω d l i θ =
+    cohLayer-squareP
+      {P = λ x → Dom (snd (dPaintings (cDeps dc)) x)}
+      {S2 = λ m → Dom (mkPainting
+              (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
+      {S3 = λ m → Dom (mkPainting
+              (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
+      {rf0 = λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x}
+      {rfF = λ m → snd (dRestrFrames (cDeps dc)) q Hq ε m}
+      {rfG = λ m → snd (dRestrFrames (cDeps dc)) r
+                     (le-trans r q k Hr Hq) ω m}
+      {F = λ m c → snd (cRestrPaintings dc) q Hq ε m c}
+      {G = λ m c → snd (cRestrPaintings dc) r
+                     (le-trans r q k Hr Hq) ω m c}
+      {E1 = snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d}
+      {C2 = snd prevCohFrames r
+              (le-trans r q (suc k) Hr (le-up q k Hq)) 0 tt ω θ d}
+      {D2 = snd prevCohFrames (suc q) Hq 0 tt ε θ d}
+      {C1 = snd (cCohs dc) q Hq 0 tt ε θ
+              (snd prevRF (suc r)
+                (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)}
+      {D1 = snd (cCohs dc) r (le-trans r q k Hr Hq) 0 tt ω θ
+              (snd prevRF (suc (suc q)) Hq ε d)}
+      {K = snd (cCohs dc) q Hq r Hr ε ω (snd prevRF 0 tt θ d)}
+      (snd cohPaintings q Hq r Hr ε ω (snd prevRF 0 tt θ d) (l θ))
+      (isSet→Square (isSetDom (snd (dFrames (cDeps dc)))) _ _ _ _)
+      i
 
 -- The cohFrames of the next level (Rocq's mkCohFrames) -------------------------
 
@@ -440,9 +418,9 @@ mkCohFrames : {p k : ℕ} {dc : DepsCohs p k}
 mkCohFrames {zero} eDC cohPaintings = tt , λ q Hq r Hr ε ω d → refl
 mkCohFrames {suc p} {k} {dc} eDC cohPaintings =
   prev ,
-  λ q Hq r Hr ε ω d →
-    Σ≡ (snd prev (suc q) Hq (suc r) Hr ε ω (fst d))
-       (mkCohLayer eDC cohPaintings prev q Hq r Hr ε ω (fst d) (snd d))
+  λ q Hq r Hr ε ω d i →
+    snd prev (suc q) Hq (suc r) Hr ε ω (fst d) i ,
+    mkCohLayer eDC cohPaintings prev q Hq r Hr ε ω (fst d) (snd d) i
   where
   prev = mkCohFrames (AddCohDep dc eDC) (fst cohPaintings)
 
@@ -491,20 +469,20 @@ mkExtraCohs (AddCoh2Dep dc2 eDC2) =
 mkCohPainting : {p k : ℕ} {dc2 : DepsCohs2 p k}
                 (eDC2 : DepsCohs2Extension p k dc2)
                 → mkCohPaintingType (mkExtraCohs eDC2)
-mkCohPainting eDC2 q Hq zero Hr ε ω d (l , c) = refl
+mkCohPainting {dc2 = dc2} eDC2 q Hq zero Hr ε ω d (l , c) =
+  subst-filler
+    (λ x → Dom (snd (dPaintings (cDeps (mkDepsCohs dc2))) x))
+    (snd (cCohs (mkDepsCohs dc2)) q Hq 0 Hr ε ω d)
+    (snd (cRestrPaintings (mkDepsCohs dc2)) q Hq ε
+      (snd (mkRestrFramesC (π₁C (mkDepsCohs dc2))) 0
+        (le-trans 0 q (suc _) Hr (le-up q _ Hq)) ω d)
+      (l ω))
 mkCohPainting eDC2 zero Hq (suc r) () ε ω d c
 mkCohPainting (TopCoh2Dep E) (suc q) () (suc r) Hr ε ω d c
-mkCohPainting (AddCoh2Dep dc2 eDC2) (suc q) Hq (suc r) Hr ε ω d (l , c) =
-  Σ≡dep {P = λ x → Dom (mkLayer _ _
-                (dFrames (cDeps (c2DepsCohs dc2)))
-                (dPaintings (cDeps (c2DepsCohs dc2)))
-                (fst (dRestrFrames (cDeps (c2DepsCohs dc2))))
-                (snd (dRestrFrames (cDeps (c2DepsCohs dc2)))) x)}
-        {Q = λ z → Dom (mkPainting (cExtraDeps (c2DepsCohs dc2)) z)}
-        (snd prev (suc q) Hq (suc r) Hr ε ω d)
-        (mkCohLayer (c2ExtraDepsCohs dc2) (c2CohPaintings dc2) prev
-          q Hq r Hr ε ω d l)
-        (mkCohPainting eDC2 q Hq r Hr ε ω (d , l) c)
+mkCohPainting (AddCoh2Dep dc2 eDC2) (suc q) Hq (suc r) Hr ε ω d (l , c) i =
+  mkCohLayer (c2ExtraDepsCohs dc2) (c2CohPaintings dc2) prev
+    q Hq r Hr ε ω d l i ,
+  mkCohPainting eDC2 q Hq r Hr ε ω (d , l) c i
   where
   prev = mkCohFrames (AddCohDep (c2DepsCohs dc2) (c2ExtraDepsCohs dc2))
                      (fst (c2CohPaintings dc2))
