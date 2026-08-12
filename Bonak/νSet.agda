@@ -515,3 +515,102 @@ mkCohPaintings : {p k : ℕ} {dc2 : DepsCohs2 p k}
 mkCohPaintings {zero} eDC2 = tt , mkCohPainting eDC2
 mkCohPaintings {suc p} {k} {dc2} eDC2 =
   mkCohPaintings (AddCoh2Dep dc2 eDC2) , mkCohPainting eDC2
+
+-- νSetData and the tower (Rocq's νSetData / νSet / νSetAt / νSetFrom) -----------
+
+record νSetData (p : ℕ) : Set₁ where
+  field
+    sFrames : mkFrameTypes p 0
+    sPaintings : mkPaintingTypes p 0 sFrames
+    sRestrFrames : mkRestrFrameTypes p 0 sFrames sPaintings
+    sRestrPaintings :
+      (E : Dom (mkFrame (depsRestr sFrames sPaintings sRestrFrames))
+           → HSet₀)
+      → mkRestrPaintingTypes
+          {deps = depsRestr sFrames sPaintings sRestrFrames}
+          (TopRestrDep E)
+    sCohFrames :
+      (E : Dom (mkFrame (depsRestr sFrames sPaintings sRestrFrames))
+           → HSet₀)
+      → mkCohFrameTypes (TopRestrDep E) (sRestrPaintings E)
+    sCohPaintings :
+      (E : Dom (mkFrame (depsRestr sFrames sPaintings sRestrFrames))
+           → HSet₀)
+      (E' : Dom (mkFrame (mkDepsRestr
+              (depsCohs (depsRestr sFrames sPaintings sRestrFrames)
+                (TopRestrDep E) (sRestrPaintings E) (sCohFrames E))))
+            → HSet₀)
+      → mkCohPaintingTypes
+          {dc = depsCohs (depsRestr sFrames sPaintings sRestrFrames)
+                  (TopRestrDep E) (sRestrPaintings E) (sCohFrames E)}
+          (TopCohDep E')
+open νSetData public
+
+mkνSetData : {p : ℕ} (C : νSetData p)
+             (E : Dom (mkFrame (depsRestr (sFrames C) (sPaintings C)
+                                          (sRestrFrames C))) → HSet₀)
+             → νSetData (suc p)
+mkνSetData {p} C E = record
+  { sFrames = mkFramesD deps0
+  ; sPaintings = mkPaintings (TopRestrDep E)
+  ; sRestrFrames = mkRestrFramesC dcE
+  ; sRestrPaintings = λ E' → mkRestrPaintings {dc = dcE} (TopCohDep E')
+  ; sCohFrames = λ E' → mkCohFrames {dc = dcE} (TopCohDep E')
+                          (sCohPaintings C E E')
+  ; sCohPaintings = λ E' E'' → mkCohPaintings
+      {dc2 = depsCohs2 dcE (TopCohDep E') (sCohPaintings C E E')}
+      (TopCoh2Dep E'')
+  }
+  where
+  deps0 : DepsRestr p 0
+  deps0 = depsRestr (sFrames C) (sPaintings C) (sRestrFrames C)
+  dcE : DepsCohs p 0
+  dcE = depsCohs deps0 (TopRestrDep E) (sRestrPaintings C E)
+                 (sCohFrames C E)
+
+record νSetStruct (p : ℕ) : Set₂ where
+  field
+    prefix : Set₁
+    struct : prefix → νSetData p
+open νSetStruct public
+
+mkPrefix : (p : ℕ) (C : νSetStruct p) → Set₁
+mkPrefix p C =
+  Σ[ D ∈ prefix C ]
+    (Dom (mkFrame (depsRestr (sFrames (struct C D))
+                             (sPaintings (struct C D))
+                             (sRestrFrames (struct C D)))) → HSet₀)
+
+mkνSet0 : νSetStruct 0
+mkνSet0 = record
+  { prefix = Unit*
+  ; struct = λ _ → record
+      { sFrames = tt* ; sPaintings = tt* ; sRestrFrames = tt
+      ; sRestrPaintings = λ E → tt
+      ; sCohFrames = λ E → tt
+      ; sCohPaintings = λ E E' → tt
+      }
+  }
+
+mkνSet : {p : ℕ} (C : νSetStruct p) → νSetStruct (suc p)
+mkνSet {p} C = record
+  { prefix = mkPrefix p C
+  ; struct = λ D → mkνSetData (struct C (fst D)) (snd D)
+  }
+
+νSetAt : (n : ℕ) → νSetStruct n
+νSetAt zero    = mkνSet0
+νSetAt (suc n) = mkνSet (νSetAt n)
+
+record νSetFrom (n : ℕ) (X : prefix (νSetAt n)) : Set₁ where
+  coinductive
+  field
+    this : Dom (mkFrame (depsRestr (sFrames (struct (νSetAt n) X))
+                                   (sPaintings (struct (νSetAt n) X))
+                                   (sRestrFrames (struct (νSetAt n) X))))
+           → HSet₀
+    next : νSetFrom (suc n) (X , this)
+open νSetFrom public
+
+νSets : Set₁
+νSets = νSetFrom 0 tt*
