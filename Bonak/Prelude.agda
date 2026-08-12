@@ -16,6 +16,9 @@ open import Agda.Primitive.Cubical public
   using    ( I; i0; i1; Partial; IsOne; itIsOne )
 open import Agda.Builtin.Cubical.Path public
   using (PathP; _≡_)
+open import Agda.Builtin.Cubical.Sub public
+  renaming (primSubOut to outS)
+  using (Sub; inS)
 open import Agda.Builtin.Sigma public
   using (Σ; _,_; fst; snd)
 open import Agda.Builtin.Unit public
@@ -67,7 +70,19 @@ transportRefl {A = A} x i = transp (λ _ → A) i x
 substRefl : (P : A → Set ℓ') {x : A} (u : P x) → subst P refl u ≡ u
 substRefl P u = transportRefl u
 
--- Path composition (standard hcomp-based) -------------------------------
+-- Level-polymorphic unit (with η) ---------------------------------------
+
+record Unit* {ℓ} : Set ℓ where
+  constructor tt*
+
+-- hfill and path composition (standard hcomp-based) ----------------------
+
+hfill : {A : Set ℓ} {φ : I} (u : (i : I) → Partial φ A)
+        (u0 : Sub A φ (u i0)) (i : I) → A
+hfill {φ = φ} u u0 i =
+  hcomp′ (λ j → λ { (φ = i1) → u (i ∧ j) itIsOne
+                  ; (i = i0) → outS u0 })
+         (outS u0)
 
 infixr 30 _∙_
 _∙_ : {x y z : A} → x ≡ y → y ≡ z → x ≡ z
@@ -112,6 +127,10 @@ PathP≡Path P p q i =
 toPathP : {P : I → Set ℓ} {x : P i0} {y : P i1}
           → transport (λ i → P i) x ≡ y → PathP P x y
 toPathP {P = P} {x} {y} h = transport (sym (PathP≡Path P x y)) h
+
+fromPathP : {P : I → Set ℓ} {x : P i0} {y : P i1}
+            → PathP P x y → transport (λ i → P i) x ≡ y
+fromPathP {P = P} p i = transp (λ j → P (i ∨ j)) i (p i)
 
 isSet→isPropPathP : (P : I → Set ℓ) → isSet (P i1)
                     → (x : P i0) (y : P i1) → isProp (PathP P x y)
