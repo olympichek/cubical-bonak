@@ -718,6 +718,35 @@ mkCoh2PaintingTypes {suc p} {k} {dc2} eDC2 =
 --     folding at the mkCohFrames / mkRestrFramesC level too (or the
 --     conversion cache).
 --
+--   * Rung 2, localised (round 2).  It is not the Square types and not
+--     any proof term: with mkCoh2FrameType already opaque, elaborating
+--     the single application
+--       mkCohFrames (AddCohDep (mkDepsCohs dc2) (mkExtraCohs eDC2)) cps Q2
+--     with cps and Q2 ABSTRACT and every spelling syntactically equal to
+--     the expected types already does not terminate (> 70 s), while the
+--     same telescope without the application takes 0.4 s and the same
+--     application with an ABSTRACT extension takes 0.3 s
+--     (probes/P05-rung2.agda).  The cost is the type-level unfolding of
+--     the tower functions (mkExtraDeps / mkRestrPaintings /
+--     mkCohFrameTypes / mkRestrFrames) at a constructor-headed extension
+--     one storey up.  It is specific to THAT storey: the same
+--     application one storey lower (mkRestrFrames at a concrete
+--     extension) takes 0.4 s — probes/P06-lower.agda.
+--   * More folding is the right tool but Agda 2.8.0 blocks it:
+--     `unfolding` is BODY-ONLY (probes/P04-unfold.agda), and this
+--     tower applies coherence data inside type SIGNATURES (mkCohLayer's
+--     PathP).  Folding mkCohFrameType therefore requires first turning
+--     every such statement into a named definition (mkCohLayerType,
+--     mkCoh2LayerType, … — Rocq's νGpd.v:692 trick, which thereby gains
+--     a second, Agda-specific justification).  Opacifying the
+--     mkCoh2FrameTypes ⋈ mkCohFrames mutual as a whole does NOT work:
+--     π₁C2 then cannot project it, and π₁-commutation
+--     (mkDepsCohs (π₁C2 dc2) ≡ π₁C (mkDepsCohs dc2)) breaks.
+--   * Conversion cache (Agda 2.9.0-dev, ~/agda-dev): the same
+--     reproducer does not finish in 15 min either with or without
+--     AGDA_CONVERSION_CACHE=1 (5-6 GB RSS and climbing in both), and
+--     2.8.0 does not finish it in 25 min either (4.9 GB RSS).  The cache does not turn this
+--     rung from unbounded into bounded.
 --   * Spelling discipline (measured, useful whatever the fix).  At this
 --     storey a term must be spelled EXACTLY as the reduct of the
 --     consumer's type spells it: naming a storey (dcT = mkDepsCohs
