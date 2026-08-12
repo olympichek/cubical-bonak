@@ -74,6 +74,7 @@ interleaved mutual
 -- The Deps classes ---------------------------------------------------------
 
 record DepsRestr (p k : ℕ) : Set₁ where
+  no-eta-equality; pattern
   constructor depsRestr
   field
     dFrames : mkFrameTypes p k
@@ -231,6 +232,7 @@ interleaved mutual
 -- The DepsCohs class ---------------------------------------------------------
 
 record DepsCohs (p k : ℕ) : Set₁ where
+  no-eta-equality; pattern
   constructor depsCohs
   field
     cDeps : DepsRestr p k

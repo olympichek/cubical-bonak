@@ -78,6 +78,7 @@ interleaved mutual
 -- The Deps classes ---------------------------------------------------------
 
 record DepsRestr (p k : ℕ) : Set₁ where
+  no-eta-equality; pattern
   constructor depsRestr
   field
     dFrames : mkFrameTypes p k
@@ -231,6 +232,7 @@ interleaved mutual
 -- The DepsCohs class ---------------------------------------------------------
 
 record DepsCohs (p k : ℕ) : Set₁ where
+  no-eta-equality; pattern
   constructor depsCohs
   field
     cDeps : DepsRestr p k
@@ -427,6 +429,7 @@ mkCohFrames {suc p} {k} {dc} eDC cohPaintings =
 -- The DepsCohs2 class -----------------------------------------------------------
 
 record DepsCohs2 (p k : ℕ) : Set₁ where
+  no-eta-equality; pattern
   constructor depsCohs2
   field
     c2DepsCohs : DepsCohs p k
@@ -530,7 +533,9 @@ mkνSetData : {p : ℕ} (C : νSetData p)
              → νSetData (suc p)
 mkνSetData {p} C E = record
   { sFrames = mkFramesD deps0
-  ; sPaintings = mkPaintings (TopRestrDep E)
+  ; sPaintings = mkPaintings
+      (TopRestrDep {deps = depsRestr (sFrames C) (sPaintings C)
+                             (sRestrFrames C)} E)
   ; sRestrFrames = mkRestrFramesC dcE
   ; sRestrPaintings = λ E' → mkRestrPaintings {dc = dcE} (TopCohDep E')
   ; sCohFrames = λ E' → mkCohFrames {dc = dcE} (TopCohDep E')
