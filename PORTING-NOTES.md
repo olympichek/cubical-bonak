@@ -110,3 +110,25 @@ DepsCohs3, mkCoh2Layer, mkCoh2Painting), GUIP only at the top.
   conv-instrument, 22x on SemiSimplicialGpd), `exact_no_check`
   analogue (Agda has no such escape; maybe postulate+rewrite trick or
   --allow-unsolved + later check), sharing in transp-normal forms.
+
+## Measurements (2026-08-12, Agda 2.8.0, this machine)
+
+νSet.agda full check: **V1 (mirror) ~5:10** / **V2 (PathP) 2:35** /
+**V3 (rew) 8:19**. V1 profile (--profile=definitions): mkCohPaintings
+212s + mkExtraCohs 91s = 98% — the π₁-commutation conversions
+(mkExtraCohs (AddCoh2Dep …) ≡ AddCohDep …, fst (mkRestrPaintings …) ≡
+Prefix …), NOT mkCohPainting itself (2.9s). --profile=internal: all in
+Typing.CheckRHS. V2 wins by eliminating Σ≡/Σ≡dep/toPathP (definitional
+PathP pairing); V3's ∙ᵗ chains cost extra at νSet level (payoff
+expected only where coh2 is stored data).
+
+νGpd parts 1-2 (νSet cached): V2 and V3 both 27s. V1 νGpd with the
+DepsCohs2 storey + mkCohPainting: check exceeded 30 min CPU (running;
+the Σ≡dep alignment conversion blows up at groupoid level). If it
+does not converge: introduce named type wrappers (νGpd.v:692's
+goal-folding trick) or land the conversion cache first.
+
+Conclusion so far: **the direct mirror (V1) is the most expensive of
+the three to typecheck, and the PathP-native V2 is the cheapest** —
+the conversion burden tracks how much transport-reshuffling glue
+(toPathP/Σ≡dep/∙-assoc) sits in the proof terms.
