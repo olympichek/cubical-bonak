@@ -340,37 +340,43 @@ mkCohPaintingTypes {suc p} {k} {dc} eDC =
 
 -- The 2-dimensional frame coherence TYPE: stored data in νGpd (in νSet
 -- this was proved by isSet) — an s-indexed family of hexagons.
+-- Opaque (νGpd.v:692's goal folding, Agda-style): conversion compares
+-- mkCoh2FrameType-applications argument-wise instead of unfolding two
+-- giant hexagon types; only the definitions that apply an inhabitant
+-- (mkCohLayer here, mkCoh2PaintingInstanceType and the mkCoh2Layer*
+-- family in νGpd.agda) unfold it.
 
-mkCoh2FrameType : {p k : ℕ} {dc : DepsCohs (suc p) k}
-  (eDC : DepsCohsExtension (suc p) k dc)
-  (prevCohFrames : mkCohFrameTypes
-     (AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC))
-     (mkRestrPaintingsPrefix eDC))
-  → Set
-mkCoh2FrameType {p} {k} {dc} eDC prevCohFrames =
-  (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (s : ℕ) .(Hs : s ≤ r)
-  (ε ω θ : arity)
-  (d : GDom (mkFrame (π₁D (mkDepsRestr (toDepsCohs (fst prevCohFrames))))))
-  → cong (λ x → snd (dRestrFrames (cDeps dc)) q Hq ε x)
-      (snd prevCohFrames r (le-trans r q (suc k) Hr (le-up q k Hq)) s Hs
-        ω θ d)
-    ∙ (snd (cCohs dc) q Hq s (le-trans s r q Hs Hr) ε θ
-         (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) (suc r)
-           (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
-    ∙ cong (λ x → snd (dRestrFrames (cDeps dc)) s
-              (le-trans s r k Hs (le-trans r q k Hr Hq)) θ x)
-        (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d))
-  ≡ snd (cCohs dc) q Hq r Hr ε ω
-      (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) s
-        (le-up s (suc k) (le-up s k
-          (le-trans s r k Hs (le-trans r q k Hr Hq)))) θ d)
-    ∙ (cong (λ x → snd (dRestrFrames (cDeps dc)) r (le-trans r q k Hr Hq)
-              ω x)
-        (snd prevCohFrames (suc q) Hq s
-          (le-up s q (le-trans s r q Hs Hr)) ε θ d)
-    ∙ snd (cCohs dc) r (le-trans r q k Hr Hq) s Hs ω θ
-        (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames)))
-          (suc (suc q)) Hq ε d))
+opaque
+  mkCoh2FrameType : {p k : ℕ} {dc : DepsCohs (suc p) k}
+    (eDC : DepsCohsExtension (suc p) k dc)
+    (prevCohFrames : mkCohFrameTypes
+       (AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC))
+       (mkRestrPaintingsPrefix eDC))
+    → Set
+  mkCoh2FrameType {p} {k} {dc} eDC prevCohFrames =
+    (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (s : ℕ) .(Hs : s ≤ r)
+    (ε ω θ : arity)
+    (d : GDom (mkFrame (π₁D (mkDepsRestr (toDepsCohs (fst prevCohFrames))))))
+    → cong (λ x → snd (dRestrFrames (cDeps dc)) q Hq ε x)
+        (snd prevCohFrames r (le-trans r q (suc k) Hr (le-up q k Hq)) s Hs
+          ω θ d)
+      ∙ (snd (cCohs dc) q Hq s (le-trans s r q Hs Hr) ε θ
+           (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) (suc r)
+             (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
+      ∙ cong (λ x → snd (dRestrFrames (cDeps dc)) s
+                (le-trans s r k Hs (le-trans r q k Hr Hq)) θ x)
+          (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d))
+    ≡ snd (cCohs dc) q Hq r Hr ε ω
+        (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) s
+          (le-up s (suc k) (le-up s k
+            (le-trans s r k Hs (le-trans r q k Hr Hq)))) θ d)
+      ∙ (cong (λ x → snd (dRestrFrames (cDeps dc)) r (le-trans r q k Hr Hq)
+                ω x)
+          (snd prevCohFrames (suc q) Hq s
+            (le-up s q (le-trans s r q Hs Hr)) ε θ d)
+      ∙ snd (cCohs dc) r (le-trans r q k Hr Hq) s Hs ω θ
+          (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames)))
+            (suc (suc q)) Hq ε d))
 
 -- The layer coherence (νGpd's mkCohLayer): as in νSet, but the
 -- 2-dimensional frame coherence premise is the STORED coh2Frame data.
@@ -398,43 +404,46 @@ module _ {p k : ℕ} {dc : DepsCohs (suc p) k}
                 (snd (cRestrPaintings dc)) (mkRestrFramesC (π₁C dc))
                 (snd (cCohs dc))
 
-  mkCohLayer :
-    (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
-    (d : GDom (mkFrame (π₁D (mkDepsRestr dcI))))
-    (l : GDom (mkLayer p (suc (suc k)) (mkFramesD (cDeps dcI))
-                (mkPaintings (cExtraDeps dcI))
-                (fst prevRF) (snd prevRF) d))
-    → subst (λ x → GDom (mkLayer p k (dFrames (cDeps dc))
-                          (dPaintings (cDeps dc))
-                          (fst (dRestrFrames (cDeps dc)))
-                          (snd (dRestrFrames (cDeps dc))) x))
+  opaque
+    unfolding mkCoh2FrameType
+
+    mkCohLayer :
+      (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
+      (d : GDom (mkFrame (π₁D (mkDepsRestr dcI))))
+      (l : GDom (mkLayer p (suc (suc k)) (mkFramesD (cDeps dcI))
+                  (mkPaintings (cExtraDeps dcI))
+                  (fst prevRF) (snd prevRF) d))
+      → subst (λ x → GDom (mkLayer p k (dFrames (cDeps dc))
+                            (dPaintings (cDeps dc))
+                            (fst (dRestrFrames (cDeps dc)))
+                            (snd (dRestrFrames (cDeps dc))) x))
+          (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
+          (outerRL q Hq ε
+            (snd prevRF (suc r) (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
+            (innerRL r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d l))
+        ≡ outerRL r (le-trans r q k Hr Hq) ω
+            (snd prevRF (suc (suc q)) Hq ε d)
+            (innerRL (suc q) Hq ε d l)
+    mkCohLayer q Hq r Hr ε ω d l =
+      Π-subst-ext
+        {B = λ ω' x → GDom (snd (dPaintings (cDeps dc))
+                        (snd (dRestrFrames (cDeps dc)) 0 tt ω' x))}
         (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
-        (outerRL q Hq ε
-          (snd prevRF (suc r) (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
-          (innerRL r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d l))
-      ≡ outerRL r (le-trans r q k Hr Hq) ω
-          (snd prevRF (suc (suc q)) Hq ε d)
-          (innerRL (suc q) Hq ε d l)
-  mkCohLayer q Hq r Hr ε ω d l =
-    Π-subst-ext
-      {B = λ ω' x → GDom (snd (dPaintings (cDeps dc))
-                      (snd (dRestrFrames (cDeps dc)) 0 tt ω' x))}
-      (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
-      (λ θ → rew-cohLayer33
-        {P = λ x → GDom (snd (dPaintings (cDeps dc)) x)}
-        {S2 = λ m → GDom (mkPainting
-                (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
-        {S3 = λ m → GDom (mkPainting
-                (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
-        {rf0 = λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x}
-        {rfF = λ m → snd (dRestrFrames (cDeps dc)) q Hq ε m}
-        {rfG = λ m → snd (dRestrFrames (cDeps dc)) r
-                       (le-trans r q k Hr Hq) ω m}
-        {F = λ m c → snd (cRestrPaintings dc) q Hq ε m c}
-        {G = λ m c → snd (cRestrPaintings dc) r
-                       (le-trans r q k Hr Hq) ω m c}
-        (cohPainting q Hq r Hr ε ω (snd prevRF 0 tt θ d) (l θ))
-        (coh2Frame q Hq r Hr 0 tt ε ω θ d))
+        (λ θ → rew-cohLayer33
+          {P = λ x → GDom (snd (dPaintings (cDeps dc)) x)}
+          {S2 = λ m → GDom (mkPainting
+                  (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
+          {S3 = λ m → GDom (mkPainting
+                  (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
+          {rf0 = λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x}
+          {rfF = λ m → snd (dRestrFrames (cDeps dc)) q Hq ε m}
+          {rfG = λ m → snd (dRestrFrames (cDeps dc)) r
+                         (le-trans r q k Hr Hq) ω m}
+          {F = λ m c → snd (cRestrPaintings dc) q Hq ε m c}
+          {G = λ m c → snd (cRestrPaintings dc) r
+                         (le-trans r q k Hr Hq) ω m c}
+          (cohPainting q Hq r Hr ε ω (snd prevRF 0 tt θ d) (l θ))
+          (coh2Frame q Hq r Hr 0 tt ε ω θ d))
 
 -- Mutually: the types of coh2Frames and the body of cohFrames
 -- (Rocq's Coh2FrameTypeBlock, as a plain mutual definition).
