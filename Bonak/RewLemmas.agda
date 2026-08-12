@@ -225,3 +225,35 @@ cohLayer-squareP {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
   β = compPathP {P = P}
         (λ j → G (D2 j) (subst-filler S3 D2 aR j))
         (subst-filler P D1 (G n2 (subst S3 D2 aR)))
+
+-- Squares over a binary family (the 2-dimensional PathP) --------------------
+
+SquareP : (A : I → I → Set ℓ)
+          {a₀₀ : A i0 i0} {a₀₁ : A i0 i1}
+          (a₀₋ : PathP (λ j → A i0 j) a₀₀ a₀₁)
+          {a₁₀ : A i1 i0} {a₁₁ : A i1 i1}
+          (a₁₋ : PathP (λ j → A i1 j) a₁₀ a₁₁)
+          (a₋₀ : PathP (λ i → A i i0) a₀₀ a₁₀)
+          (a₋₁ : PathP (λ i → A i i1) a₀₁ a₁₁) → Set ℓ
+SquareP A a₀₋ a₁₋ a₋₀ a₋₁ =
+  PathP (λ i → PathP (λ j → A i j) (a₋₀ i) (a₋₁ i)) a₀₋ a₁₋
+
+-- Cubes in a groupoid: any two parallel squares with matching sides are
+-- connected.  This is the cubical form of Rocq's GUIP, and (as in
+-- νGpd.v:918) the ONLY place where the h-level of the tower is used in
+-- the level-3 machinery.
+
+isGroupoid→Cube : {A : Set ℓ} (gA : isGroupoid A)
+  {a₀₀ a₀₁ a₁₀ a₁₁ : I → A}
+  {a₀₋ : (m : I) → a₀₀ m ≡ a₀₁ m} {a₁₋ : (m : I) → a₁₀ m ≡ a₁₁ m}
+  {a₋₀ : (m : I) → a₀₀ m ≡ a₁₀ m} {a₋₁ : (m : I) → a₀₁ m ≡ a₁₁ m}
+  (sq₀ : Square (a₀₋ i0) (a₁₋ i0) (a₋₀ i0) (a₋₁ i0))
+  (sq₁ : Square (a₀₋ i1) (a₁₋ i1) (a₋₀ i1) (a₋₁ i1))
+  → PathP (λ m → Square (a₀₋ m) (a₁₋ m) (a₋₀ m) (a₋₁ m)) sq₀ sq₁
+isGroupoid→Cube {A = A} gA {a₀₋ = a₀₋} {a₁₋} {a₋₀} {a₋₁} sq₀ sq₁ =
+  isProp→PathP
+    (λ m → isSet→isPropPathP (λ i → a₋₀ m i ≡ a₋₁ m i)
+             (gA (a₋₀ m i1) (a₋₁ m i1)) (a₀₋ m) (a₁₋ m))
+    sq₀ sq₁
+
+
