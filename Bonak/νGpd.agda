@@ -102,3 +102,161 @@ mkCohPaintings : {p k : ℕ} {dc2 : DepsCohs2 p k}
   (eDC2 : DepsCohs2Extension p k dc2)
   → mkCohPaintingTypes (mkExtraCohs eDC2)
 mkCohPaintings eDC2 = mkCohPaintingsPrefix eDC2 , mkCohPainting eDC2
+
+------------------------------------------------------------------------
+-- Part 3: the level-3 coherence machinery (νGpd.v:653-1130).
+-- The endpoint-type ladder keeps every instance type a named
+-- application (νGpd.v:692's goal-folding, doubly important since the
+-- no-eta switch makes syntactic equality the fast path).
+------------------------------------------------------------------------
+
+open import Bonak.GpdLemmas
+
+-- The painting family the coh2Painting statement quantifies over
+-- (νGpd.v:653): the painting of the (suc p, k)-tower two π₁'s down.
+
+mkCoh2PaintingSourcePainting : {p k : ℕ}
+  (dc2 : DepsCohs2 (suc p) k)
+  (eDC2 : DepsCohs2Extension (suc p) k dc2)
+  (d : GDom (mkFrame (π₁D (mkDepsRestr (π₁C (π₁C (mkDepsCohs dc2)))))))
+  → HGpd₀
+mkCoh2PaintingSourcePainting dc2 eDC2 d =
+  mkPainting
+    (AddRestrDep (mkDepsRestr (π₁C (π₁C (mkDepsCohs dc2))))
+      (mkExtraDeps (AddCohDep (π₁C (mkDepsCohs dc2))
+        (AddCohDep (mkDepsCohs dc2) (mkExtraCohs eDC2)))))
+    d
+
+-- The frame endpoint (νGpd.v:661): both triple restrictions of d.
+
+mkCoh2PaintingFrameEndpointType : {p k : ℕ}
+  (dc2 : DepsCohs2 (suc p) k)
+  (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (s : ℕ) .(Hs : s ≤ r)
+  (ε ω θ : arity)
+  (d : GDom (mkFrame (π₁D (mkDepsRestr (π₁C (π₁C (mkDepsCohs dc2)))))))
+  → Set
+mkCoh2PaintingFrameEndpointType {p} {k} dc2 q Hq r Hr s Hs ε ω θ d =
+  snd (dRestrFrames (cDeps (c2DepsCohs dc2))) q Hq ε
+    (snd (mkRestrFramesC (π₁C (c2DepsCohs dc2)))
+      r (le-trans r q (suc k) Hr (le-up q k Hq)) ω
+      (snd (mkRestrFramesC (π₁C (π₁C (mkDepsCohs dc2)))) s
+        (le-trans s r (suc (suc k)) Hs
+          (le-up r (suc k) (le-trans r q (suc k) Hr (le-up q k Hq)))) θ d))
+  ≡ snd (dRestrFrames (cDeps (c2DepsCohs dc2))) s
+      (le-trans s r k Hs (le-trans r q k Hr Hq)) θ
+      (snd (mkRestrFramesC (π₁C (c2DepsCohs dc2)))
+        (suc r) (le-trans r q k Hr Hq) ω
+        (snd (mkRestrFramesC (π₁C (π₁C (mkDepsCohs dc2))))
+          (suc (suc q)) Hq ε d))
+
+-- The two triple-restricted paintings the coh2Painting equates
+-- (νGpd.v:672), over a given frame endpoint.
+
+mkCoh2PaintingEndpointType : {p k : ℕ}
+  (dc2 : DepsCohs2 (suc p) k)
+  (eDC2 : DepsCohs2Extension (suc p) k dc2)
+  (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (s : ℕ) .(Hs : s ≤ r)
+  (ε ω θ : arity)
+  (d : GDom (mkFrame (π₁D (mkDepsRestr (π₁C (π₁C (mkDepsCohs dc2)))))))
+  (c : GDom (mkCoh2PaintingSourcePainting dc2 eDC2 d))
+  (coh2FrameEndpoint :
+     mkCoh2PaintingFrameEndpointType dc2 q Hq r Hr s Hs ε ω θ d)
+  → Set
+mkCoh2PaintingEndpointType {p} {k} dc2 eDC2 q Hq r Hr s Hs ε ω θ d c
+  coh2FrameEndpoint =
+  let rP1 = mkRestrPainting (AddCohDep (c2DepsCohs dc2)
+              (c2ExtraDepsCohs dc2))
+      rP2 = mkRestrPainting (AddCohDep (π₁C (mkDepsCohs dc2))
+              (AddCohDep (mkDepsCohs dc2) (mkExtraCohs eDC2)))
+      HsHrHq = le-trans s r (suc (suc k)) Hs
+                 (le-up r (suc k) (le-trans r q (suc k) Hr (le-up q k Hq)))
+  in
+  subst (λ x → GDom (snd (dPaintings (cDeps (c2DepsCohs dc2))) x))
+    coh2FrameEndpoint
+    (snd (cRestrPaintings (c2DepsCohs dc2)) q Hq ε
+      (snd (mkRestrFramesC (π₁C (c2DepsCohs dc2)))
+        r (le-trans r q (suc k) Hr (le-up q k Hq)) ω
+        (snd (mkRestrFramesC (π₁C (π₁C (mkDepsCohs dc2)))) s HsHrHq θ d))
+      (rP1 r (le-trans r q (suc k) Hr (le-up q k Hq)) ω
+        (snd (mkRestrFramesC (π₁C (π₁C (mkDepsCohs dc2)))) s HsHrHq θ d)
+        (rP2 s HsHrHq θ d c)))
+  ≡ snd (cRestrPaintings (c2DepsCohs dc2)) s
+      (le-trans s r k Hs (le-trans r q k Hr Hq)) θ
+      (snd (mkRestrFramesC (π₁C (c2DepsCohs dc2)))
+        (suc r) (le-trans r q k Hr Hq) ω
+        (snd (mkRestrFramesC (π₁C (π₁C (mkDepsCohs dc2))))
+          (suc (suc q)) Hq ε d))
+      (rP1 (suc r) (le-trans r q k Hr Hq) ω
+        (snd (mkRestrFramesC (π₁C (π₁C (mkDepsCohs dc2))))
+          (suc (suc q)) Hq ε d)
+        (rP2 (suc (suc q)) Hq ε d c))
+
+-- The coh2Painting instance statement (νGpd.v:697): a named definition
+-- so goals stay one application (νGpd.v:692's folding note).
+
+mkCoh2PaintingInstanceType : {p k : ℕ}
+  (dc2 : DepsCohs2 (suc p) k)
+  (eDC2 : DepsCohs2Extension (suc p) k dc2)
+  (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (s : ℕ) .(Hs : s ≤ r)
+  (ε ω θ : arity)
+  (d : GDom (mkFrame (π₁D (mkDepsRestr (π₁C (π₁C (mkDepsCohs dc2)))))))
+  (c : GDom (mkCoh2PaintingSourcePainting dc2 eDC2 d))
+  → Set
+mkCoh2PaintingInstanceType {p} {k} dc2 eDC2 q Hq r Hr s Hs ε ω θ d c =
+  let rP2 = mkRestrPainting (AddCohDep (π₁C (mkDepsCohs dc2))
+              (AddCohDep (mkDepsCohs dc2) (mkExtraCohs eDC2)))
+      rF2 = snd (mkRestrFramesC (π₁C (π₁C (mkDepsCohs dc2))))
+      HrHq↑ = le-trans r q (suc k) Hr (le-up q k Hq)
+      P₀ = λ x → GDom (snd (dPaintings (cDeps (c2DepsCohs dc2))) x)
+  in
+  subst (mkCoh2PaintingEndpointType dc2 eDC2 q Hq r Hr s Hs ε ω θ d c)
+    (snd (c2Coh2Frames dc2) q Hq r Hr s Hs ε ω θ d)
+    (_⊙_ {P = P₀}
+      (sigT-map-eq {P = λ x → GDom (mkPainting
+             (cExtraDeps (π₁C (c2DepsCohs dc2))) x)} {Q = P₀}
+        (snd (cRestrPaintings (c2DepsCohs dc2)) q Hq ε)
+        (mkCohPainting (AddCoh2Dep dc2 eDC2)
+          r HrHq↑ s Hs ω θ d c))
+      (_⊙_ {P = P₀}
+        (snd (c2CohPaintings dc2) q Hq s (le-trans s r q Hs Hr) ε θ
+          (rF2 (suc r) HrHq↑ ω d)
+          (rP2 (suc r) HrHq↑ ω d c))
+        (sigT-map-eq {P = λ x → GDom (mkPainting
+               (cExtraDeps (π₁C (c2DepsCohs dc2))) x)} {Q = P₀}
+          (snd (cRestrPaintings (c2DepsCohs dc2)) s
+            (le-trans s r k Hs (le-trans r q k Hr Hq)) θ)
+          (mkCohPainting (AddCoh2Dep dc2 eDC2)
+            (suc q) Hq (suc r) Hr ε ω d c))))
+  ≡ _⊙_ {P = P₀}
+      (snd (c2CohPaintings dc2) q Hq r Hr ε ω
+        (rF2 s (le-up s (suc k) (le-up s k
+          (le-trans s r k Hs (le-trans r q k Hr Hq)))) θ d)
+        (rP2 s (le-up s (suc k) (le-up s k
+          (le-trans s r k Hs (le-trans r q k Hr Hq)))) θ d c))
+      (_⊙_ {P = P₀}
+        (sigT-map-eq {P = λ x → GDom (mkPainting
+               (cExtraDeps (π₁C (c2DepsCohs dc2))) x)} {Q = P₀}
+          (snd (cRestrPaintings (c2DepsCohs dc2)) r
+            (le-trans r q k Hr Hq) ω)
+          (mkCohPainting (AddCoh2Dep dc2 eDC2)
+            (suc q) Hq s (le-up s q (le-trans s r q Hs Hr)) ε θ d c))
+        (snd (c2CohPaintings dc2) r (le-trans r q k Hr Hq) s Hs ω θ
+          (rF2 (suc (suc q)) Hq ε d)
+          (rP2 (suc (suc q)) Hq ε d c)))
+
+mkCoh2PaintingType : {p k : ℕ}
+  (dc2 : DepsCohs2 (suc p) k)
+  (eDC2 : DepsCohs2Extension (suc p) k dc2) → Set
+mkCoh2PaintingType {p} {k} dc2 eDC2 =
+  (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (s : ℕ) .(Hs : s ≤ r)
+  (ε ω θ : arity)
+  (d : GDom (mkFrame (π₁D (mkDepsRestr (π₁C (π₁C (mkDepsCohs dc2)))))))
+  (c : GDom (mkCoh2PaintingSourcePainting dc2 eDC2 d))
+  → mkCoh2PaintingInstanceType dc2 eDC2 q Hq r Hr s Hs ε ω θ d c
+
+mkCoh2PaintingTypes : {p k : ℕ} {dc2 : DepsCohs2 p k}
+  (eDC2 : DepsCohs2Extension p k dc2) → Set
+mkCoh2PaintingTypes {zero} _ = ⊤
+mkCoh2PaintingTypes {suc p} {k} {dc2} eDC2 =
+  Σ[ _ ∈ mkCoh2PaintingTypes (AddCoh2Dep dc2 eDC2) ]
+    mkCoh2PaintingType dc2 eDC2
