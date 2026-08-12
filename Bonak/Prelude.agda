@@ -166,6 +166,48 @@ isSetΣ {B = B} sA sB u v p q = λ j i → α j i , β j i
                (snd u) (snd v))
         (λ i → snd (p i)) (λ i → snd (q i))
 
+-- Groupoid level (for νGpd) ----------------------------------------------
+
+isGroupoid : Set ℓ → Set ℓ
+isGroupoid A = (x y : A) → isSet (x ≡ y)
+
+isSet→isGroupoid : isSet A → isGroupoid A
+isSet→isGroupoid h x y = isProp→isSet (h x y)
+
+isGroupoid⊤ : isGroupoid ⊤
+isGroupoid⊤ = isSet→isGroupoid isSet⊤
+
+isGroupoidΠ : {B : A → Set ℓ'} → ((a : A) → isGroupoid (B a))
+              → isGroupoid ((a : A) → B a)
+isGroupoidΠ gB f g p q α β j i k a =
+  gB a (f a) (g a) (λ m → p m a) (λ m → q m a)
+       (λ m n → α m n a) (λ m n → β m n a) j i k
+
+isGroupoid→isSetPathP : (P : I → Set ℓ) → isGroupoid (P i1)
+                        → (x : P i0) (y : P i1) → isSet (PathP P x y)
+isGroupoid→isSetPathP P gP1 x y =
+  subst isSet (sym (PathP≡Path P x y)) (gP1 (transport (λ i → P i) x) y)
+
+isGroupoidΣ : {B : A → Set ℓ'} → isGroupoid A
+              → ((a : A) → isGroupoid (B a)) → isGroupoid (Σ A B)
+isGroupoidΣ {B = B} gA gB u v p q α β = λ m j i → base m j i , over m j i
+  where
+  base : PathP (λ _ → (λ i → fst (p i)) ≡ (λ i → fst (q i)))
+               (λ j i → fst (α j i)) (λ j i → fst (β j i))
+  base = gA (fst u) (fst v) (λ i → fst (p i)) (λ i → fst (q i))
+            (λ j i → fst (α j i)) (λ j i → fst (β j i))
+  over : PathP (λ m → PathP (λ j → PathP (λ i → B (base m j i))
+                                   (snd u) (snd v))
+                       (λ i → snd (p i)) (λ i → snd (q i)))
+               (λ j i → snd (α j i)) (λ j i → snd (β j i))
+  over = isProp→PathP
+    (λ m → isSet→isPropPathP
+      (λ j → PathP (λ i → B (base m j i)) (snd u) (snd v))
+      (isGroupoid→isSetPathP (λ i → B (fst (q i))) (gB (fst v))
+        (snd u) (snd v))
+      (λ i → snd (p i)) (λ i → snd (q i)))
+    (λ j i → snd (α j i)) (λ j i → snd (β j i))
+
 -- HSet ---------------------------------------------------------------------
 
 record HSet (ℓ : Level) : Set (lsuc ℓ) where
@@ -184,3 +226,26 @@ hΣ A B = hset (Σ (Dom A) (λ a → Dom (B a)))
 
 hΠ : (A : Set ℓ) (B : A → HSet ℓ') → HSet (ℓ ⊔ ℓ')
 hΠ A B = hset ((a : A) → Dom (B a)) (isSetΠ (λ a → isSetDom (B a)))
+
+-- HGpd ---------------------------------------------------------------------
+
+record HGpd (ℓ : Level) : Set (lsuc ℓ) where
+  constructor hgpd
+  field
+    GDom : Set ℓ
+    isGroupoidDom : isGroupoid GDom
+open HGpd public
+
+hpaths : {A : HGpd ℓ} (x y : GDom A) → HSet ℓ
+hpaths {A = A} x y = hset (x ≡ y) (isGroupoidDom A x y)
+
+gunit : HGpd lzero
+gunit = hgpd ⊤ isGroupoid⊤
+
+gΣ : (A : HGpd ℓ) (B : GDom A → HGpd ℓ') → HGpd (ℓ ⊔ ℓ')
+gΣ A B = hgpd (Σ (GDom A) (λ a → GDom (B a)))
+              (isGroupoidΣ (isGroupoidDom A) (λ a → isGroupoidDom (B a)))
+
+gΠ : (A : Set ℓ) (B : A → HGpd ℓ') → HGpd (ℓ ⊔ ℓ')
+gΠ A B = hgpd ((a : A) → GDom (B a))
+              (isGroupoidΠ (λ a → isGroupoidDom (B a)))
