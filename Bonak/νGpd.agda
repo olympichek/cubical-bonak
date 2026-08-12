@@ -15,6 +15,7 @@ open import Bonak.νGpdBase arity public
 -- The DepsCohs2 class (νGpd: carries cohPaintings AND coh2Frames) ------------
 
 record DepsCohs2 (p k : ℕ) : Set₁ where
+  no-eta-equality; pattern
   constructor depsCohs2
   field
     c2DepsCohs : DepsCohs p k
