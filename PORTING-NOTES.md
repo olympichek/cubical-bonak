@@ -132,3 +132,32 @@ Conclusion so far: **the direct mirror (V1) is the most expensive of
 the three to typecheck, and the PathP-native V2 is the cheapest** —
 the conversion burden tracks how much transport-reshuffling glue
 (toPathP/Σ≡dep/∙-assoc) sits in the proof terms.
+
+
+## THE ETA FIX (2026-08-12, headline)
+
+`no-eta-equality; pattern` on the three Deps records (+ pinning ONE
+implicit that η used to solve: TopRestrDep's deps in mkνSetData)
+collapses all typecheck times to Rocq-comparable:
+
+| file                        | with η        | no-eta |
+|-----------------------------|---------------|--------|
+| V1 νSet                     | 310 s         | 5.1 s  |
+| V2 νSet (PathP)             | 155 s         | 3.9 s  |
+| V3 νSet (rew)               | 499 s         | 5.8 s  |
+| V1 νGpdBase                 | 28 s          | 1.5 s  |
+| V1 νGpd DepsCohs2 storey    | >40 min, DNF  | 3.4 s  |
+| V2/V3 νGpd parts 1-2        | 27 s          | ~1.3 s |
+
+(Rocq νSet.v: 1.85 s.) Diagnosis: Agda's conversion eta-expands record
+comparisons (621k of 6.19M compares) — each expansion multiplies a
+comparison by the field count and duplicates the neutral spine, giving
+combinatorial blowup down the Deps tower; conversion count dropped
+6.19M → 38k. Rocq's primitive projections have η too, but its lazy
+kernel shares the spine. Our builders are constructor-headed, so η was
+never load-bearing for the tower's definitional equalities.
+
+Both compute gates (SemiSimplicial4 normalization, Examples) still
+pass. The conversion-cache Agda patch (~/agda-dev/src, enable with
+AGDA_CONVERSION_CACHE=1) is superseded as a necessity but kept as an
+artifact; A/B against the eta-fixed code is optional follow-up.
