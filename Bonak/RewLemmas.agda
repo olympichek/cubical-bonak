@@ -141,3 +141,54 @@ rew-cohLayer33 {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
     (λ {g} H → transportRefl f
                ∙ funExt (λ ω → sym (transportRefl (f ω)) ∙ H ω))
     E1 H
+
+-- V3 (groupoid-rew) kit ----------------------------------------------------
+
+-- Transport-based path composition: nesting is strictly associative,
+-- so chains of ∙ᵗ never need reassociation (the rew-trick).
+infixl 30 _∙ᵗ_
+_∙ᵗ_ : {x y z : A} → x ≡ y → y ≡ z → x ≡ z
+_∙ᵗ_ {x = x} p q = subst (λ u → x ≡ u) q p
+
+-- The ONE interface lemma per level (G6): back to hcomp-composition,
+-- paid only where a ∙-composite form is genuinely demanded.
+∙ᵗ→∙ : {x y z : A} (p : x ≡ y) (q : y ≡ z) → p ∙ᵗ q ≡ p ∙ q
+∙ᵗ→∙ {x = x} p q =
+  J (λ _ q → p ∙ᵗ q ≡ p ∙ q)
+    (transportRefl p ∙ rUnit p)
+    q
+
+-- The fused layer-coherence lemma, chain-form premise: the
+-- 2-dimensional frame coherence is stated pointwise as nested ∙ᵗ
+-- transports (bracket-free), never as a tree of ∙-composites.
+rew-cohLayer33ᵗ :
+  {ℓt ℓx ℓp ℓs : Level}
+  {T1 : Set ℓt} {T2 T3 : Set ℓs} {X : Set ℓx} {P : X → Set ℓp}
+  {S2 : T2 → Set ℓp} {S3 : T3 → Set ℓp}
+  {rf0 : T1 → X} {rfF : T2 → X} {rfG : T3 → X}
+  {F : (m : T2) → S2 m → P (rfF m)}
+  {G : (n : T3) → S3 n → P (rfG n)}
+  {d1 d2 : T1} {E1 : d1 ≡ d2}
+  {m1 m2 : T2} {C2 : m1 ≡ m2}
+  {n1 n2 : T3} {D2 : n1 ≡ n2}
+  {C1 : rfF m2 ≡ rf0 d1}
+  {D1 : rfG n2 ≡ rf0 d2}
+  {K : rfF m1 ≡ rfG n1}
+  {aL : S2 m1} {aR : S3 n1}
+  → subst P K (F m1 aL) ≡ G n1 aR
+  → cong rfF C2 ∙ᵗ C1 ∙ᵗ cong rf0 E1 ≡ K ∙ᵗ cong rfG D2 ∙ᵗ D1
+  → subst (λ d → P (rf0 d)) E1 (subst P C1 (F m2 (subst S2 C2 aL)))
+    ≡ subst P D1 (G n2 (subst S3 D2 aR))
+rew-cohLayer33ᵗ {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
+  {rfG = rfG} {F = F} {G = G}
+  {E1 = E1} {C2 = C2} {D2 = D2} {C1 = C1} {D1 = D1} {K = K}
+  HC Hchain =
+  rew-cohLayer33 {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
+    {rfG = rfG} {F = F} {G = G} HC
+    ( sym (∙-assoc (cong rfF C2) C1 (cong rf0 E1))
+    ∙ sym (cong (_∙ cong rf0 E1) (∙ᵗ→∙ (cong rfF C2) C1))
+    ∙ sym (∙ᵗ→∙ (cong rfF C2 ∙ᵗ C1) (cong rf0 E1))
+    ∙ Hchain
+    ∙ ∙ᵗ→∙ (K ∙ᵗ cong rfG D2) D1
+    ∙ cong (_∙ D1) (∙ᵗ→∙ K (cong rfG D2))
+    ∙ ∙-assoc K (cong rfG D2) D1 )

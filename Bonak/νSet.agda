@@ -348,19 +348,19 @@ mkCoh2Frame : {p k : ℕ} {dc : DepsCohs (suc p) k}
   → cong (λ x → snd (dRestrFrames (cDeps dc)) q Hq ε x)
       (snd prevCohFrames r (le-trans r q (suc k) Hr (le-up q k Hq)) 0 tt
         ω θ d)
-    ∙ (snd (cCohs dc) q Hq 0 tt ε θ
+    ∙ᵗ snd (cCohs dc) q Hq 0 tt ε θ
          (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) (suc r)
            (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
-    ∙ cong (λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x)
-        (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d))
+    ∙ᵗ cong (λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x)
+        (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
   ≡ snd (cCohs dc) q Hq r Hr ε ω
       (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) 0 tt θ d)
-    ∙ (cong (λ x → snd (dRestrFrames (cDeps dc)) r (le-trans r q k Hr Hq)
+    ∙ᵗ cong (λ x → snd (dRestrFrames (cDeps dc)) r (le-trans r q k Hr Hq)
               ω x)
         (snd prevCohFrames (suc q) Hq 0 tt ε θ d)
-    ∙ snd (cCohs dc) r (le-trans r q k Hr Hq) 0 tt ω θ
+    ∙ᵗ snd (cCohs dc) r (le-trans r q k Hr Hq) 0 tt ω θ
         (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames)))
-          (suc (suc q)) Hq ε d))
+          (suc (suc q)) Hq ε d)
 mkCoh2Frame {dc = dc} eDC prevCohFrames q Hq r Hr ε ω θ d =
   isSetDom (snd (dFrames (cDeps dc))) _ _ _ _
 
@@ -415,7 +415,7 @@ module _ {p k : ℕ} {dc : DepsCohs (suc p) k}
       {B = λ ω' x → Dom (snd (dPaintings (cDeps dc))
                       (snd (dRestrFrames (cDeps dc)) 0 tt ω' x))}
       (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
-      (λ θ → rew-cohLayer33
+      (λ θ → rew-cohLayer33ᵗ
         {P = λ x → Dom (snd (dPaintings (cDeps dc)) x)}
         {S2 = λ m → Dom (mkPainting
                 (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
