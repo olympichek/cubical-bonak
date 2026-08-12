@@ -141,3 +141,43 @@ rew-cohLayer33 {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
     (λ {g} H → transportRefl f
                ∙ funExt (λ ω → sym (transportRefl (f ω)) ∙ H ω))
     E1 H
+
+-- V2 (PathP-native) kit --------------------------------------------------
+
+-- The filler connecting x to its transport (subst-filler).
+subst-filler : (P : A → Set ℓ') {x y : A} (p : x ≡ y) (u : P x)
+               → PathP (λ i → P (p i)) u (subst P p u)
+subst-filler P p u i =
+  transp (λ j → P (p (i ∧ j))) (~ i) u
+
+-- Composition of dependent paths over composition of base paths.
+compPathP : {P : A → Set ℓ'} {x y z : A} {p : x ≡ y} {q : y ≡ z}
+            {u : P x} {v : P y} {w : P z}
+            → PathP (λ i → P (p i)) u v → PathP (λ i → P (q i)) v w
+            → PathP (λ i → P ((p ∙ q) i)) u w
+compPathP {P = P} {p = p} {q = q} {u = u} α β i =
+  comp′ (λ j → P (compPath-filler p q j i))
+        (λ j → λ { (i = i0) → u ; (i = i1) → β j })
+        (α i)
+
+-- Any four suitably-parallel paths in an HSet bound a square.
+Square : {a₀₀ a₀₁ a₁₀ a₁₁ : A}
+         (a₀₋ : a₀₀ ≡ a₀₁) (a₁₋ : a₁₀ ≡ a₁₁)
+         (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁) → Set _
+Square a₀₋ a₁₋ a₋₀ a₋₁ = PathP (λ i → a₋₀ i ≡ a₋₁ i) a₀₋ a₁₋
+
+isSet→Square : isSet A → {a₀₀ a₀₁ a₁₀ a₁₁ : A}
+               (a₀₋ : a₀₀ ≡ a₀₁) (a₁₋ : a₁₀ ≡ a₁₁)
+               (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁)
+               → Square a₀₋ a₁₋ a₋₀ a₋₁
+isSet→Square sA a₀₋ a₁₋ a₋₀ a₋₁ =
+  isProp→PathP (λ i → sA (a₋₀ i) (a₋₁ i)) a₀₋ a₁₋
+
+-- Transport a dependent path along a square between base paths
+-- (the V2 replacement for rewriting the index path with Hpath).
+substPathP : {x y : A} {p q : x ≡ y} (P : A → Set ℓ')
+             {u : P x} {v : P y}
+             (sq : p ≡ q)
+             → PathP (λ i → P (p i)) u v → PathP (λ i → P (q i)) u v
+substPathP P {u} {v} sq α =
+  transport (λ j → PathP (λ i → P (sq j i)) u v) α
