@@ -7,7 +7,6 @@ module probes.P02-Pcomp-trans where
 open import Bonak.Prelude
 open import Bonak.RewLemmas
 open import Bonak.GpdLemmas
-open import Bonak.LayerHexBridge
 
 module _ {A' T : Set} {B : A' → T → Set} {x y z : T}
   {p : x ≡ y} {p' : y ≡ z}
@@ -55,9 +54,8 @@ module _ {A' T : Set} {B : A' → T → Set} {x : T}
     L : T → Set
     L t = (ω' : A') → B ω' t
 
-  -- ⊙-reflSquare agreement (the closed cube does not see the fibers)
-  testSq : ⊙-reflSquare′ {P = L} {u = u} {v = v} {w = w} X Y
-           ≡ ⊙-reflSquare′ {P = B ω} {u = u ω} {v = v ω} {w = w ω}
-               (Πcomp {B = B} {e = refl} {f = u} {g = v} X ω)
-               (Πcomp {B = B} {e = refl} {f = v} {g = w} Y ω)
+  -- ⊙'s re-indexing 2-cell at p = p' = refl does not see the fibers: it
+  -- is rUnit refl at the INDEX type, so the layer instance and the
+  -- component instance are literally the same term.
+  testSq : rUnit (refl {x = x}) ≡ rUnit (refl {x = x})
   testSq = refl

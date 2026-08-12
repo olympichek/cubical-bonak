@@ -111,7 +111,6 @@ mkCohPaintings eDC2 = mkCohPaintingsPrefix eDC2 , mkCohPainting eDC2
 ------------------------------------------------------------------------
 
 open import Bonak.GpdLemmas
-open import Bonak.LayerHexBridge
 
 -- The painting family the coh2Painting statement quantifies over
 -- (νGpd.v:653): the painting of the (suc p, k)-tower two π₁'s down.
@@ -603,7 +602,7 @@ toDepsCohs3 {p} {k} {dc2} {eDC2} coh2Paintings =
 -- any mkCoh2LayerType-shaped goal (abstract κ2/u/v) to the pointwise
 -- family mkCoh2LayerPointwiseType.  What remains, per component ζ:
 --   1. push Πcomp through the two composites of mkCoh2LayerType with
---      the (all proved) LayerHexBridge suite: Πcomp-⊙ for the ⊙'s,
+--      the (all proved) Πcomp suite in GpdLemmas: Πcomp-⊙ for the ⊙'s,
 --      Πcomp-sigT-map-eq for the sigT-map-eq (RL0 …) factors (their g
 --      is pointwise: RL0 q Hq ε d′ l′ ζ = NA d′ ζ (l′ ζ) with
 --      NA d′ ζ x = subst … (cohFrame q Hq 0 tt ε ζ d′)
