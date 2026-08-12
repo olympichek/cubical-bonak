@@ -1,66 +1,65 @@
 ------------------------------------------------------------------------
--- Bonak.LeProp — the recursive ≤ in Prop, mirroring Rocq's LeSProp.v.
+-- Bonak.LeProp — the recursive ≤, mirroring Rocq's LeSProp.v.
 --
--- Prop is definitionally proof-irrelevant (validated with --cubical in
--- probes/P00-flags.agda), so bound proofs can be weakened, shifted and
--- composed freely, exactly like Rocq's SProp.
+-- Design (probes/P01-le-transport.agda): Prop-valued ≤ breaks Cubical
+-- Agda's transport-clause generation for indexed matches
+-- (CannotGenerateTransportClause), so ≤ is Set-valued — recursive into
+-- η-⊤ / ⊥ — and *all proof arguments throughout the development are
+-- irrelevant* (.), which restores SProp-like definitional irrelevance
+-- across neutral proofs (P01 gate 4).
+--
+-- With the recursive definition, `suc n ≤ suc m` *reduces* to `n ≤ m`,
+-- so Rocq's ⇓/⇑ (lower/raise both) are definitional identities and are
+-- not needed at all.
 ------------------------------------------------------------------------
 
 module Bonak.LeProp where
 
-open import Bonak.Prelude using (ℕ; zero; suc)
+open import Bonak.Prelude using (ℕ; zero; suc; ⊤; tt)
 
-data SFalse : Prop where
-record STrue : Prop where
-  constructor sI
+data ⊥ : Set where
 
-infix 4 _≤_
-_≤_ : ℕ → ℕ → Prop
-zero  ≤ m     = STrue
-suc n ≤ zero  = SFalse
-suc n ≤ suc m = n ≤ m
-
--- Absurdity elimination out of Prop's empty type (one per target sort)
-exfalso : {ℓ : _} {A : Set ℓ} → SFalse → A
+exfalso : {ℓ : _} {A : Set ℓ} → ⊥ → A
 exfalso ()
 
-exfalsoP : {A : Prop} → SFalse → A
-exfalsoP ()
+infix 4 _≤_
+_≤_ : ℕ → ℕ → Set
+zero  ≤ m     = ⊤
+suc n ≤ zero  = ⊥
+suc n ≤ suc m = n ≤ m
 
 leR-refl : {n : ℕ} → n ≤ n
-leR-refl {zero}  = sI
+leR-refl {zero}  = tt
 leR-refl {suc n} = leR-refl {n}
 
-leR-O : {n : ℕ} → zero ≤ n
-leR-O = sI
+-- Explicit-argument forms: ≤ is a defined function, so its arguments
+-- cannot be recovered by unification from a proof's type — call sites
+-- inside the tower use these.
 
-leR-O-contra : {n : ℕ} → suc n ≤ zero → SFalse
-leR-O-contra h = h
+le-trans : (n m p : ℕ) → .(n ≤ m) → .(m ≤ p) → n ≤ p
+le-trans zero    m       p       _ _ = tt
+le-trans (suc n) zero    p       () _
+le-trans (suc n) (suc m) zero    _ ()
+le-trans (suc n) (suc m) (suc p) h g = le-trans n m p h g
+
+le-up : (n m : ℕ) → .(n ≤ m) → n ≤ suc m
+le-up zero    m       _ = tt
+le-up (suc n) zero    ()
+le-up (suc n) (suc m) h = le-up n m h
+
+le-down : (n m : ℕ) → .(suc n ≤ m) → n ≤ m
+le-down zero    m       _ = tt
+le-down (suc n) zero    ()
+le-down (suc n) (suc m) h = le-down n m h
 
 infixl 45 _↕_
-_↕_ : {n m p : ℕ} → n ≤ m → m ≤ p → n ≤ p
-_↕_ {zero}  {m}     {p}     _ _ = sI
-_↕_ {suc n} {zero}  {p}     h _ = exfalsoP h
-_↕_ {suc n} {suc m} {zero}  _ g = exfalsoP g
-_↕_ {suc n} {suc m} {suc p} h g = _↕_ {n} {m} {p} h g
+_↕_ : {n m p : ℕ} → .(n ≤ m) → .(m ≤ p) → n ≤ p
+_↕_ {n} {m} {p} h g = le-trans n m p h g
 
 infix 40 ↑_
-↑_ : {n m : ℕ} → n ≤ m → n ≤ suc m
-↑_ {zero}  {m}     _ = sI
-↑_ {suc n} {zero}  h = exfalsoP h
-↑_ {suc n} {suc m} h = ↑_ {n} {m} h
+↑_ : {n m : ℕ} → .(n ≤ m) → n ≤ suc m
+↑_ {n} {m} h = le-up n m h
 
 infix 40 ↓_
-↓_ : {n m : ℕ} → suc n ≤ m → n ≤ m
-↓_ {zero}  {m}     _ = sI
-↓_ {suc n} {zero}  h = exfalsoP h
-↓_ {suc n} {suc m} h = ↓_ {n} {m} h
-
--- Lower/raise both sides: definitional identities on _≤_
-infix 40 ⇓_
-⇓_ : {n m : ℕ} → suc n ≤ suc m → n ≤ m
-⇓ h = h
-
-infix 40 ⇑_
-⇑_ : {n m : ℕ} → n ≤ m → suc n ≤ suc m
-⇑ h = h
+↓_ : {n m : ℕ} → .(suc n ≤ m) → n ≤ m
+↓_ {n} {m} h = le-down n m h
