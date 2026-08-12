@@ -430,3 +430,88 @@ module _ {p k : ℕ} {dc : DepsCohs (suc p) k}
                        (le-trans r q k Hr Hq) ω m c}
         (snd cohPaintings q Hq r Hr ε ω (snd prevRF 0 tt θ d) (l θ))
         (mkCoh2Frame eDC prevCohFrames q Hq r Hr ε ω θ d))
+
+-- The cohFrames of the next level (Rocq's mkCohFrames) -------------------------
+
+mkCohFrames : {p k : ℕ} {dc : DepsCohs p k}
+              (eDC : DepsCohsExtension p k dc)
+              (cohPaintings : mkCohPaintingTypes eDC)
+              → mkCohFrameTypes (mkExtraDeps eDC) (mkRestrPaintings eDC)
+mkCohFrames {zero} eDC cohPaintings = tt , λ q Hq r Hr ε ω d → refl
+mkCohFrames {suc p} {k} {dc} eDC cohPaintings =
+  prev ,
+  λ q Hq r Hr ε ω d →
+    Σ≡ (snd prev (suc q) Hq (suc r) Hr ε ω (fst d))
+       (mkCohLayer eDC cohPaintings prev q Hq r Hr ε ω (fst d) (snd d))
+  where
+  prev = mkCohFrames (AddCohDep dc eDC) (fst cohPaintings)
+
+-- The DepsCohs2 class -----------------------------------------------------------
+
+record DepsCohs2 (p k : ℕ) : Set₁ where
+  constructor depsCohs2
+  field
+    c2DepsCohs : DepsCohs p k
+    c2ExtraDepsCohs : DepsCohsExtension p k c2DepsCohs
+    c2CohPaintings : mkCohPaintingTypes c2ExtraDepsCohs
+open DepsCohs2 public
+
+π₁C2 : {p k : ℕ} → DepsCohs2 (suc p) k → DepsCohs2 p (suc k)
+π₁C2 dc2 = depsCohs2 (π₁C (c2DepsCohs dc2))
+                     (AddCohDep (c2DepsCohs dc2) (c2ExtraDepsCohs dc2))
+                     (fst (c2CohPaintings dc2))
+
+mkDepsCohs : {p k : ℕ} (dc2 : DepsCohs2 p k) → DepsCohs (suc p) k
+mkDepsCohs dc2 =
+  depsCohs (mkDepsRestr (c2DepsCohs dc2))
+           (mkExtraDeps (c2ExtraDepsCohs dc2))
+           (mkRestrPaintings (c2ExtraDepsCohs dc2))
+           (mkCohFrames (c2ExtraDepsCohs dc2) (c2CohPaintings dc2))
+
+data DepsCohs2Extension : (p k : ℕ) → DepsCohs2 p k → Set₁ where
+  TopCoh2Dep : {p : ℕ} {dc2 : DepsCohs2 p 0}
+    (E : Dom (mkFrame (mkDepsRestr (mkDepsCohs dc2))) → HSet₀)
+    → DepsCohs2Extension p 0 dc2
+  AddCoh2Dep : {p k : ℕ} (dc2 : DepsCohs2 (suc p) k)
+    → DepsCohs2Extension (suc p) k dc2
+    → DepsCohs2Extension p (suc k) (π₁C2 dc2)
+
+mkExtraCohs : {p k : ℕ} {dc2 : DepsCohs2 p k}
+              (eDC2 : DepsCohs2Extension p k dc2)
+              → DepsCohsExtension (suc p) k (mkDepsCohs dc2)
+mkExtraCohs (TopCoh2Dep E) = TopCohDep E
+mkExtraCohs (AddCoh2Dep dc2 eDC2) =
+  AddCohDep (mkDepsCohs dc2) (mkExtraCohs eDC2)
+
+-- The painting coherence (Rocq's mkCohPainting).  With Π-layers the
+-- r = 0 case is refl (Rocq needed nth_lmap); the r,q ≥ 1 case is a
+-- dependent Σ-path whose components are the *same* mkCohLayer proof
+-- term that mkCohFrames stored — consumed definitionally.
+
+mkCohPainting : {p k : ℕ} {dc2 : DepsCohs2 p k}
+                (eDC2 : DepsCohs2Extension p k dc2)
+                → mkCohPaintingType (mkExtraCohs eDC2)
+mkCohPainting eDC2 q Hq zero Hr ε ω d (l , c) = refl
+mkCohPainting eDC2 zero Hq (suc r) () ε ω d c
+mkCohPainting (TopCoh2Dep E) (suc q) () (suc r) Hr ε ω d c
+mkCohPainting (AddCoh2Dep dc2 eDC2) (suc q) Hq (suc r) Hr ε ω d (l , c) =
+  Σ≡dep {P = λ x → Dom (mkLayer _ _
+                (dFrames (cDeps (c2DepsCohs dc2)))
+                (dPaintings (cDeps (c2DepsCohs dc2)))
+                (fst (dRestrFrames (cDeps (c2DepsCohs dc2))))
+                (snd (dRestrFrames (cDeps (c2DepsCohs dc2)))) x)}
+        {Q = λ z → Dom (mkPainting (cExtraDeps (c2DepsCohs dc2)) z)}
+        (snd prev (suc q) Hq (suc r) Hr ε ω d)
+        (mkCohLayer (c2ExtraDepsCohs dc2) (c2CohPaintings dc2) prev
+          q Hq r Hr ε ω d l)
+        (mkCohPainting eDC2 q Hq r Hr ε ω (d , l) c)
+  where
+  prev = mkCohFrames (AddCohDep (c2DepsCohs dc2) (c2ExtraDepsCohs dc2))
+                     (fst (c2CohPaintings dc2))
+
+mkCohPaintings : {p k : ℕ} {dc2 : DepsCohs2 p k}
+                 (eDC2 : DepsCohs2Extension p k dc2)
+                 → mkCohPaintingTypes (mkExtraCohs eDC2)
+mkCohPaintings {zero} eDC2 = tt , mkCohPainting eDC2
+mkCohPaintings {suc p} {k} {dc2} eDC2 =
+  mkCohPaintings (AddCoh2Dep dc2 eDC2) , mkCohPainting eDC2
