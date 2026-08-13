@@ -440,6 +440,68 @@ module _ {p k : ℕ} (dc2 : DepsCohs2 (suc p) k)
   -- rung down, 2 min → 4 s), and pinning every ⊙/sigT-map-eq implicit
   -- were all applied and are kept below — they are not sufficient
   -- here.  Waiting on the conversion-cache Agda A/B.
+  --
+  -- NOTE (RUNG-2 BISECTED — total-folding experiment, 2026-08-13).
+  -- The wall is ONE conversion, and it is NOT the six ⊙/sigT-map-eq
+  -- factors: it is the `d` ARGUMENT of the coh2Frame instance.  Isolated
+  -- probe (baseline file + nothing else):
+  --
+  --   snd prevCoh2Frames (suc q) Hq (suc r) Hr (suc s) Hs ε ω θ      -- 3 s
+  --   … the same, applied to (d : GDom (mkFrame (π₁D (mkDepsRestr dcI))))
+  --                                                                  -- >120 s
+  --   … the same, applied to a `d` whose binder is written LITERALLY as
+  --     νGpdBase's own binder elaborates it (all five toDepsCohs
+  --     implicits pinned to π₁D (π₁D (mkDepsRestr (mkDepsCohs (π₁C2 dc2))))
+  --     etc.)                                                        -- 4 s
+  --
+  -- So the statement elaborates in seconds iff d's type is the SAME TERM
+  -- νGpdBase produced; it is unusable because every other consumer of d
+  -- (rfI, RL2, c2lTripleL/R, the endpoint types) needs the ladder's own
+  -- dcI spelling, and converting the two ways of spelling these
+  -- three-storey deps records is what diverges.
+  --
+  -- The atomic residual conversion (own probe, >120 s):
+  --      mkCohFrameTypes (mkExtraDeps      (AddCohDep dcT eDCT))
+  --                      (mkRestrPaintings (AddCohDep dcT eDCT))
+  --   =?= mkCohFrameTypes (AddRestrDep (mkDepsRestr dcT) (mkExtraDeps eDCT))
+  --                      (mkRestrPaintingsPrefix eDCT)
+  -- i.e. the π₁-commutation pair (mkExtraDeps∘AddCohDep vs AddRestrDep,
+  -- mkRestrPaintings vs mkRestrPaintingsPrefix) — one δι-step each on
+  -- paper, divergent at this storey.  These are exactly the conversions
+  -- PORTING-NOTES measures as 98% of the νSet cost before the eta fix.
+  --
+  -- TOTAL-FOLDING HYPOTHESIS: REFUTED.  Manual sharing via names cannot
+  -- rescue this; the regime is neither "names are slow" nor "raw is
+  -- slow" but "only literal syntactic identity is affordable".  Measured
+  -- (each: change alone as a control, then with the d-probe):
+  --   * ladder defs turned into pinned-implicit copies of the raw term
+  --     — control alone already >120 s (the ladder's internal alignment
+  --     breaks: rfM/RL1 confront the new spelling);
+  --   * dcJ respelled π₁D (mkDepsRestr dcT) / AddRestrDep / Prefix so the
+  --     ladder matches νGpdBase — control alone >120 s (same reason,
+  --     mirrored);
+  --   * νGpdBase reshaped instead — a shared former
+  --     mkCoh2FrameDepsJ dc eDC prevCohFrames = depsCohs (mkDepsRestr
+  --     (π₁C dc)) … built to the ladder's shape, replacing all five
+  --     `toDepsCohs (fst prevCohFrames)` occurrences (νGpdBase 1 s,
+  --     νGpd 4 s, all green) — d-probe still >120 s;
+  --   * νGpdBase's prevCohFrames BINDER respelled to the mkExtraDeps /
+  --     mkRestrPaintings form actually passed by mkCoh2FrameTypes, which
+  --     makes toDepsCohs' implicits come out field-by-field identical to
+  --     π₁C dcJ (νGpdBase 2 s, νGpd 5 s, all green) — d-probe still
+  --     >120 s.
+  -- A pure δ-alias, by contrast, is FREE (dcI' = dcI, then converting
+  -- through dcI' : 4 s), so the brittleness is not about definitions
+  -- being opaque or transparent — Agda's syntactic-equality fast path is
+  -- the only thing carrying rung 2, and it is all-or-nothing.
+  --
+  -- Opacity cannot patch this either: the same deps term must be opaque
+  -- at the confrontation (so conversion stops at the argument level) and
+  -- transparent for the ladder's own layer machinery (RL2 = mkRestrLayer
+  -- (cDeps dcJ) …, and c2lTripleL's SIGNATURE applies rfI to d, where
+  -- body-only `unfolding` does not reach).  Conclusion: the
+  -- constructor-headed-extension encoding, not the spelling discipline,
+  -- is what has to change (or the kernel needs a conversion cache).
 
 {-
   opaque
