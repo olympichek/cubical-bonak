@@ -1,621 +1,311 @@
 ------------------------------------------------------------------------
--- Bonak.νSet — V1 direct mirror of Rocq theories/νSet/νSet.v.
+-- Bonak.νSet — the νSet tower, fillers-only storage with (p , k)
+-- indexing.  The prefix of fillers is a per-level record WITHOUT eta.
 --
--- Parameterized by the arity alone: with funExt computing in Cubical
--- Agda, the layer former is uniformly `(ε : arity) → B ε` (LayerSig's
--- nth = application, lam = identity, ext = funExt), so simplicial = ⊤,
--- cubical = Bool.
+-- Storage discipline: only the fillers are stored.  `Pre n` is the list
+-- of the n fillers below the current level and every other notion —
+-- frame, layer, painting, the three restrictions, the three coherences —
+-- is a FUNCTION of the indices and of that list, all in one mutual
+-- block.  No Deps records, no Extension inductives, no stored strata.
 --
--- Rocq's RestrFrameTypeBlock / CohFrameTypeBlock helper classes become
--- plain mutual definitions; the Deps* classes become η-records; the
--- two Extension inductives keep p as an index (it is a non-uniform
--- parameter in Rocq); SProp bounds are Set-valued recursive ≤ with
--- irrelevant proof arguments (Bonak.LeProp, see probes/P01).
+-- Index discipline: relative, (p , k).  The dimension n = p + k appears
+-- only as the LENGTH of the prefix, never as an index of the tower's
+-- notions, and every bound is 2-place and relative (q ≤ k, r ≤ q) with
+-- dot-irrelevant proofs (Bonak.LeProp).  Because `suc q ≤ suc k` reduces
+-- to `q ≤ k`, a bound is passed to the next level verbatim: there are no
+-- raise/lower lemmas, no stored differences, and no `recover-nat-eq`.
+--
+-- The prefix's length is where the two disciplines meet: `frame p k`
+-- needs p + k fillers, and both indices move.  See Bonak.NatRew for the
+-- resulting obstruction and the two rewrite rules that remove it.
+--
+-- The prefix is the only record the construction has, and it is
+-- declared without eta: eta-expansion of record comparisons is the
+-- known conversion hazard of this development (THE ETA FIX, see
+-- PORTING-NOTES), and a no-eta prefix measures ~1.8× cheaper than the
+-- same construction over Agda's Σ, whose eta has no off switch.
+-- Without eta a clause only fires on constructor form, so consumers
+-- must match the prefix as `(D ∷ E)` even where the proof does not use
+-- it (the r = 0 coherence cases).
+--
+-- Layers are functions `(ε : arity) → B ε` (V1 decision 1), so `nth` is
+-- application and the r = 0 restriction case is `l ε` — it reduces at a
+-- variable prefix, which is what the bottom-index hazard demands.
 ------------------------------------------------------------------------
+
+{-# OPTIONS --rewriting --termination-depth=2 #-}
 
 module Bonak.νSet (arity : Set) where
 
 open import Bonak.Prelude
 open import Bonak.LeProp
 open import Bonak.RewLemmas
+open import Bonak.NatRew
 
 HSet₀ : Set₁
 HSet₀ = HSet lzero
 
--- The type of lists {frame(n,0);...;frame(n,p-1)} for arbitrary k := n-p
-mkFrameTypes : ℕ → ℕ → Set₁
-mkFrameTypes zero    k = Unit*
-mkFrameTypes (suc p) k = Σ[ frames ∈ mkFrameTypes p (suc k) ] HSet₀
-
--- The type of lists {painting(n,0);...;painting(n,p-1)} for n := k+p
-mkPaintingTypes : (p k : ℕ) → mkFrameTypes p k → Set₁
-mkPaintingTypes zero    k _      = Unit*
-mkPaintingTypes (suc p) k frames =
-  Σ[ paintings ∈ mkPaintingTypes p (suc k) (fst frames) ]
-    (Dom (snd frames) → HSet₀)
-
--- Mutually: the types of restrFrames and the body of frames
--- (Rocq's RestrFrameTypeBlock, as a plain mutual definition).
--- mkLayer takes the two components of the restrFrames Σ separately so
--- its signature never has to reduce mkRestrFrameTypes.
-
-interleaved mutual
-
-  mkRestrFrameTypes : (p k : ℕ) (frames : mkFrameTypes p k)
-                      (paintings : mkPaintingTypes p k frames) → Set
-  mkFrames : (p k : ℕ) (frames : mkFrameTypes p k)
-             (paintings : mkPaintingTypes p k frames)
-             (R : mkRestrFrameTypes p k frames paintings)
-             → mkFrameTypes (suc p) k
-
-  mkRestrFrameTypes zero    k frames paintings = ⊤
-  mkRestrFrameTypes (suc p) k frames paintings =
-    Σ[ R ∈ mkRestrFrameTypes p (suc k) (fst frames) (fst paintings) ]
-      ((q : ℕ) .(Hq : q ≤ k) (ε : arity)
-       → Dom (snd (mkFrames p (suc k) (fst frames) (fst paintings) R))
-       → Dom (snd frames))
-
-  mkLayer : (p k : ℕ) (frames : mkFrameTypes (suc p) k)
-            (paintings : mkPaintingTypes (suc p) k frames)
-            (R₁ : mkRestrFrameTypes p (suc k) (fst frames) (fst paintings))
-            (r : (q : ℕ) .(Hq : q ≤ k) (ε : arity)
-                 → Dom (snd (mkFrames p (suc k) (fst frames)
-                               (fst paintings) R₁))
-                 → Dom (snd frames))
-            (d : Dom (snd (mkFrames p (suc k) (fst frames)
-                             (fst paintings) R₁)))
-            → HSet₀
-
-  mkLayer p k frames paintings R₁ r d =
-    hΠ arity (λ ε → snd paintings (r 0 tt ε d))
-
-  mkFrames zero    k frames paintings R = tt* , hunit
-  mkFrames (suc p) k frames paintings R =
-    mkFrames p (suc k) (fst frames) (fst paintings) (fst R) ,
-    hΣ (snd (mkFrames p (suc k) (fst frames) (fst paintings) (fst R)))
-       (λ d → mkLayer p k frames paintings (fst R) (snd R) d)
-
--- The Deps classes ---------------------------------------------------------
-
-record DepsRestr (p k : ℕ) : Set₁ where
+-- The prefix's cons cell.  Parameterized rather than recursive, so it
+-- needs no place in the mutual block below.
+record Snoc (A : Set₁) (B : A → Set₁) : Set₁ where
   no-eta-equality; pattern
-  constructor depsRestr
+  constructor _∷_
   field
-    dFrames : mkFrameTypes p k
-    dPaintings : mkPaintingTypes p k dFrames
-    dRestrFrames : mkRestrFrameTypes p k dFrames dPaintings
-open DepsRestr public
+    pre : A
+    fil : B pre
+open Snoc public
 
-toDepsRestr : {p k : ℕ} {frames : mkFrameTypes p k}
-              {paintings : mkPaintingTypes p k frames}
-              (R : mkRestrFrameTypes p k frames paintings) → DepsRestr p k
-toDepsRestr {p} {k} {frames} {paintings} R =
-  depsRestr frames paintings R
+------------------------------------------------------------------------
+-- The block: signatures
+--
+-- One mutual block, in Agda's layout-inferred style.  `Pre` and `Fil`
+-- are defined as soon as they are declared: the later signatures project
+-- out of a prefix (`pre D`, `fil D`), which needs `Pre` to reduce, and a
+-- merely declared function does not reduce.
+--
+-- ARGUMENT LAYOUT.  Agda's termination checker compares caller and
+-- callee arguments BY POSITION, so a descent is seen only where the
+-- descending argument occupies the same column on both sides.  This
+-- construction's well-founded measure is the prefix shrinking (`fst D`,
+-- under layer / restr-layer / coh-layer), so the prefix sits in a fixed
+-- column in every member — hence the argument order
+--
+--     p , k , D , [E] , q , Hq , r , Hr , ε , ω , d , l/c
+--
+-- with the faces and their bounds AFTER the prefix, rather than the
+-- reading order (p k q r … D d) the statements suggest.  Clauses match
+-- the prefix (`(D , E)`) instead of projecting it, for the same reason.
+--
+-- TERMINATION IS NOT ESTABLISHED, and six of the eleven members carry
+-- `{-# TERMINATING #-}`.  The recursion is well-founded — every cycle
+-- either shrinks the prefix or decreases p or k — but the shrinking one
+-- is invisible to a size-change analysis: the level that decreases is
+-- the prefix's LENGTH, which under (p,k) indexing is p + k, an
+-- expression in the types and not an argument of anything.  Alice's
+-- absolutely-indexed block passes precisely because that level is her
+-- first argument.  Measured, not guessed: the block is rejected at
+-- --termination-depth 2..6; with the prefix column aligned and matched
+-- the rejected set shrinks from all of {frame, layer, painting,
+-- restr-frame, restr-layer, coh-frame} to six members; removing any
+-- single one of restr-layer's four calls makes it pass, which is what
+-- fixing one edge (V1 decision 3's abstraction of restr-layer over its
+-- r = 0 coherence) does — it moves three more members across but not
+-- the rest.  This costs nothing at the measured level: pragma'd
+-- definitions still reduce, and the compute gate passes.
+------------------------------------------------------------------------
 
-π₁D : {p k : ℕ} → DepsRestr (suc p) k → DepsRestr p (suc k)
-π₁D deps = depsRestr (fst (dFrames deps)) (fst (dPaintings deps))
-                     (fst (dRestrFrames deps))
+-- The prefix of fillers, and the filler over one.
+Pre : ℕ → Set₁
+Fil : (p k : ℕ) (D : Pre (p + k)) → Set₁
 
-mkFramesD : {p k : ℕ} (deps : DepsRestr p k) → mkFrameTypes (suc p) k
-mkFramesD deps = mkFrames _ _ (dFrames deps) (dPaintings deps)
-                          (dRestrFrames deps)
+Pre zero    = Unit*
+Pre (suc n) = Snoc (Pre n) (Fil n 0)
 
-mkFrame : {p k : ℕ} (deps : DepsRestr p k) → HSet₀
-mkFrame deps = snd (mkFramesD deps)
+-- frame(p) at dimension p + k.
+frame : (p k : ℕ) (D : Pre (p + k)) → HSet₀
 
-data DepsRestrExtension : (p k : ℕ) → DepsRestr p k → Set₁ where
-  TopRestrDep : {p : ℕ} {deps : DepsRestr p 0}
-                (E : Dom (mkFrame deps) → HSet₀)
-                → DepsRestrExtension p 0 deps
-  AddRestrDep : {p k : ℕ} (deps : DepsRestr (suc p) k)
-                → DepsRestrExtension (suc p) k deps
-                → DepsRestrExtension p (suc k) (π₁D deps)
+-- A filler at dimension n is a family over the FULL frame at n, i.e.
+-- the frame whose index equals the prefix length: (p , k) = (n , 0).
+Fil p k D = Dom (frame p k D) → HSet₀
 
--- Paintings over the extension ------------------------------------------------
+-- layer(p) at dimension p + k + 1 (so it can peel the top filler).
+layer : (p k : ℕ) (D : Pre (suc (p + k)))
+        (d : Dom (frame p (suc k) D)) → HSet₀
 
-mkPainting : {p k : ℕ} {deps : DepsRestr p k}
-             (extraDeps : DepsRestrExtension p k deps)
-             → Dom (mkFrame deps) → HSet₀
-mkPainting (TopRestrDep E) d = E d
-mkPainting (AddRestrDep deps extraDeps) d =
-  hΣ (mkLayer _ _ (dFrames deps) (dPaintings deps)
-        (fst (dRestrFrames deps)) (snd (dRestrFrames deps)) d)
-     (λ l → mkPainting extraDeps (d , l))
+-- painting(p) at dimension p + k, over the filler E.
+painting : (p k : ℕ) (D : Pre (p + k)) (E : Fil (p + k) 0 D)
+           (d : Dom (frame p k D)) → HSet₀
 
-mkPaintingsPrefix : {p k : ℕ} {deps : DepsRestr p k}
-                    (extraDeps : DepsRestrExtension p k deps)
-                    → mkPaintingTypes p (suc k) (fst (mkFramesD deps))
-mkPaintingsPrefix {zero} _ = tt*
-mkPaintingsPrefix {suc p} {k} {deps} extraDeps =
-  mkPaintingsPrefix (AddRestrDep deps extraDeps) ,
-  mkPainting (AddRestrDep deps extraDeps)
+-- The three restrictions: dimension p + k + 1 ↦ dimension p + k, along
+-- the q-th face, q relative to p (q ≤ k).
+restr-frame : (p k : ℕ) (D : Pre (suc (p + k)))
+              (q : ℕ) .(Hq : q ≤ k) (ε : arity)
+              (d : Dom (frame p (suc k) D))
+              → Dom (frame p k (pre D))
 
-mkPaintings : {p k : ℕ} {deps : DepsRestr p k}
-              (extraDeps : DepsRestrExtension p k deps)
-              → mkPaintingTypes (suc p) k (mkFramesD deps)
-mkPaintings extraDeps = mkPaintingsPrefix extraDeps , mkPainting extraDeps
+restr-layer : (p k : ℕ) (D : Pre (suc (suc (p + k))))
+              (q : ℕ) .(Hq : q ≤ k) (ε : arity)
+              (d : Dom (frame p (suc (suc k)) D))
+              (l : Dom (layer p (suc k) D d))
+              → Dom (layer p k (pre D)
+                       (restr-frame p (suc k) D (suc q) Hq ε d))
 
--- restrPainting types ----------------------------------------------------------
+restr-painting : (p k : ℕ) (D : Pre (suc (p + k)))
+                 (E : Fil (suc (p + k)) 0 D)
+                 (q : ℕ) .(Hq : q ≤ k) (ε : arity)
+                 (d : Dom (frame p (suc k) D))
+                 (c : Dom (painting p (suc k) D E d))
+                 → Dom (painting p k (pre D) (fil D)
+                          (restr-frame p k D q Hq ε d))
 
-mkRestrPaintingType : {p k : ℕ} {deps : DepsRestr (suc p) k}
-                      (extraDeps : DepsRestrExtension (suc p) k deps) → Set
-mkRestrPaintingType {p} {k} {deps} extraDeps =
-  (q : ℕ) .(Hq : q ≤ k) (ε : arity) (d : Dom (mkFrame (π₁D deps)))
-  → Dom (mkPainting (AddRestrDep deps extraDeps) d)
-  → Dom (snd (dPaintings deps) (snd (dRestrFrames deps) q Hq ε d))
+-- The three coherences: the faces q and r commute (r ≤ q ≤ k).
+coh-frame : (p k : ℕ) (D : Pre (suc (suc (p + k))))
+            (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
+            (d : Dom (frame p (suc (suc k)) D))
+            → restr-frame p k (pre D) q Hq ε
+                (restr-frame p (suc k) D r
+                   (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
+              ≡ restr-frame p k (pre D) r (le-trans r q k Hr Hq) ω
+                  (restr-frame p (suc k) D (suc q) Hq ε d)
 
-mkRestrPaintingTypes : {p k : ℕ} {deps : DepsRestr p k}
-                       (extraDeps : DepsRestrExtension p k deps) → Set
-mkRestrPaintingTypes {zero} _ = ⊤
-mkRestrPaintingTypes {suc p} {k} {deps} extraDeps =
-  Σ[ _ ∈ mkRestrPaintingTypes (AddRestrDep deps extraDeps) ]
-    mkRestrPaintingType extraDeps
+coh-layer : (p k : ℕ) (D : Pre (suc (suc (suc (p + k)))))
+            (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
+            (d : Dom (frame p (suc (suc (suc k))) D))
+            (l : Dom (layer p (suc (suc k)) D d))
+            → subst (λ x → Dom (layer p k (pre (pre D)) x))
+                (coh-frame p (suc k) D (suc q) Hq (suc r) Hr ε ω d)
+                (restr-layer p k (pre D) q Hq ε
+                   (restr-frame p (suc (suc k)) D (suc r)
+                      (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
+                   (restr-layer p (suc k) D r
+                      (le-trans r q (suc k) Hr (le-up q k Hq)) ω d l))
+              ≡ restr-layer p k (pre D) r (le-trans r q k Hr Hq) ω
+                  (restr-frame p (suc (suc k)) D (suc (suc q)) Hq ε d)
+                  (restr-layer p (suc k) D (suc q) Hq ε d l)
 
--- The restriction of a layer along the new restrFrames, given the
--- previous-level restrFrames and the r = 0 coherences relating them
--- (Rocq's mkRestrLayer; prevRF/coh abstracted like Rocq's prev block,
--- which also keeps this definition out of the mutual clique below).
+coh-painting : (p k : ℕ) (D : Pre (suc (suc (p + k))))
+               (E : Fil (suc (suc (p + k))) 0 D)
+               (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
+               (d : Dom (frame p (suc (suc k)) D))
+               (c : Dom (painting p (suc (suc k)) D E d))
+               → subst (λ x → Dom (painting p k (pre (pre D))
+                                     (fil (pre D)) x))
+                   (coh-frame p k D q Hq r Hr ε ω d)
+                   (restr-painting p k (pre D) (fil D) q Hq ε
+                      (restr-frame p (suc k) D r
+                         (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
+                      (restr-painting p (suc k) D E r
+                         (le-trans r q (suc k) Hr (le-up q k Hq)) ω d c))
+                 ≡ restr-painting p k (pre D) (fil D) r
+                     (le-trans r q k Hr Hq) ω
+                     (restr-frame p (suc k) D (suc q) Hq ε d)
+                     (restr-painting p (suc k) D E (suc q) Hq ε d c)
 
-mkRestrLayer :
-  {p k : ℕ} (deps : DepsRestr (suc p) k)
-  (extraDeps : DepsRestrExtension (suc p) k deps)
-  (rPtop : mkRestrPaintingType extraDeps)
-  (prevRF : mkRestrFrameTypes (suc p) (suc k) (fst (mkFramesD deps))
-              (mkPaintings (AddRestrDep deps extraDeps)))
-  (coh : (q : ℕ) .(Hq : q ≤ k) (ε ω : arity)
-         (d : Dom (snd (mkFrames p (suc (suc k))
-                (fst (fst (mkFramesD deps)))
-                (fst (mkPaintings (AddRestrDep deps extraDeps)))
-                (fst prevRF))))
-       → snd (dRestrFrames deps) q Hq ε (snd prevRF 0 tt ω d)
-         ≡ snd (dRestrFrames deps) 0 tt ω (snd prevRF (suc q) Hq ε d))
-  (q : ℕ) .(Hq : q ≤ k) (ε : arity)
-  (d : Dom (snd (mkFrames p (suc (suc k))
-         (fst (fst (mkFramesD deps)))
-         (fst (mkPaintings (AddRestrDep deps extraDeps)))
-         (fst prevRF))))
-  (l : Dom (mkLayer p (suc k) (fst (mkFramesD deps))
-              (mkPaintings (AddRestrDep deps extraDeps))
-              (fst prevRF) (snd prevRF) d))
-  → Dom (mkLayer p k (dFrames deps) (dPaintings deps)
-           (fst (dRestrFrames deps)) (snd (dRestrFrames deps))
-           (snd prevRF (suc q) Hq ε d))
-mkRestrLayer deps extraDeps rPtop prevRF coh q Hq ε d l ω =
-  subst (λ x → Dom (snd (dPaintings deps) x)) (coh q Hq ε ω d)
-        (rPtop q Hq ε (snd prevRF 0 tt ω d) (l ω))
+------------------------------------------------------------------------
+-- The block: definitions
+------------------------------------------------------------------------
 
--- Mutually: the types of cohFrames and the body of restrFrames
--- (Rocq's CohFrameTypeBlock, as a plain mutual definition).
+{-# TERMINATING #-}
+frame zero    k D = hunit
+frame (suc p) k D = hΣ (frame p (suc k) D) (λ d → layer p k D d)
 
-interleaved mutual
+-- The prefix is matched, not projected: Agda's termination checker sees
+-- a pattern variable as a subterm of the matched argument, and that is
+-- how the level descent (`layer` at dimension p+k+1 calling `painting`
+-- at p+k) enters the call matrices at all.
+{-# TERMINATING #-}
+layer p k (D ∷ E) d =
+  hΠ arity (λ ε → painting p k D E
+                    (restr-frame p k (D ∷ E) 0 tt ε d))
 
-  mkCohFrameTypes : {p k : ℕ} {deps : DepsRestr p k}
-                    (extraDeps : DepsRestrExtension p k deps)
-                    (restrPaintings : mkRestrPaintingTypes extraDeps) → Set
-  mkRestrFrames : {p k : ℕ} {deps : DepsRestr p k}
-                  (extraDeps : DepsRestrExtension p k deps)
-                  (restrPaintings : mkRestrPaintingTypes extraDeps)
-                  (Q : mkCohFrameTypes extraDeps restrPaintings)
-                  → mkRestrFrameTypes (suc p) k (mkFramesD deps)
-                      (mkPaintings extraDeps)
+{-# TERMINATING #-}
+painting p zero    D E d = E d
+painting p (suc k) D E d =
+  hΣ (layer p k D d) (λ l → painting (suc p) k D E (d , l))
 
-  mkCohFrameTypes {zero} _ _ = ⊤
-  mkCohFrameTypes {suc p} {k} {deps} extraDeps restrPaintings =
-    Σ[ Q ∈ mkCohFrameTypes (AddRestrDep deps extraDeps)
-             (fst restrPaintings) ]
-      ((q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
-       (d : Dom (snd (mkFrames p (suc (suc k))
-              (fst (fst (mkFramesD deps)))
-              (fst (mkPaintings (AddRestrDep deps extraDeps)))
-              (fst (mkRestrFrames (AddRestrDep deps extraDeps)
-                     (fst restrPaintings) Q)))))
-       → snd (dRestrFrames deps) q Hq ε
-           (snd (mkRestrFrames (AddRestrDep deps extraDeps)
-                  (fst restrPaintings) Q) r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
-         ≡ snd (dRestrFrames deps) r (le-trans r q k Hr Hq) ω
-           (snd (mkRestrFrames (AddRestrDep deps extraDeps)
-                  (fst restrPaintings) Q) (suc q) Hq ε d))
+{-# TERMINATING #-}
+restr-frame zero    k D q Hq ε d       = tt
+restr-frame (suc p) k D q Hq ε (d , l) =
+  restr-frame p (suc k) D (suc q) Hq ε d ,
+  restr-layer p k D q Hq ε d l
 
-  mkRestrFrames {zero} _ _ _ = tt , λ q Hq ε d → tt
-  mkRestrFrames {suc p} {k} {deps} extraDeps restrPaintings Q =
-    mkRestrFrames (AddRestrDep deps extraDeps) (fst restrPaintings)
-      (fst Q) ,
-    λ q Hq ε d →
-      snd (mkRestrFrames (AddRestrDep deps extraDeps)
-            (fst restrPaintings) (fst Q)) (suc q) Hq ε (fst d) ,
-      mkRestrLayer deps extraDeps (snd restrPaintings)
-        (mkRestrFrames (AddRestrDep deps extraDeps)
-          (fst restrPaintings) (fst Q))
-        (λ q' Hq' ε' ω' d' → snd Q q' Hq' 0 tt ε' ω' d')
-        q Hq ε (fst d) (snd d)
+{-# TERMINATING #-}
+restr-layer p k ((D ∷ E₁) ∷ E₂) q Hq ε d l ω =
+  subst (λ x → Dom (painting p k D E₁ x))
+    (coh-frame p k ((D ∷ E₁) ∷ E₂) q Hq 0 tt ε ω d)
+    (restr-painting p k (D ∷ E₁) E₂ q Hq ε
+      (restr-frame p (suc k) ((D ∷ E₁) ∷ E₂) 0 tt ω d) (l ω))
 
--- The DepsCohs class ---------------------------------------------------------
+restr-painting p k       (D ∷ E₁) E zero    Hq ε d (l , c) = l ε
+restr-painting p zero    D        E (suc q) ()
+restr-painting p (suc k) (D ∷ E₁) E (suc q) Hq ε d (l , c) =
+  restr-layer p k (D ∷ E₁) q Hq ε d l ,
+  restr-painting (suc p) k (D ∷ E₁) E q Hq ε (d , l) c
 
-record DepsCohs (p k : ℕ) : Set₁ where
-  no-eta-equality; pattern
-  constructor depsCohs
-  field
-    cDeps : DepsRestr p k
-    cExtraDeps : DepsRestrExtension p k cDeps
-    cRestrPaintings : mkRestrPaintingTypes cExtraDeps
-    cCohs : mkCohFrameTypes cExtraDeps cRestrPaintings
-open DepsCohs public
+{-# TERMINATING #-}
+coh-frame zero    k D q Hq r Hr ε ω d       = refl
+coh-frame (suc p) k D q Hq r Hr ε ω (d , l) =
+  Σ≡ (coh-frame p (suc k) D (suc q) Hq (suc r) Hr ε ω d)
+     (coh-layer p k D q Hq r Hr ε ω d l)
 
-toDepsCohs : {p k : ℕ} {deps : DepsRestr p k}
-             {extraDeps : DepsRestrExtension p k deps}
-             {restrPaintings : mkRestrPaintingTypes extraDeps}
-             (cohs : mkCohFrameTypes extraDeps restrPaintings)
-             → DepsCohs p k
-toDepsCohs {p} {k} {deps} {extraDeps} {restrPaintings} cohs =
-  depsCohs deps extraDeps restrPaintings cohs
-
-π₁C : {p k : ℕ} → DepsCohs (suc p) k → DepsCohs p (suc k)
-π₁C dc = depsCohs (π₁D (cDeps dc))
-                  (AddRestrDep (cDeps dc) (cExtraDeps dc))
-                  (fst (cRestrPaintings dc))
-                  (fst (cCohs dc))
-
-mkRestrFramesC : {p k : ℕ} (dc : DepsCohs p k)
-                 → mkRestrFrameTypes (suc p) k (mkFramesD (cDeps dc))
-                     (mkPaintings (cExtraDeps dc))
-mkRestrFramesC dc = mkRestrFrames (cExtraDeps dc) (cRestrPaintings dc)
-                                  (cCohs dc)
-
-mkDepsRestr : {p k : ℕ} (dc : DepsCohs p k) → DepsRestr (suc p) k
-mkDepsRestr dc = depsRestr (mkFramesD (cDeps dc))
-                           (mkPaintings (cExtraDeps dc))
-                           (mkRestrFramesC dc)
-
-data DepsCohsExtension : (p k : ℕ) → DepsCohs p k → Set₁ where
-  TopCohDep : {p : ℕ} {dc : DepsCohs p 0}
-              (E : Dom (mkFrame (mkDepsRestr dc)) → HSet₀)
-              → DepsCohsExtension p 0 dc
-  AddCohDep : {p k : ℕ} (dc : DepsCohs (suc p) k)
-              → DepsCohsExtension (suc p) k dc
-              → DepsCohsExtension p (suc k) (π₁C dc)
-
-mkExtraDeps : {p k : ℕ} {dc : DepsCohs p k}
-              (eDC : DepsCohsExtension p k dc)
-              → DepsRestrExtension (suc p) k (mkDepsRestr dc)
-mkExtraDeps (TopCohDep E) = TopRestrDep E
-mkExtraDeps (AddCohDep dc eDC) =
-  AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC)
-
--- restrPaintings over the extension --------------------------------------------
-
-mkRestrPainting : {p k : ℕ} {dc : DepsCohs p k}
-  (eDC : DepsCohsExtension p k dc)
-  (q : ℕ) .(Hq : q ≤ k) (ε : arity)
-  (d : Dom (mkFrame (π₁D (mkDepsRestr dc))))
-  → Dom (mkPainting (AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC)) d)
-  → Dom (mkPainting (cExtraDeps dc) (snd (mkRestrFramesC dc) q Hq ε d))
-mkRestrPainting eDC zero Hq ε d (l , c) = l ε
-mkRestrPainting (TopCohDep E) (suc q) ()
-mkRestrPainting (AddCohDep dc eDC) (suc q) Hq ε d (l , c) =
-  mkRestrLayer (cDeps dc) (cExtraDeps dc) (snd (cRestrPaintings dc))
-    (mkRestrFramesC (π₁C dc))
-    (λ q' Hq' ε' ω' d' → snd (cCohs dc) q' Hq' 0 tt ε' ω' d')
-    q Hq ε d l ,
-  mkRestrPainting eDC q Hq ε (d , l) c
-
-mkRestrPaintingsPrefix : {p k : ℕ} {dc : DepsCohs p k}
-  (eDC : DepsCohsExtension p k dc)
-  → mkRestrPaintingTypes
-      (AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC))
-mkRestrPaintingsPrefix {zero} _ = tt
-mkRestrPaintingsPrefix {suc p} {k} {dc} eDC =
-  mkRestrPaintingsPrefix (AddCohDep dc eDC) ,
-  mkRestrPainting (AddCohDep dc eDC)
-
-mkRestrPaintings : {p k : ℕ} {dc : DepsCohs p k}
-  (eDC : DepsCohsExtension p k dc)
-  → mkRestrPaintingTypes (mkExtraDeps eDC)
-mkRestrPaintings eDC = mkRestrPaintingsPrefix eDC , mkRestrPainting eDC
-
--- cohPainting types --------------------------------------------------------------
-
-mkCohPaintingType : {p k : ℕ} {dc : DepsCohs (suc p) k}
-                    (eDC : DepsCohsExtension (suc p) k dc) → Set
-mkCohPaintingType {p} {k} {dc} eDC =
-  (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
-  (d : Dom (mkFrame (π₁D (mkDepsRestr (π₁C dc)))))
-  (c : Dom (mkPainting
-         (AddRestrDep (mkDepsRestr (π₁C dc))
-           (mkExtraDeps (AddCohDep dc eDC))) d))
-  → subst (λ x → Dom (snd (dPaintings (cDeps dc)) x))
-      (snd (cCohs dc) q Hq r Hr ε ω d)
-      (snd (cRestrPaintings dc) q Hq ε
-        (snd (mkRestrFramesC (π₁C dc)) r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
-        (mkRestrPainting (AddCohDep dc eDC) r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d c))
-    ≡ snd (cRestrPaintings dc) r (le-trans r q k Hr Hq) ω
-        (snd (mkRestrFramesC (π₁C dc)) (suc q) Hq ε d)
-        (mkRestrPainting (AddCohDep dc eDC) (suc q) Hq ε d c)
-
-mkCohPaintingTypes : {p k : ℕ} {dc : DepsCohs p k}
-                     (eDC : DepsCohsExtension p k dc) → Set
-mkCohPaintingTypes {zero} _ = ⊤
-mkCohPaintingTypes {suc p} {k} {dc} eDC =
-  Σ[ _ ∈ mkCohPaintingTypes (AddCohDep dc eDC) ] mkCohPaintingType eDC
-
--- The 2-dimensional frame coherence, from the frames being HSets
--- (Rocq's mkCoh2Frame, proved by UIP) -----------------------------------------
-
-mkCoh2Frame : {p k : ℕ} {dc : DepsCohs (suc p) k}
-  (eDC : DepsCohsExtension (suc p) k dc)
-  (prevCohFrames : mkCohFrameTypes
-     (AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC))
-     (mkRestrPaintingsPrefix eDC))
-  (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω θ : arity)
-  (d : Dom (mkFrame (π₁D (mkDepsRestr (toDepsCohs (fst prevCohFrames))))))
-  → cong (λ x → snd (dRestrFrames (cDeps dc)) q Hq ε x)
-      (snd prevCohFrames r (le-trans r q (suc k) Hr (le-up q k Hq)) 0 tt
-        ω θ d)
-    ∙ (snd (cCohs dc) q Hq 0 tt ε θ
-         (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) (suc r)
-           (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
-    ∙ cong (λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x)
-        (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d))
-  ≡ snd (cCohs dc) q Hq r Hr ε ω
-      (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames))) 0 tt θ d)
-    ∙ (cong (λ x → snd (dRestrFrames (cDeps dc)) r (le-trans r q k Hr Hq)
-              ω x)
-        (snd prevCohFrames (suc q) Hq 0 tt ε θ d)
-    ∙ snd (cCohs dc) r (le-trans r q k Hr Hq) 0 tt ω θ
-        (snd (mkRestrFramesC (toDepsCohs (fst prevCohFrames)))
-          (suc (suc q)) Hq ε d))
-mkCoh2Frame {dc = dc} eDC prevCohFrames q Hq r Hr ε ω θ d =
-  isSetDom (snd (dFrames (cDeps dc))) _ _ _ _
-
--- The layer coherence (Rocq's mkCohLayer): a Π-layer bridge step, then
--- the fused rew-cohLayer33 with the painting coherence and mkCoh2Frame
--- as premises.
-
-module _ {p k : ℕ} {dc : DepsCohs (suc p) k}
-  (eDC : DepsCohsExtension (suc p) k dc)
-  (cohPaintings : mkCohPaintingTypes eDC)
-  (prevCohFrames : mkCohFrameTypes
-     (AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC))
-     (mkRestrPaintingsPrefix eDC))
+-- The layer coherence: a Π-layer bridge step, then the fused
+-- rew-cohLayer33 with the painting coherence and the 2-dimensional
+-- frame coherence (which is free: frames are HSets) as premises.
+-- Every path implicit of rew-cohLayer33 has to be given: the goal only
+-- exposes them after unfolding two nested restr-layer clauses, and
+-- Agda's unifier gives up there (the V1 decision-8 spots, at scale).
+coh-layer p k (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l =
+  Π-subst-ext
+    {B = λ θ x → Dom (painting p k D E₁ (restr-frame p k P₁ 0 tt θ x))}
+    (coh-frame p (suc k) P₃ (suc q) Hq (suc r) Hr ε ω d)
+    (λ θ → rew-cohLayer33
+      {P = λ x → Dom (painting p k D E₁ x)}
+      {S2 = λ m → Dom (painting p (suc k) P₁ E₂ m)}
+      {S3 = λ m → Dom (painting p (suc k) P₁ E₂ m)}
+      {rf0 = λ x → restr-frame p k P₁ 0 tt θ x}
+      {rfF = λ m → restr-frame p k P₁ q Hq ε m}
+      {rfG = λ m → restr-frame p k P₁ r H₂ ω m}
+      {F = λ m c → restr-painting p k P₁ E₂ q Hq ε m c}
+      {G = λ m c → restr-painting p k P₁ E₂ r H₂ ω m c}
+      {E1 = coh-frame p (suc k) P₃ (suc q) Hq (suc r) Hr ε ω d}
+      {m1 = restr-frame p (suc k) P₂ r H₁ ω (b θ)}
+      {m2 = restr-frame p (suc k) P₂ 0 tt θ dR}
+      {C2 = coh-frame p (suc k) P₃ r H₁ 0 tt ω θ d}
+      {n1 = restr-frame p (suc k) P₂ (suc q) Hq ε (b θ)}
+      {n2 = restr-frame p (suc k) P₂ 0 tt θ dE}
+      {D2 = coh-frame p (suc k) P₃ (suc q) Hq 0 tt ε θ d}
+      {C1 = coh-frame p k P₂ q Hq 0 tt ε θ dR}
+      {D1 = coh-frame p k P₂ r H₂ 0 tt ω θ dE}
+      {K = coh-frame p k P₂ q Hq r Hr ε ω (b θ)}
+      {aL = restr-painting p (suc k) P₂ E₃ r H₁ ω (b θ) (l θ)}
+      {aR = restr-painting p (suc k) P₂ E₃ (suc q) Hq ε (b θ) (l θ)}
+      (coh-painting p k P₂ E₃ q Hq r Hr ε ω (b θ) (l θ))
+      (isSetDom (frame p k D) _ _ _ _))
   where
+  P₁ = (D ∷ E₁)
+  P₂ = ((D ∷ E₁) ∷ E₂)
+  P₃ = (((D ∷ E₁) ∷ E₂) ∷ E₃)
+  H₁ = le-trans r q (suc k) Hr (le-up q k Hq)
+  H₂ = le-trans r q k Hr Hq
+  -- the ω-restriction of d used by the outer restr-layer on each side,
+  dR = restr-frame p (suc (suc k)) P₃ (suc r) H₁ ω d
+  dE = restr-frame p (suc (suc k)) P₃ (suc (suc q)) Hq ε d
+  -- and its θ-restriction, where the painting coherence applies.
+  b : (θ : arity) → Dom (frame p (suc (suc k)) P₂)
+  b θ = restr-frame p (suc (suc k)) P₃ 0 tt θ d
 
-  private
-    dcI : DepsCohs p (suc (suc k))
-    dcI = toDepsCohs (fst prevCohFrames)
+-- The painting coherence.  With Π-layers the r = 0 case is refl; the
+-- r , q ≥ 1 case is a dependent Σ-path whose base is the very clause
+-- coh-frame unfolds to, so the alignment holds by clause unfolding
+-- rather than by a stored-term discipline.
+-- Without eta on the prefix the r = 0 reduction (`restr-painting … 0`
+-- ↦ `l ω`) fires only when the prefix is a constructor, so this
+-- clause has to match it even though the proof does not use it.
+coh-painting p k ((D ∷ E₁) ∷ E₂) E q Hq zero Hr ε ω d (l , c) = refl
+coh-painting p k       D          E zero    Hq (suc r) ()
+coh-painting p zero    D          E (suc q) ()
+coh-painting p (suc k) ((D ∷ E₁) ∷ E₂) E (suc q) Hq (suc r) Hr ε ω d (l , c) =
+  Σ≡dep {P = λ x → Dom (layer p k D x)}
+        {Q = λ z → Dom (painting (suc p) k D E₁ z)}
+    (coh-frame p (suc k) ((D ∷ E₁) ∷ E₂) (suc q) Hq (suc r) Hr ε ω d)
+    (coh-layer p k ((D ∷ E₁) ∷ E₂) q Hq r Hr ε ω d l)
+    (coh-painting (suc p) k ((D ∷ E₁) ∷ E₂) E q Hq r Hr ε ω (d , l) c)
 
-    prevRF = mkRestrFramesC dcI
+------------------------------------------------------------------------
+-- The tower
+------------------------------------------------------------------------
 
-    -- the two mkRestrLayer instances of the statement
-    innerRL = mkRestrLayer (π₁D (mkDepsRestr dc))
-                (AddRestrDep (mkDepsRestr dc) (mkExtraDeps eDC))
-                (snd (mkRestrPaintingsPrefix eDC)) prevRF
-                (λ q' Hq' ε' ω' d' →
-                   snd prevCohFrames q' Hq' 0 tt ε' ω' d')
-    outerRL = mkRestrLayer (cDeps dc) (cExtraDeps dc)
-                (snd (cRestrPaintings dc)) (mkRestrFramesC (π₁C dc))
-                (λ q' Hq' ε' ω' d' →
-                   snd (cCohs dc) q' Hq' 0 tt ε' ω' d')
+-- The full frame at dimension n: the one whose index is the length.
+fullframe : {n : ℕ} (D : Pre n) → HSet₀
+fullframe {n} D = frame n 0 D
 
-  mkCohLayer :
-    (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
-    (d : Dom (mkFrame (π₁D (mkDepsRestr dcI))))
-    (l : Dom (mkLayer p (suc (suc k)) (mkFramesD (cDeps dcI))
-                (mkPaintings (cExtraDeps dcI))
-                (fst prevRF) (snd prevRF) d))
-    → subst (λ x → Dom (mkLayer p k (dFrames (cDeps dc))
-                          (dPaintings (cDeps dc))
-                          (fst (dRestrFrames (cDeps dc)))
-                          (snd (dRestrFrames (cDeps dc))) x))
-        (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
-        (outerRL q Hq ε
-          (snd prevRF (suc r) (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
-          (innerRL r (le-trans r q (suc k) Hr (le-up q k Hq)) ω d l))
-      ≡ outerRL r (le-trans r q k Hr Hq) ω
-          (snd prevRF (suc (suc q)) Hq ε d)
-          (innerRL (suc q) Hq ε d l)
-  mkCohLayer q Hq r Hr ε ω d l =
-    Π-subst-ext
-      {B = λ ω' x → Dom (snd (dPaintings (cDeps dc))
-                      (snd (dRestrFrames (cDeps dc)) 0 tt ω' x))}
-      (snd prevCohFrames (suc q) Hq (suc r) Hr ε ω d)
-      (λ θ → rew-cohLayer33
-        {P = λ x → Dom (snd (dPaintings (cDeps dc)) x)}
-        {S2 = λ m → Dom (mkPainting
-                (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
-        {S3 = λ m → Dom (mkPainting
-                (AddRestrDep (cDeps dc) (cExtraDeps dc)) m)}
-        {rf0 = λ x → snd (dRestrFrames (cDeps dc)) 0 tt θ x}
-        {rfF = λ m → snd (dRestrFrames (cDeps dc)) q Hq ε m}
-        {rfG = λ m → snd (dRestrFrames (cDeps dc)) r
-                       (le-trans r q k Hr Hq) ω m}
-        {F = λ m c → snd (cRestrPaintings dc) q Hq ε m c}
-        {G = λ m c → snd (cRestrPaintings dc) r
-                       (le-trans r q k Hr Hq) ω m c}
-        (snd cohPaintings q Hq r Hr ε ω (snd prevRF 0 tt θ d) (l θ))
-        (mkCoh2Frame eDC prevCohFrames q Hq r Hr ε ω θ d))
-
--- The cohFrames of the next level (Rocq's mkCohFrames) -------------------------
-
-mkCohFrames : {p k : ℕ} {dc : DepsCohs p k}
-              (eDC : DepsCohsExtension p k dc)
-              (cohPaintings : mkCohPaintingTypes eDC)
-              → mkCohFrameTypes (mkExtraDeps eDC) (mkRestrPaintings eDC)
-mkCohFrames {zero} eDC cohPaintings = tt , λ q Hq r Hr ε ω d → refl
-mkCohFrames {suc p} {k} {dc} eDC cohPaintings =
-  prev ,
-  λ q Hq r Hr ε ω d →
-    Σ≡ (snd prev (suc q) Hq (suc r) Hr ε ω (fst d))
-       (mkCohLayer eDC cohPaintings prev q Hq r Hr ε ω (fst d) (snd d))
-  where
-  prev = mkCohFrames (AddCohDep dc eDC) (fst cohPaintings)
-
--- The DepsCohs2 class -----------------------------------------------------------
-
-record DepsCohs2 (p k : ℕ) : Set₁ where
-  no-eta-equality; pattern
-  constructor depsCohs2
-  field
-    c2DepsCohs : DepsCohs p k
-    c2ExtraDepsCohs : DepsCohsExtension p k c2DepsCohs
-    c2CohPaintings : mkCohPaintingTypes c2ExtraDepsCohs
-open DepsCohs2 public
-
-π₁C2 : {p k : ℕ} → DepsCohs2 (suc p) k → DepsCohs2 p (suc k)
-π₁C2 dc2 = depsCohs2 (π₁C (c2DepsCohs dc2))
-                     (AddCohDep (c2DepsCohs dc2) (c2ExtraDepsCohs dc2))
-                     (fst (c2CohPaintings dc2))
-
-mkDepsCohs : {p k : ℕ} (dc2 : DepsCohs2 p k) → DepsCohs (suc p) k
-mkDepsCohs dc2 =
-  depsCohs (mkDepsRestr (c2DepsCohs dc2))
-           (mkExtraDeps (c2ExtraDepsCohs dc2))
-           (mkRestrPaintings (c2ExtraDepsCohs dc2))
-           (mkCohFrames (c2ExtraDepsCohs dc2) (c2CohPaintings dc2))
-
-data DepsCohs2Extension : (p k : ℕ) → DepsCohs2 p k → Set₁ where
-  TopCoh2Dep : {p : ℕ} {dc2 : DepsCohs2 p 0}
-    (E : Dom (mkFrame (mkDepsRestr (mkDepsCohs dc2))) → HSet₀)
-    → DepsCohs2Extension p 0 dc2
-  AddCoh2Dep : {p k : ℕ} (dc2 : DepsCohs2 (suc p) k)
-    → DepsCohs2Extension (suc p) k dc2
-    → DepsCohs2Extension p (suc k) (π₁C2 dc2)
-
-mkExtraCohs : {p k : ℕ} {dc2 : DepsCohs2 p k}
-              (eDC2 : DepsCohs2Extension p k dc2)
-              → DepsCohsExtension (suc p) k (mkDepsCohs dc2)
-mkExtraCohs (TopCoh2Dep E) = TopCohDep E
-mkExtraCohs (AddCoh2Dep dc2 eDC2) =
-  AddCohDep (mkDepsCohs dc2) (mkExtraCohs eDC2)
-
--- The painting coherence (Rocq's mkCohPainting).  With Π-layers the
--- r = 0 case is refl (Rocq needed nth_lmap); the r,q ≥ 1 case is a
--- dependent Σ-path whose components are the *same* mkCohLayer proof
--- term that mkCohFrames stored — consumed definitionally.
-
-mkCohPainting : {p k : ℕ} {dc2 : DepsCohs2 p k}
-                (eDC2 : DepsCohs2Extension p k dc2)
-                → mkCohPaintingType (mkExtraCohs eDC2)
-mkCohPainting eDC2 q Hq zero Hr ε ω d (l , c) = refl
-mkCohPainting eDC2 zero Hq (suc r) () ε ω d c
-mkCohPainting (TopCoh2Dep E) (suc q) () (suc r) Hr ε ω d c
-mkCohPainting (AddCoh2Dep dc2 eDC2) (suc q) Hq (suc r) Hr ε ω d (l , c) =
-  Σ≡dep {P = λ x → Dom (mkLayer _ _
-                (dFrames (cDeps (c2DepsCohs dc2)))
-                (dPaintings (cDeps (c2DepsCohs dc2)))
-                (fst (dRestrFrames (cDeps (c2DepsCohs dc2))))
-                (snd (dRestrFrames (cDeps (c2DepsCohs dc2)))) x)}
-        {Q = λ z → Dom (mkPainting (cExtraDeps (c2DepsCohs dc2)) z)}
-        (snd prev (suc q) Hq (suc r) Hr ε ω d)
-        (mkCohLayer (c2ExtraDepsCohs dc2) (c2CohPaintings dc2) prev
-          q Hq r Hr ε ω d l)
-        (mkCohPainting eDC2 q Hq r Hr ε ω (d , l) c)
-  where
-  prev = mkCohFrames (AddCohDep (c2DepsCohs dc2) (c2ExtraDepsCohs dc2))
-                     (fst (c2CohPaintings dc2))
-
-mkCohPaintings : {p k : ℕ} {dc2 : DepsCohs2 p k}
-                 (eDC2 : DepsCohs2Extension p k dc2)
-                 → mkCohPaintingTypes (mkExtraCohs eDC2)
-mkCohPaintings {zero} eDC2 = tt , mkCohPainting eDC2
-mkCohPaintings {suc p} {k} {dc2} eDC2 =
-  mkCohPaintings (AddCoh2Dep dc2 eDC2) , mkCohPainting eDC2
-
--- νSetData and the tower (Rocq's νSetData / νSet / νSetAt / νSetFrom) -----------
-
-record νSetData (p : ℕ) : Set₁ where
-  field
-    sFrames : mkFrameTypes p 0
-    sPaintings : mkPaintingTypes p 0 sFrames
-    sRestrFrames : mkRestrFrameTypes p 0 sFrames sPaintings
-    sRestrPaintings :
-      (E : Dom (mkFrame (depsRestr sFrames sPaintings sRestrFrames))
-           → HSet₀)
-      → mkRestrPaintingTypes
-          {deps = depsRestr sFrames sPaintings sRestrFrames}
-          (TopRestrDep E)
-    sCohFrames :
-      (E : Dom (mkFrame (depsRestr sFrames sPaintings sRestrFrames))
-           → HSet₀)
-      → mkCohFrameTypes (TopRestrDep E) (sRestrPaintings E)
-    sCohPaintings :
-      (E : Dom (mkFrame (depsRestr sFrames sPaintings sRestrFrames))
-           → HSet₀)
-      (E' : Dom (mkFrame (mkDepsRestr
-              (depsCohs (depsRestr sFrames sPaintings sRestrFrames)
-                (TopRestrDep E) (sRestrPaintings E) (sCohFrames E))))
-            → HSet₀)
-      → mkCohPaintingTypes
-          {dc = depsCohs (depsRestr sFrames sPaintings sRestrFrames)
-                  (TopRestrDep E) (sRestrPaintings E) (sCohFrames E)}
-          (TopCohDep E')
-open νSetData public
-
-mkνSetData : {p : ℕ} (C : νSetData p)
-             (E : Dom (mkFrame (depsRestr (sFrames C) (sPaintings C)
-                                          (sRestrFrames C))) → HSet₀)
-             → νSetData (suc p)
-mkνSetData {p} C E = record
-  { sFrames = mkFramesD deps0
-  ; sPaintings = mkPaintings
-      (TopRestrDep {deps = depsRestr (sFrames C) (sPaintings C)
-                             (sRestrFrames C)} E)
-  ; sRestrFrames = mkRestrFramesC dcE
-  ; sRestrPaintings = λ E' → mkRestrPaintings {dc = dcE} (TopCohDep E')
-  ; sCohFrames = λ E' → mkCohFrames {dc = dcE} (TopCohDep E')
-                          (sCohPaintings C E E')
-  ; sCohPaintings = λ E' E'' → mkCohPaintings
-      {dc2 = depsCohs2 dcE (TopCohDep E') (sCohPaintings C E E')}
-      (TopCoh2Dep E'')
-  }
-  where
-  deps0 : DepsRestr p 0
-  deps0 = depsRestr (sFrames C) (sPaintings C) (sRestrFrames C)
-  dcE : DepsCohs p 0
-  dcE = depsCohs deps0 (TopRestrDep E) (sRestrPaintings C E)
-                 (sCohFrames C E)
-
-record νSetStruct (p : ℕ) : Set₂ where
-  field
-    prefix : Set₁
-    struct : prefix → νSetData p
-open νSetStruct public
-
-mkPrefix : (p : ℕ) (C : νSetStruct p) → Set₁
-mkPrefix p C =
-  Σ[ D ∈ prefix C ]
-    (Dom (mkFrame (depsRestr (sFrames (struct C D))
-                             (sPaintings (struct C D))
-                             (sRestrFrames (struct C D)))) → HSet₀)
-
-mkνSet0 : νSetStruct 0
-mkνSet0 = record
-  { prefix = Unit*
-  ; struct = λ _ → record
-      { sFrames = tt* ; sPaintings = tt* ; sRestrFrames = tt
-      ; sRestrPaintings = λ E → tt
-      ; sCohFrames = λ E → tt
-      ; sCohPaintings = λ E E' → tt
-      }
-  }
-
-mkνSet : {p : ℕ} (C : νSetStruct p) → νSetStruct (suc p)
-mkνSet {p} C = record
-  { prefix = mkPrefix p C
-  ; struct = λ D → mkνSetData (struct C (fst D)) (snd D)
-  }
-
-νSetAt : (n : ℕ) → νSetStruct n
-νSetAt zero    = mkνSet0
-νSetAt (suc n) = mkνSet (νSetAt n)
-
-record νSetFrom (n : ℕ) (X : prefix (νSetAt n)) : Set₁ where
+record νSet→ (n : ℕ) (D : Pre n) : Set₁ where
   coinductive
+  constructor _∷ν_
   field
-    this : Dom (mkFrame (depsRestr (sFrames (struct (νSetAt n) X))
-                                   (sPaintings (struct (νSetAt n) X))
-                                   (sRestrFrames (struct (νSetAt n) X))))
-           → HSet₀
-    next : νSetFrom (suc n) (X , this)
-open νSetFrom public
+    this : Fil n 0 D
+    next : νSet→ (suc n) (D ∷ this)
+open νSet→ public
 
 νSets : Set₁
-νSets = νSetFrom 0 tt*
+νSets = νSet→ 0 tt*
