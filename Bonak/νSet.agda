@@ -32,6 +32,18 @@
 -- application and the r = 0 restriction case is `l ε` — it reduces at a
 -- variable prefix, which is what the bottom-index hazard demands.
 --
+-- Equality discipline: PathP-shaped (DESIGN-V2 in the pathp worktree).
+-- The layer and painting coherences are dependent paths over the frame
+-- coherence, so no statement contains a subst.  The Σ-assemblies
+-- (coh-frame, coh-painting) are definitional pairing of component
+-- paths, the Π-layer step is definitional (a PathP of functions is a
+-- function into PathPs), the r = 0 painting coherence is the filler of
+-- restr-layer's transport, and the layer coherence is closed by one
+-- square filling in the HSet of frames (Bonak.RewLemmas'
+-- cohLayer-squareP).  restr-layer still transports values along the
+-- r = 0 frame coherence — the transport moves to the term level, where
+-- fillers connect it to the untransported side.
+--
 -- Termination is checked through one extra argument per member: the
 -- fuel `n`, a ℕ tied to the member's base dimension by an irrelevant
 -- proof of the recursive equality `EqN n (p + k)` (Bonak.EqProp), so
@@ -181,17 +193,18 @@ coh-layer : (n p k : ℕ) .(e : EqN n (suc (p + k)))
             (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
             (d : Dom (frame (suc (suc n)) p (suc (suc (suc k))) e D))
             (l : Dom (layer (suc (suc n)) p (suc (suc k)) e D d))
-            → subst (λ x → Dom (layer n p k e (pre (pre D)) x))
-                (coh-frame n p (suc k) e D (suc q) Hq (suc r) Hr ε ω d)
+            → PathP (λ i → Dom (layer n p k e (pre (pre D))
+                       (coh-frame n p (suc k) e D (suc q) Hq (suc r) Hr
+                          ε ω d i)))
                 (restr-layer n p k e (pre D) q Hq ε
                    (restr-frame (suc n) p (suc (suc k)) e D (suc r)
                       (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
                    (restr-layer (suc n) p (suc k) e D r
                       (le-trans r q (suc k) Hr (le-up q k Hq)) ω d l))
-              ≡ restr-layer n p k e (pre D) r (le-trans r q k Hr Hq) ω
-                  (restr-frame (suc n) p (suc (suc k)) e D (suc (suc q))
-                     Hq ε d)
-                  (restr-layer (suc n) p (suc k) e D (suc q) Hq ε d l)
+                (restr-layer n p k e (pre D) r (le-trans r q k Hr Hq) ω
+                   (restr-frame (suc n) p (suc (suc k)) e D (suc (suc q))
+                      Hq ε d)
+                   (restr-layer (suc n) p (suc k) e D (suc q) Hq ε d l))
 
 coh-painting : (n p k : ℕ) .(e : EqN n (p + k))
                (D : Pre (suc (suc (p + k))))
@@ -199,19 +212,19 @@ coh-painting : (n p k : ℕ) .(e : EqN n (p + k))
                (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
                (d : Dom (frame (suc (suc n)) p (suc (suc k)) e D))
                (c : Dom (painting (suc (suc n)) p (suc (suc k)) e D E d))
-               → subst (λ x → Dom (painting n p k e (pre (pre D))
-                                     (fil (pre D)) x))
-                   (coh-frame n p k e D q Hq r Hr ε ω d)
+               → PathP (λ i → Dom (painting n p k e (pre (pre D))
+                          (fil (pre D))
+                          (coh-frame n p k e D q Hq r Hr ε ω d i)))
                    (restr-painting n p k e (pre D) (fil D) q Hq ε
                       (restr-frame (suc n) p (suc k) e D r
                          (le-trans r q (suc k) Hr (le-up q k Hq)) ω d)
                       (restr-painting (suc n) p (suc k) e D E r
                          (le-trans r q (suc k) Hr (le-up q k Hq)) ω d c))
-                 ≡ restr-painting n p k e (pre D) (fil D) r
-                     (le-trans r q k Hr Hq) ω
-                     (restr-frame (suc n) p (suc k) e D (suc q) Hq ε d)
-                     (restr-painting (suc n) p (suc k) e D E (suc q)
-                        Hq ε d c)
+                   (restr-painting n p k e (pre D) (fil D) r
+                      (le-trans r q k Hr Hq) ω
+                      (restr-frame (suc n) p (suc k) e D (suc q) Hq ε d)
+                      (restr-painting (suc n) p (suc k) e D E (suc q)
+                         Hq ε d c))
 
 ------------------------------------------------------------------------
 -- The block: definitions
@@ -250,47 +263,47 @@ restr-painting n p (suc k) e (D ∷ E₁) E (suc q) Hq ε d (l , c) =
   restr-layer n p k e (D ∷ E₁) q Hq ε d l ,
   restr-painting n (suc p) k e (D ∷ E₁) E q Hq ε (d , l) c
 
-coh-frame n zero    k e D q Hq r Hr ε ω d       = refl
-coh-frame n (suc p) k e D q Hq r Hr ε ω (d , l) =
-  Σ≡ (coh-frame n p (suc k) e D (suc q) Hq (suc r) Hr ε ω d)
-     (coh-layer n p k e D q Hq r Hr ε ω d l)
+coh-frame n zero    k e D q Hq r Hr ε ω d         = refl
+coh-frame n (suc p) k e D q Hq r Hr ε ω (d , l) i =
+  coh-frame n p (suc k) e D (suc q) Hq (suc r) Hr ε ω d i ,
+  coh-layer n p k e D q Hq r Hr ε ω d l i
 
--- The layer coherence: a Π-layer bridge step, then the fused
--- rew-cohLayer33 with the painting coherence and the 2-dimensional
--- frame coherence (which is free: frames are HSets) as premises.
--- Every path implicit of rew-cohLayer33 has to be given: the goal only
+-- The layer coherence.  Layers are Π and a PathP of functions is a
+-- function into PathPs, so the θ-component is taken definitionally;
+-- each component is one cohLayer-squareP: the two restr-layer
+-- transport chains connected along the frame coherence, with the
+-- painting coherence as the connecting PathP and the 2-dimensional
+-- frame coherence a free Square (frames are HSets).  Every path
+-- implicit of cohLayer-squareP has to be given: the goal only
 -- exposes them after unfolding two nested restr-layer clauses, and
 -- Agda's unifier gives up there (the V1 decision-8 spots, at scale).
 coh-layer zero    p k ()
-coh-layer (suc n) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l =
-  Π-subst-ext
-    {B = λ θ x → Dom (painting n p k e D E₁
-                        (restr-frame n p k e P₁ 0 tt θ x))}
-    (coh-frame (suc n) p (suc k) e P₃ (suc q) Hq (suc r) Hr ε ω d)
-    (λ θ → rew-cohLayer33
-      {P = λ x → Dom (painting n p k e D E₁ x)}
-      {S2 = λ m → Dom (painting (suc n) p (suc k) e P₁ E₂ m)}
-      {S3 = λ m → Dom (painting (suc n) p (suc k) e P₁ E₂ m)}
-      {rf0 = λ x → restr-frame n p k e P₁ 0 tt θ x}
-      {rfF = λ m → restr-frame n p k e P₁ q Hq ε m}
-      {rfG = λ m → restr-frame n p k e P₁ r H₂ ω m}
-      {F = λ m c → restr-painting n p k e P₁ E₂ q Hq ε m c}
-      {G = λ m c → restr-painting n p k e P₁ E₂ r H₂ ω m c}
-      {E1 = coh-frame (suc n) p (suc k) e P₃ (suc q) Hq (suc r) Hr ε ω d}
-      {m1 = restr-frame (suc n) p (suc k) e P₂ r H₁ ω (b θ)}
-      {m2 = restr-frame (suc n) p (suc k) e P₂ 0 tt θ dR}
-      {C2 = coh-frame (suc n) p (suc k) e P₃ r H₁ 0 tt ω θ d}
-      {n1 = restr-frame (suc n) p (suc k) e P₂ (suc q) Hq ε (b θ)}
-      {n2 = restr-frame (suc n) p (suc k) e P₂ 0 tt θ dE}
-      {D2 = coh-frame (suc n) p (suc k) e P₃ (suc q) Hq 0 tt ε θ d}
-      {C1 = coh-frame n p k e P₂ q Hq 0 tt ε θ dR}
-      {D1 = coh-frame n p k e P₂ r H₂ 0 tt ω θ dE}
-      {K = coh-frame n p k e P₂ q Hq r Hr ε ω (b θ)}
-      {aL = restr-painting (suc n) p (suc k) e P₂ E₃ r H₁ ω (b θ) (l θ)}
-      {aR = restr-painting (suc n) p (suc k) e P₂ E₃ (suc q) Hq ε
-              (b θ) (l θ)}
-      (coh-painting n p k e P₂ E₃ q Hq r Hr ε ω (b θ) (l θ))
-      (isSetDom (frame n p k e D) _ _ _ _))
+coh-layer (suc n) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l i θ =
+  cohLayer-squareP
+    {P = λ x → Dom (painting n p k e D E₁ x)}
+    {S2 = λ m → Dom (painting (suc n) p (suc k) e P₁ E₂ m)}
+    {S3 = λ m → Dom (painting (suc n) p (suc k) e P₁ E₂ m)}
+    {rf0 = λ x → restr-frame n p k e P₁ 0 tt θ x}
+    {rfF = λ m → restr-frame n p k e P₁ q Hq ε m}
+    {rfG = λ m → restr-frame n p k e P₁ r H₂ ω m}
+    {F = λ m c → restr-painting n p k e P₁ E₂ q Hq ε m c}
+    {G = λ m c → restr-painting n p k e P₁ E₂ r H₂ ω m c}
+    {E1 = coh-frame (suc n) p (suc k) e P₃ (suc q) Hq (suc r) Hr ε ω d}
+    {m1 = restr-frame (suc n) p (suc k) e P₂ r H₁ ω (b θ)}
+    {m2 = restr-frame (suc n) p (suc k) e P₂ 0 tt θ dR}
+    {C2 = coh-frame (suc n) p (suc k) e P₃ r H₁ 0 tt ω θ d}
+    {n1 = restr-frame (suc n) p (suc k) e P₂ (suc q) Hq ε (b θ)}
+    {n2 = restr-frame (suc n) p (suc k) e P₂ 0 tt θ dE}
+    {D2 = coh-frame (suc n) p (suc k) e P₃ (suc q) Hq 0 tt ε θ d}
+    {C1 = coh-frame n p k e P₂ q Hq 0 tt ε θ dR}
+    {D1 = coh-frame n p k e P₂ r H₂ 0 tt ω θ dE}
+    {K = coh-frame n p k e P₂ q Hq r Hr ε ω (b θ)}
+    {aL = restr-painting (suc n) p (suc k) e P₂ E₃ r H₁ ω (b θ) (l θ)}
+    {aR = restr-painting (suc n) p (suc k) e P₂ E₃ (suc q) Hq ε
+            (b θ) (l θ)}
+    (coh-painting n p k e P₂ E₃ q Hq r Hr ε ω (b θ) (l θ))
+    (isSet→Square (isSetDom (frame n p k e D)) _ _ _ _)
+    i
   where
   P₁ = (D ∷ E₁)
   P₂ = ((D ∷ E₁) ∷ E₂)
@@ -304,23 +317,26 @@ coh-layer (suc n) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l =
   b : (θ : arity) → Dom (frame (suc (suc n)) p (suc (suc k)) e P₂)
   b θ = restr-frame (suc (suc n)) p (suc (suc k)) e P₃ 0 tt θ d
 
--- The painting coherence.  With Π-layers the r = 0 case is refl; the
--- r , q ≥ 1 case is a dependent Σ-path whose base is the very clause
--- coh-frame unfolds to, so the alignment holds by clause unfolding
--- rather than by a stored-term discipline.
+-- The painting coherence.  With Π-layers the r = 0 case is the filler
+-- of restr-layer's transport (both endpoints reduce to the same
+-- restr-painting composite, one transported); the r , q ≥ 1 case pairs
+-- the layer coherence with the recursive painting coherence — the pair
+-- path IS the clause coh-frame unfolds to, so the alignment holds by
+-- clause unfolding rather than by a stored-term discipline.
 -- Without eta on the prefix the r = 0 reduction (`restr-painting … 0`
 -- ↦ `l ω`) fires only when the prefix is a constructor, so this
 -- clause has to match it even though the proof does not use it.
-coh-painting n p k e ((D ∷ E₁) ∷ E₂) E q Hq zero Hr ε ω d (l , c) = refl
+coh-painting n p k e ((D ∷ E₁) ∷ E₂) E q Hq zero Hr ε ω d (l , c) =
+  subst-filler (λ x → Dom (painting n p k e D E₁ x))
+    (coh-frame n p k e ((D ∷ E₁) ∷ E₂) q Hq 0 tt ε ω d)
+    (restr-painting n p k e (D ∷ E₁) E₂ q Hq ε
+      (restr-frame (suc n) p (suc k) e ((D ∷ E₁) ∷ E₂) 0 tt ω d) (l ω))
 coh-painting n p k e       D          E zero    Hq (suc r) ()
 coh-painting n p zero    e D        E (suc q) ()
 coh-painting n p (suc k) e ((D ∷ E₁) ∷ E₂) E (suc q) Hq (suc r) Hr ε ω
-             d (l , c) =
-  Σ≡dep {P = λ x → Dom (layer n p k e D x)}
-        {Q = λ z → Dom (painting n (suc p) k e D E₁ z)}
-    (coh-frame n p (suc k) e ((D ∷ E₁) ∷ E₂) (suc q) Hq (suc r) Hr ε ω d)
-    (coh-layer n p k e ((D ∷ E₁) ∷ E₂) q Hq r Hr ε ω d l)
-    (coh-painting n (suc p) k e ((D ∷ E₁) ∷ E₂) E q Hq r Hr ε ω (d , l) c)
+             d (l , c) i =
+  coh-layer n p k e ((D ∷ E₁) ∷ E₂) q Hq r Hr ε ω d l i ,
+  coh-painting n (suc p) k e ((D ∷ E₁) ∷ E₂) E q Hq r Hr ε ω (d , l) c i
 
 ------------------------------------------------------------------------
 -- The tower

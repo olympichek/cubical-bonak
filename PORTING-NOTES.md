@@ -489,3 +489,36 @@ they sat beside is removed. No `{-# TERMINATING #-}` remains outside
 the probes that exist to demonstrate it; the residue is
 `--termination-depth=3` in the tower's OPTIONS. Earlier sections use
 the pre-rename names.
+
+## Branch surgery: main = V4 storage + V2 equalities (2026-08-17, latest)
+
+The direct-mirror line is renamed `globular` (worktree `../globular`,
+history unchanged); `main` now branches off `fillers-only` with the
+coherences refactored to the PathP shapes of DESIGN-V2 — the adopted
+V4 + V2 combination.  The axes compose as predicted:
+
+- `coh-layer` / `coh-painting` are stated as PathPs over the frame
+  coherence; no statement contains a subst.
+- The Σ-assemblies in `coh-frame` and `coh-painting` are definitional
+  pairing `λ i → (… i , … i)`; the Π-layer step is definitional.
+- `coh-layer`'s body is one `cohLayer-squareP` (the PathP form of
+  rew-cohLayer33) closed by `isSet→Square`; the r = 0 painting
+  coherence is `subst-filler` of restr-layer's transport, which stays
+  at the term level.
+
+Vanish census at νSet level: the tower consumes {cohLayer-squareP,
+isSet→Square, subst-filler} where the Id form consumed
+{rew-cohLayer33, Π-subst-ext, Σ≡, Σ≡dep}; substComposite,
+substCommSlice and ∙-assoc are no longer load-bearing (kept in
+RewLemmas for the probes).  The pinned-implicit discipline carries
+over unchanged: the goal still exposes the chain endpoints only after
+unfolding two nested restr-layer clauses.
+
+Measurements (Agda 2.8.0, this machine, marginal νSet check ×3):
+**0.69 s vs 0.80 s** Id-form; `--profile=conversion` 3,133 compare
+equal / 891 by reduction vs 3,271 / 952.  `frame4`'s normal form is
+byte-identical to the Id-form tower's (zero transp/hcomp); all fuel
+probes green.  The globular νGpd files (νGpd, νGpdBase, GpdLemmas)
+and the P02 Σ≡-composition probes live on `globular`; the νGpd storey
+on `main` is to be built fresh on the V4 + V2 base.
+

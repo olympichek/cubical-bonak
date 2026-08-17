@@ -1,11 +1,13 @@
 ------------------------------------------------------------------------
--- Bonak.RewLemmas — transport lemmas mirroring Rocq's RewLemmas.v and
--- the Σ-path kit of SigT.v.
+-- Bonak.RewLemmas — the path kit for the tower's coherences.
 --
--- In cubical, `eq_existT_curried` and friends are PathP-pairings plus
--- the toPathP/fromPathP converters; `rew_cohLayer33` keeps its Rocq
--- statement (subst-form) and is proved by a substComposite /
--- substCommSlice chain.
+-- Two sections.  The PathP kit at the end is what Bonak.νSet consumes:
+-- its coherences are dependent paths over the frame coherence, so the
+-- tower needs only the transport filler, dependent-path composition,
+-- and one square filling in an HSet.  The subst-form section before it
+-- (composite/slice laws, the Σ-path kit, the fused chain lemma
+-- rew-cohLayer33, the Π-layer bridge) states the same coherence algebra
+-- on transported inhabitants; the probes exercise it.
 ------------------------------------------------------------------------
 
 module Bonak.RewLemmas where
@@ -141,3 +143,78 @@ rew-cohLayer33 {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
     (λ {g} H → transportRefl f
                ∙ funExt (λ ω → sym (transportRefl (f ω)) ∙ H ω))
     E1 H
+
+-- PathP kit ----------------------------------------------------------------
+
+-- The filler connecting x to its transport.
+subst-filler : (P : A → Set ℓ') {x y : A} (p : x ≡ y) (u : P x)
+               → PathP (λ i → P (p i)) u (subst P p u)
+subst-filler P p u i =
+  transp (λ j → P (p (i ∧ j))) (~ i) u
+
+-- Composition of dependent paths over composition of base paths.
+compPathP : {P : A → Set ℓ'} {x y z : A} {p : x ≡ y} {q : y ≡ z}
+            {u : P x} {v : P y} {w : P z}
+            → PathP (λ i → P (p i)) u v → PathP (λ i → P (q i)) v w
+            → PathP (λ i → P ((p ∙ q) i)) u w
+compPathP {P = P} {p = p} {q = q} {u = u} α β i =
+  comp′ (λ j → P (compPath-filler p q j i))
+        (λ j → λ { (i = i0) → u ; (i = i1) → β j })
+        (α i)
+
+-- Any four suitably-parallel paths in an HSet bound a square.
+Square : {a₀₀ a₀₁ a₁₀ a₁₁ : A}
+         (a₀₋ : a₀₀ ≡ a₀₁) (a₁₋ : a₁₀ ≡ a₁₁)
+         (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁) → Set _
+Square a₀₋ a₁₋ a₋₀ a₋₁ = PathP (λ i → a₋₀ i ≡ a₋₁ i) a₀₋ a₁₋
+
+isSet→Square : isSet A → {a₀₀ a₀₁ a₁₀ a₁₁ : A}
+               (a₀₋ : a₀₀ ≡ a₀₁) (a₁₋ : a₁₀ ≡ a₁₁)
+               (a₋₀ : a₀₀ ≡ a₁₀) (a₋₁ : a₀₁ ≡ a₁₁)
+               → Square a₀₋ a₁₋ a₋₀ a₋₁
+isSet→Square sA a₀₋ a₁₋ a₋₀ a₋₁ =
+  isProp→PathP (λ i → sA (a₋₀ i) (a₋₁ i)) a₀₋ a₁₋
+
+-- The layer-coherence square (the PathP form of rew-cohLayer33):
+-- connect the two transport chains by a dependent path along E1, given
+-- the painting coherence as a PathP over K and the 2-dimensional frame
+-- coherence as a Square (free in an HSet of frames).
+
+cohLayer-squareP :
+  {ℓt ℓx ℓp ℓs : Level}
+  {T1 : Set ℓt} {T2 T3 : Set ℓs} {X : Set ℓx} {P : X → Set ℓp}
+  {S2 : T2 → Set ℓp} {S3 : T3 → Set ℓp}
+  {rf0 : T1 → X} {rfF : T2 → X} {rfG : T3 → X}
+  {F : (m : T2) → S2 m → P (rfF m)}
+  {G : (n : T3) → S3 n → P (rfG n)}
+  {d1 d2 : T1} {E1 : d1 ≡ d2}
+  {m1 m2 : T2} {C2 : m1 ≡ m2}
+  {n1 n2 : T3} {D2 : n1 ≡ n2}
+  {C1 : rfF m2 ≡ rf0 d1}
+  {D1 : rfG n2 ≡ rf0 d2}
+  {K : rfF m1 ≡ rfG n1}
+  {aL : S2 m1} {aR : S3 n1}
+  → PathP (λ i → P (K i)) (F m1 aL) (G n1 aR)
+  → Square K (cong rf0 E1)
+      (cong rfF C2 ∙ C1) (cong rfG D2 ∙ D1)
+  → PathP (λ i → P (rf0 (E1 i)))
+      (subst P C1 (F m2 (subst S2 C2 aL)))
+      (subst P D1 (G n2 (subst S3 D2 aR)))
+cohLayer-squareP {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
+  {rfG = rfG} {F = F} {G = G} {E1 = E1} {m1 = m1} {m2 = m2} {C2 = C2}
+  {n1 = n1} {n2 = n2} {D2 = D2} {C1 = C1} {D1 = D1} {K = K}
+  {aL = aL} {aR = aR} HCP sq i =
+  comp′ (λ j → P (sq j i))
+        (λ j → λ { (i = i0) → α j ; (i = i1) → β j })
+        (HCP i)
+  where
+  α : PathP (λ j → P ((cong rfF C2 ∙ C1) j))
+        (F m1 aL) (subst P C1 (F m2 (subst S2 C2 aL)))
+  α = compPathP {P = P}
+        (λ j → F (C2 j) (subst-filler S2 C2 aL j))
+        (subst-filler P C1 (F m2 (subst S2 C2 aL)))
+  β : PathP (λ j → P ((cong rfG D2 ∙ D1) j))
+        (G n1 aR) (subst P D1 (G n2 (subst S3 D2 aR)))
+  β = compPathP {P = P}
+        (λ j → G (D2 j) (subst-filler S3 D2 aR j))
+        (subst-filler P D1 (G n2 (subst S3 D2 aR)))
