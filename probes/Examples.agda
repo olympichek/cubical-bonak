@@ -1,5 +1,8 @@
 ------------------------------------------------------------------------
--- probes.Examples — the νSet gate: instantiations and the level-4 example.
+-- probes.Examples — the νSet gate: instantiations and the level-4
+-- example.  Fillers are written with the fuel-polymorphic prefix
+-- `λ m f d → …`; the compute gate `frame4` normalizes with every fuel
+-- closed, so all of them reduce away.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting #-}
@@ -17,25 +20,23 @@ AugmentedSemiSimplicial : Set₁
 AugmentedSemiSimplicial = Simplicial.νSets
 
 SemiSimplicial : Set₁
-SemiSimplicial = Simplicial.νSet→ 1 (tt* Simplicial.∷ λ _ → hunit)
+SemiSimplicial = Simplicial.νSet→ 1 (tt* Simplicial.∷ λ m f d → hunit)
 
 SemiCubical : Set₁
 SemiCubical = Cubes.νSets
 
--- The V1 gate, transposed: V1's `prefix (νSetAt 4)` is by construction
--- the list of 4 fillers, which fillers-only storage calls `Pre 4`.
 SemiSimplicial4 : Set₁
 SemiSimplicial4 = Simplicial.Pre 4
 
--- A compute gate with an inhabitant: building the point prefix at
--- dimension 4 forces every filler type — hence frame / layer / painting
--- / restr-* / coh-* at dimensions 0..3 — to reduce.
+-- The point prefix at dimension 4: building it forces every filler
+-- type — hence frame / layer / painting / restr-* / coh-* at
+-- dimensions 0..3 — to reduce.
 pt4 : SemiSimplicial4
-pt4 = ((((tt* Simplicial.∷ (λ _ → hunit)) Simplicial.∷ (λ _ → hunit))
-        Simplicial.∷ (λ _ → hunit)) Simplicial.∷ (λ _ → hunit))
+pt4 = ((((tt* Simplicial.∷ (λ m f d → hunit))
+         Simplicial.∷ (λ m f d → hunit))
+        Simplicial.∷ (λ m f d → hunit))
+       Simplicial.∷ (λ m f d → hunit))
 
 -- and its full frame at dimension 4, the type the next filler eats.
--- Normalizing this is the compute gate (see V4-REPORT.md): it runs
--- frame / layer / painting / restr-* / coh-* at dimensions 0..4.
 frame4 : Set
-frame4 = Dom (Simplicial.frame 4 0 pt4)
+frame4 = Dom (Simplicial.frame 4 4 0 tt pt4)

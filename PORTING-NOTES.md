@@ -161,3 +161,30 @@ Both compute gates (SemiSimplicial4 normalization, Examples) still
 pass. The conversion-cache Agda patch (~/agda-dev/src, enable with
 AGDA_CONVERSION_CACHE=1) is superseded as a necessity but kept as an
 artifact; A/B against the eta-fixed code is optional follow-up.
+
+## Rocq backport of the fuel tower: refuted (2026-08-17)
+
+`Bonak/νSetF.agda` (fillers-only + fuel columns, zero TERMINATING
+pragmas) does not backport to Rocq: its termination is a size-change
+argument (three families descending on three different columns,
+strictness only around composed cycles) and Rocq's guard demands
+per-call strict descent on the caller's single {struct} argument —
+the call skeleton is rejected on its first edge. Restaging to satisfy
+the guard re-derives the stored-strata Rocq original, Deps records
+and all: the Rocq architecture is the guard-imposed normal form of
+this construction, and the fillers-only block exists only under
+size-change termination. The NatRew rewrite rules DO port (Symbol
+addition under -allow-rewrite-rules, verified on bonak-patched-rocq /
+Rocq 9.4+alpha), and EqN is LeSProp.v's pattern mirrored back.
+Receipts: probes/V4_P06_rocq_backport.v; full account: V4-REPORT.md
+§8 of the output-fuel section.
+
+## Fuel tower canonicalized (2026-08-17, later)
+
+The fuel tower is the branch's canonical `Bonak/νSet.agda`:
+`Bonak/νSetF.agda` and `probes/ExamplesF.agda` are renamed to
+`Bonak/νSet.agda` and `probes/Examples.agda`, and the 1-pragma tower
+they sat beside is removed. No `{-# TERMINATING #-}` remains outside
+the probes that exist to demonstrate it; the residue is
+`--termination-depth=3` in the tower's OPTIONS. Earlier sections use
+the pre-rename names.
