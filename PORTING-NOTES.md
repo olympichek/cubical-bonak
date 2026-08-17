@@ -162,6 +162,307 @@ pass. The conversion-cache Agda patch (~/agda-dev/src, enable with
 AGDA_CONVERSION_CACHE=1) is superseded as a necessity but kept as an
 artifact; A/B against the eta-fixed code is optional follow-up.
 
+## Proposed V4: fillers-only storage + `(p,k)` indexing (2026-08-13)
+
+Not a variant of V1's *equalities* (that is V2/V3) but of its *storage*.
+V1 mirrors Rocq: four `Deps*` η-records holding frames, paintings,
+restrictions and coherences. Alice's `agda-alice` stores **only the
+fillers** and computes everything else as functions of one mutual block:
+
+```agda
+νSet-< zero    = ⊤
+νSet-< (1+ n)  = Σ[ R ∈ νSet-< n ] νSet-= n R
+νSet-= n D     = frame n n (◆₂ n) D .Dom → HSet
+```
+
+`frame`, `layer`, `painting`, `restr-{frame,layer,painting}`,
+`coh-{frame,layer,painting}` are the other nine members of that block —
+functions of the indices and of `D` (`agda-alice/src/νSet/Base.agda:30-104`).
+V4 = **Alice's storage discipline, master's index discipline.**
+
+### The design
+
+1. **Store only fillers.** `Pre`/`Fil` as above; everything else a
+   function. This extends V1 decision 3 (`Block classes → interleaved
+   mutual`) from the individual Blocks to the whole construction — the
+   `Deps*` records of decision 4 disappear rather than being encoded.
+2. **Keep `(p,k)`,** `n = p + k` never named. Bounds stay as V1 decision
+   2 (Set-valued recursive `≤`, dot-irrelevant proof args). Unchanged.
+3. **One generic chain** for descent (see costs below).
+
+### Why the combination, and not either half
+
+The two designs pay on *different* axes, and each kills the other's main
+expense.
+
+Fillers-only kills the zipper. With one stored family instead of four
+there is nothing to map *between*: in the Rocq line the four record types
+force nine image maps (`extChainDeps`, `cohsChain{Ext,Next,Deps,Next1,
+Extend,NextExt}`, `cohs2Chain{Cohs,DepsCohs}`) plus a 126-line algebra
+section proving they commute with composition and extension —
+`indexed-fibered-eq/theories/νSet/Equiv/Face.v`. The same skeleton is
+re-stamped per extension: ~58% of `νDgnSet` is repeated zipper, and
+`Equiv/` mirrors it three times (presheaf-side, translation-side, chains).
+None of that gets built.
+
+`(p,k)` kills the inequality layer. The difference *is* the index, so
+there are no `[_≤_][_]₂/₃/₄` records, no stored `δpn`/`δqn`, no coherences
+between differences, no `drop₃-*`/`drop₄-*`, and **no `recover-nat-eq`**
+(15 sites in agda-alice: 8 `νSet/Face.agda`, 4 `Correspondence.agda`, 3
+`νSet/Base.agda`) — at `j = 0` the source type *is* the target type.
+`Inequalities.agda` 192 lines vs `LeProp`-style ~90.
+
+Note this is **not** an SProp story. Agda's dot-irrelevance already does
+what SProp does, and Alice uses it (`.Hpn`). Her ₂/₃/₄ records exist
+because *absolute* indices must reconstruct their pairwise differences,
+and those differences are relevant by necessity — she recurses on `δ`, and
+you cannot recurse on an irrelevant argument any more than on an SProp.
+
+| | agda-alice | V1 (Rocq mirror) | **V4** |
+|---|---|---|---|
+| zipper records | none | four `Deps*` | none |
+| image maps + algebra | none | inherited from Rocq | none |
+| inequality layer | 192 lines | ~90 | ~90 |
+| `recover-nat-eq` sites | 15 | 0 | 0 |
+| descent | free (one index moves) | chains ×4 | one generic chain |
+
+### The one real cost: descent needs reification
+
+`(p,k)` moves **both** indices under a step, so relating stages
+arithmetically is impossible. Probed twice, in Rocq:
+
+- numerically — `projSteps (j : ℕ) : I (j + p) k → I p (j + k)` fails with
+  `j0 + k.+1` vs `j0.+1 + k`, and no `Nat.add` orientation fixes it (the
+  source needs left-recursion, the target right-recursion);
+- in the Moore idiom — replacing nats by lists and addition by
+  concatenation reproduces it verbatim as `js ++ (x ∷ L)` vs
+  `x ∷ (js ++ L)`.
+
+The obstruction is **reversal**, not associativity: descending moves items
+from one index to the other, flipping order. Moore chains make
+associativity definitional and do not touch this. So no representation
+trick removes it — with one moving index (absolute `(n,p)`) descent is a
+three-line fixpoint; with two, it must be reified.
+
+Cheap, because there is now only one index family:
+
+```agda
+data GChain {I : ℕ → ℕ → Set} (step : ∀ p k → I (suc p) k → I p (suc k))
+            {P K} (top : I P K) : ∀ {p k} → I p k → Set where
+  nil  : GChain step top top
+  cons : ∀ {p k} {x : I (suc p) k} → GChain step top x → GChain step top (step p k x)
+```
+
+Verified in Rocq: all three of master's projection chains instantiate this
+single family, with `compose` and `length` proved once generically.
+~25 lines total, against four families + nine images + 126 lines of algebra.
+
+### Risks, cheapest probe first
+
+1. **The eta fix loses its target.** THE ETA FIX above is
+   `no-eta-equality; pattern` on *the three `Deps` records* — V4 deletes
+   them. Either the blowup cannot arise (no record η to expand in the
+   tower) or it reappears on the prefix `Σ`, where there is no equally
+   clean lever. **Probe this first**, before writing any tower: build the
+   fillers-only `Pre`/`Fil`/`Frame`/`Layer` block to level 2 and compare
+   conversion counts against V1's 38k/6.19M.
+2. **Termination depth.** Whole-construction mutual is larger than V1's
+   per-Block `interleaved mutual`; agda-alice needs
+   `--termination-depth=3` for an 11-symbol fillers-only block. Budget for
+   raising it — it is a per-file global pragma, not a local annotation.
+3. **Index-translation tax, permanent.** The paper and agda-alice are
+   absolute; every cross-check goes through `~/bonak/notes/index-translation.md`.
+   This is not free: the `νDgnSet` Below/Above base shift (§2, §5 of that
+   note) is exactly where it bites, and it is easy to mis-attribute
+   structure to indexing that is really intrinsic to degeneracies (the
+   Below/Above split appears in absolutely-indexed `dgn-alice` too).
+4. **Unvalidated:** whether V1 decision 4's `.(1)`-convertibility facts
+   survive. They currently come from clause unfolding of constructor-headed
+   builders; with functions instead of records they should come from clause
+   unfolding of the mutual block, but that is reasoning, not a measurement.
+
+### Review findings (2026-08-14)
+
+Design review against `~/bonak/notes/index-structures.md` (same day:
+the fuel-vs-algebra split, the one-variable law `S^a(x)`, and the
+bound-vs-inventory division of labor). Verdict: sound; V4 is the
+fourth quadrant of the storage × indexing square, and the
+cost-complementarity claim holds up. Refinements:
+
+1. **The reversal obstruction is an instance of the one-variable
+   law**: `projSteps` puts two open variables in every index position,
+   violating `S^a(x)` on both coordinates at once. Confirms that no
+   representation trick removes it and reification is the correct
+   response.
+2. **`GChain` is the proof-relevant free ≤** (`le_refl`/`le_up` with
+   the proof carrying step views). That encoding is dominated by
+   irrelevant bounds *for bounds* — it earns its keep exactly and only
+   where the proof is needed as data, which descent is. Coordinates
+   stay unary + irrelevant; the path gets the constructor spine.
+3. **Probe 1 re-scoped.** (a) Probe at level 4, not level 2 — every
+   conversion cliff in this tower's history (the eta fix, the
+   `mkExtraCohs` commutations, Rocq `Defined` times) appeared at
+   dimension 4–5. (b) Alice's prefix is an iterated Σ, and Σ has
+   definitional η with no `no-eta-equality` lever: include a variant
+   with `Pre` as a per-level no-eta record (`_∷_`-style, like the
+   coinductive `νSet->`). (c) Add a **sharing axis** the proposal
+   omits: stored `Deps*` records memoize strata, fillers-only
+   recomputes `frame`/`painting` as function applications at every use
+   site; the eta-fix diagnosis (η-expansion, not term size) suggests
+   this is survivable, but agda-alice — the only fillers-only artifact
+   ever measured — is the slowest of the three systems. Measure
+   conversion counts AND wall time.
+4. **Risk 4 promoted: it is the successor of the actual V1 hotspot.**
+   The V1 profile put 98% of check time in π₁-commutation conversions
+   (`mkExtraCohs`), not in `mkCohPainting`. V4 deletes those facts but
+   creates their analogues: commutation of `GChain`'s generic
+   `compose` with the block functions on **open** chains (inside
+   recursive cases the chain argument is a variable, so `compose` is
+   stuck). If decision 9's byte-identity discipline consumes these
+   definitionally, this is where V4's conversion budget concentrates.
+   The deciding question — `compose`-commutation *proved* vs *holding
+   by clause unfolding* at the consuming sites — goes into the probe.
+5. **Risk 2 may invert.** Alice's fuel is a projected record field;
+   V4's is a bare `k : ℕ` in constructor position, which the
+   termination checker reads directly. Hypothesis (untested): the
+   block needs depth 2, not 3. Cheap to measure in the probe.
+6. **Underspecified load-bearing detail: the type of `D`.**
+   `frame p k D` needs a prefix of length `p + k`, which the
+   discipline forbids naming — so `I p k` must be a *split*
+   filler-prefix family whose re-splitting step is what `GChain`
+   chains over. Implicit in `projSteps`' signature, never stated;
+   needs a design paragraph before implementation (it is where the
+   Rocq line pays with `DepsRestr`-vs-Extension and where the
+   off-by-one conventions live).
+7. **A third descent option is missing from the option space:
+   CPS/accumulator descent** — build the downward strata as functions
+   of the eventual top data during the upward pass, closing the
+   continuation when the filler arrives; `compose` becomes function
+   composition (definitional). Two Rocq experiments running 2026-08-14
+   bear on this directly: the merged-single-extension refactor in the
+   `single-block` worktree (= the `GChain` consolidation claim, Rocq
+   side) and the CPS fusion probe in the `cps-fusion` worktree. CPS
+   must fight Rocq's guard checker; if it survives there it is
+   strictly easier in Agda. **Gate the descent-mechanism choice on
+   both reports**; prototype descent both ways in the probe file
+   before committing the mutual block to `GChain`.
+
+   *Update (2026-08-14, later): the CPS report landed, green*
+   (`~/bonak/cps-fusion/CPS-FUSION-REPORT.md`). Three findings that
+   change the picture for V4:
+   - **The continuation degenerated to first-order.** No accumulator
+     fields, no higher-order data: each `Deps…` class stores the
+     *single* datum the suffix determines at its level (the top
+     painting / restrPainting family / cohPainting), and the `proj1`
+     truncation instance *is* the step. All three Extension inductives
+     and both global descent fixpoints deleted; `SemiSimplicial4`
+     byte-identical; **1.7× faster** than baseline. So the real
+     dichotomy for V4 descent is not GChain-vs-CPS but
+     **chain-reification vs stored-top + step** — and stored-top won
+     in Rocq. Note the tension with fillers-only: the Rocq win came
+     from storing *one more computed field per level*, exactly what
+     V4's storage discipline forbids; if fillers-only descent hurts,
+     this is the measured fallback.
+   - **The bottom index must stay out of the stored data**: the
+     `q = 0` case (`nth l ε`) must remain a uniform wrapper around the
+     stored `q.+1`-part, or the `r = 0` coherence case loses its
+     definitional `nth` reduction at variable prefixes. Directly
+     relevant to decision 9's byte-identity discipline.
+   - **Index equalities become conversion problems** when an inductive
+     index is replaced by a computed record: two invisible one-line
+     choices (a stray `simpl.`, projecting a step out of a record
+     instead of naming it) cost a factor of 11. Keep step terms
+     syntactic at consuming sites.
+   *Update (2026-08-14, latest): the merged-single-extension report
+   landed too* (`~/bonak/single-block/SINGLE-BLOCK-REPORT.md`), green
+   but decisive against chain-walking:
+   - **One-chain-for-all-strata is refuted with a mechanized
+     witness**: storing the strata-4–6 lists only at the far end makes
+     every access a `k`-step walk, stuck under variable `k` (the
+     `r = 0` coherence branch never exposes `nth`); nodes must carry
+     increments, increments' types need the accumulated lists, whose
+     types mention the strata-1–3 chain — the staircase is forced.
+     `GChain`-style reification is viable only with
+     increment-carrying nodes, and its `push`/`proj1` round-trips are
+     definitional (record eta + primitive projections) — good news
+     for the analogous Agda facts.
+   - **Un-bundling is a 30× conversion regression** (1.7 s → ~50 s):
+     replacing one record variable by 5–7 explicit arguments blows up
+     what the kernel converts. Record bundles are load-bearing;
+     V4's "delete the records" must not become "thread components".
+   Head-to-head verdict: stored-top + step (three classes, zero
+   chains, 0.96 s) beats increment-chain reification (one class,
+   three chains, ~50 s) on every axis measured in Rocq.
+
+### Build results (2026-08-14): V4 BUILT — 8× cheaper than V1
+
+Worktree `../fillers-only` (branch `fillers-only`), full report
+`V4-REPORT.md` there. All eleven members closed, no postulates; gate
+passes with `frame 4` residue-free and `SemiSimplicial4` reproducing
+V1's normal form (same 195 transp/hcomp — the G3 wart is confirmed to
+live on the equality axis, so V2 stacks). Headlines:
+
+- **V1 6.2 s / 37.9k conversions → V4(a) 0.77 s / 4.8k, V4(b) no-eta
+  prefix 0.43 s / 3.9k** — ~8× on both axes, ~5× faster than V2.
+  Tower ≈205 code lines vs Alice's 315 and V1's 621.
+- **The decisive probe was not eta but the prefix length**: `frame p k`
+  needs `Pre (p + k)` under three addition equations no recursive `+`
+  satisfies together (the reversal obstruction, definitional form).
+  Resolution: `--rewriting` with *proved* `+-zero`/`+-suc` REWRITE
+  rules (cubical Path accepted as the relation) — then `I p k` is just
+  `Pre (p + k)`, no split family. Caveat: the confluence checker skips
+  `--cubical` (critical pairs joined by hand); conversion is genuinely
+  extended, no Rocq analogue.
+- **No reified descent of any kind was needed** — no GChain, no CPS,
+  no stored-top, zero stage-commutation glue. The Rocq chains were an
+  artifact of relating *stored strata* across stages; with nothing
+  stored there are no stages to relate. Risk 4 (the mkExtraCohs
+  hotspot's successor) does not materialize — the hotspot is deleted.
+- **Eta**: the blowup does not return on the prefix (208 η-expansions
+  vs V1's 393); the no-eta record prefix still buys 1.8×. Sharing
+  axis: no recomputation penalty — agda-alice's slowness is hereby
+  attributed to her Inequalities layer, not fillers-only storage.
+- **The one open bill: termination is NOT established.** Depths 2–6
+  all fail; six of eleven members carry `{-# TERMINATING #-}`. Cause
+  is structural: the decreasing quantity is the prefix length
+  `p + k` — a type-level expression, an argument of nothing; Alice
+  passes because that level is her first argument. Column alignment
+  and avoiding `where` blocks are load-bearing for the checker (see
+  report §5, incl. a reconstructible partial fix costing four extra
+  coherence arguments).
+
+*Update (2026-08-15) — termination revisited, several §5 claims
+corrected (report § "Termination revisited"):* the pragma attaches to
+the WHOLE mutual block, so "six of eleven" was five redundant copies —
+the file now carries exactly ONE pragma, which is also the floor for
+any unchecked variant. The rejected cycle is a single ten-call loop
+(`frame → frame → layer → restr-frame → restr-layer → coh-frame →
+coh-layer → coh-painting → coh-painting → coh-layer → frame`);
+deleting any one edge passes at any depth, but every edge is a
+defining clause of the tower. **The prev-abstraction route is refuted**:
+abstraction moves an edge to the caller and every caller is on the
+loop (three abstractions modelled, verdict unchanged). Two mechanisms
+isolated, each eliminated experimentally without changing the verdict:
+`pre`/`fil` projections leaking into solved implicits (a pre-split
+rewrite removes them: −9% conversions, +30% wall, still rejected, and
+`frame` loses its variable-prefix reduction — not kept), and `Pre`
+being a defined type rather than an inductive family
+(`probes/V4-P01-termination.agda`: the stripped ten-edge model is
+ACCEPTED over a length-indexed `data Pre`, rejected over the function —
+but the full block is rejected either way). The §5 `where`-block claim
+is not reproducible. Trust posture: two hand-checked meta-obligations
+(REWRITE confluence, one block-level termination pragma). The
+remaining checked-termination route is checker-side: a synthetic
+measure column (sum of nat arguments) in the agda-dev fork.
+
+Recommendation adopted from the report: carry V4 as the storage
+discipline for the νGpd storey, combined with V2's PathP equalities.
+
+Layers-as-functions (decision 1) and the `≤` encoding (decision 2) are
+orthogonal and carry over verbatim. So does the V2/V3 axis: V4 is about
+what is stored, PathP/rew are about how equalities are represented, and the
+four combine freely.
+
 ## Rocq backport of the fuel tower: refuted (2026-08-17)
 
 `Bonak/νSetF.agda` (fillers-only + fuel columns, zero TERMINATING
