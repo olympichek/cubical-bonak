@@ -508,9 +508,14 @@ V4 + V2 combination.  The axes compose as predicted:
 
 Vanish census at νSet level: the tower consumes {cohLayer-squareP,
 isSet→Square, subst-filler} where the Id form consumed
-{rew-cohLayer33, Π-subst-ext, Σ≡, Σ≡dep}; substComposite,
-substCommSlice and ∙-assoc are no longer load-bearing (kept in
-RewLemmas for the probes).  The pinned-implicit discipline carries
+{rew-cohLayer33, Π-subst-ext, Σ≡, Σ≡dep}.  The Id-form kit and the
+subst lemmas under it (substComposite, substCommSlice, ∙-assoc, J)
+are DELETED — RewLemmas is the PathP kit only — together with the
+probes that exercised it: the P02 Σ≡-composition pair (live on
+`globular`), V4-P05-fuel-no-proof (verdict recorded in V4-REPORT,
+"Can the fuel column shrink?"), and the broken-header V4-P00-rewrite
+(its REWRITE story lives in Bonak/NatRew.agda and the build-results
+section above).  The pinned-implicit discipline carries
 over unchanged: the goal still exposes the chain endpoints only after
 unfolding two nested restr-layer clauses.
 

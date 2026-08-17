@@ -66,8 +66,8 @@
 --
 -- The EqN proof is computationally inert — it closes three
 -- impossible-fuel clauses and guards `Fil`'s quantifier — and the
--- tower typechecks without it, with junk clauses instead
--- (probes/V4-P05-fuel-no-proof.agda).  It is kept because it is what
+-- tower typechecks without it, with junk clauses instead (V4-REPORT,
+-- "Can the fuel column shrink?").  It is kept because it is what
 -- makes the wrong-fuel sector of `Fil` contractible (functions out of
 -- an irrelevant ⊥): without it, wrong-fuel frames are inhabited
 -- ⊤-towers and fillers carry genuine extra data there.
