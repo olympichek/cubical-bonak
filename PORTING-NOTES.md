@@ -527,3 +527,68 @@ probes green.  The globular νGpd files (νGpd, νGpdBase, GpdLemmas)
 and the P02 Σ≡-composition probes live on `globular`; the νGpd storey
 on `main` is to be built fresh on the V4 + V2 base.
 
+
+## νGpd storey closed on V4+V2 (2026-08-18..20)
+
+`Bonak/νGpd.agda` is built and green: HGpd-valued frames / layers /
+paintings (`gunit`/`gΣ`/`gΠ`), the mutual block grown by
+coh2-frame / coh2-layer / coh2-painting, and exactly one truncation
+site — `isGroupoid→Cube` inside coh2-layer, the cubical form of
+Rocq's single GUIP use.  The s = 0 painting 2-coherence is
+`cohLayer-fillP` (the filler of coh-layer's square composition),
+exactly as the r = 0 painting coherence is `subst-filler` one storey
+down.  Commit e9f5c38.
+
+Closing coh2-layer's body hit three separate walls, each with its own
+fix:
+
+1. **Interval clause patterns trigger the boundary-confluence pass**,
+   which simplify-normalizes and reifies the whole clause body per
+   face on the success path.  Fix: the body is hoisted into
+   `coh2-layer-suc` with λ-bound interval variables, typed against
+   the folded instance type `Coh2LayerSucT` — instance-type folding,
+   which Agda's mutual-block phasing forces anyway (a signature
+   cannot apply a layer at an arity point before clauses exist).
+2. **Kan operations in the tower's concrete Σ/Π fibers compute
+   componentwise** with no sharing, exponentially in comp′ nesting
+   via per-face context re-substitution; the pasting never finished
+   at 35 GB.  Fix: the fused kit — the final section of
+   `Bonak/GpdLemmas.agda`, a ~60-parameter anonymous module whose
+   public lemma `coh2Layer-cubeP` states the entire four-lateral
+   pasting (six `junctionP` cells, the `∙congF`/`∙Πapp` bridges —
+   cong over ∙ is NOT definitional over abstract families — the
+   stated laterals, `squarePOverCube`, and the base-pad transport)
+   over abstract families, where every filler is neutral.
+   coh2-layer's clause is a single application, mirroring coh-layer's
+   `cohLayer-squareP`.  Analysis: `CONV-COST.md`.
+3. **Agda's dead-code interface pass** costs ~90 s per filler
+   parameter on the kit's telescope shape (76.9 s of a 77.9 s
+   telescope-only run).  Local env-guarded patches
+   (`AGDA_NO_DEADCODE`, `AGDA_CONV_CACHE`) made iteration workable;
+   neither is needed to check νGpd itself.  Analysis and upstream
+   plan: `DEADCODE-COST.md`.
+
+Discipline notes that carry forward: family implicits applied at
+composite terms are not Miller patterns and deadlock silently — every
+kit application pins them (`{P = …}` etc.); interval-typed bindings
+need explicit signatures (unannotated ones infer Π-over-I and leak
+metas); where/module bodies do not allow forward references in types.
+
+Measurements: νGpd alone re-checks in 2 m 27 s / 1.77 GB peak on
+stock Agda 2.8.0 (deps cached), 3 m 02 s / 1.52 GB on the patched
+binary; cold full build 53 m on stock (GpdLemmas' kit section
+dominates: ~11 min of typing plus the interface pass);
+GpdLemmas + νGpd rebuild under the patched binary 670 s / 10.5 GB.
+νSet gate probes stay green.
+
+Termination is now CHECKED (2026-08-20, later): the development
+`{-# TERMINATING #-}` is removed and the block passes the termination
+checker at `--termination-depth=4` — green at 4 (311 s / 1.6 GB
+total, the analysis adds ~1–2 min over the type check) and at 5
+(589 s — larger matrices), rejected at 3 on the
+restr-frame..coh2-layer-suc group.  The boundary matches the fuel
+discipline exactly: the coh2 statements write occurrences up to suc⁴
+of the member's fuel, as νSet's suc³ statements need depth 3.
+
+Still in flight: the `conv-cost` worktree experiments and the
+DeadCode memoization prototype.

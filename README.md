@@ -11,6 +11,14 @@ their groupoid structure), kept on branches / worktrees:
   column (no `TERMINATING` pragma), and **PathP-shaped coherences**
   (V2 — dependent paths over the frame coherence; no statement
   contains a subst).  Status narrative: `V4-REPORT.md`.
+  The **νGpd storey** (`Bonak/νGpd.agda`) sits on the same base:
+  HGpd-valued frames/layers/paintings, the coh2 storey, and one
+  truncation site (`isGroupoid→Cube`); termination stays checked
+  (no pragma, `--termination-depth=4`); its pasting kit is
+  `Bonak/GpdLemmas.agda`, whose fused closing lemma `coh2Layer-cubeP`
+  checks the layer 2-coherence once over abstract families.
+  Cost analyses: `CONV-COST.md` (the kit's conversion profile),
+  `DEADCODE-COST.md` (Agda's interface-pass overhead).
 - `globular` (worktree `../globular`) — **V1, direct mirror** of the
   Rocq construction (`theories/νSet/νSet.v` + `νGpd.v` at bonak
   master): Deps* records, Extension data types, Id-shaped coherences
@@ -28,6 +36,9 @@ their groupoid structure), kept on branches / worktrees:
   `subst` chains, no path composites), per the validated
   `RewTrick.agda` discipline — funExt round-trips definitionally, one
   interface lemma per level shift.
+- `conv-cost` (worktree `../conv-cost`) — experiment line off `main`:
+  restructurings of the GpdLemmas kit aimed at cutting its boundary
+  conversion count (see `CONV-COST.md`, "Directions").
 
 Self-contained: builtin cubical primitives only (`Bonak/Prelude.agda`),
 no external library. Toolchain: Agda 2.8.0,
@@ -38,7 +49,7 @@ Feasibility probes live in `probes/` (P00: the three flags coexist;
 Prop-valued `leR` is definitionally irrelevant in index positions;
 coinductive records check).
 
-Reference material: `~/bonak/master` (Rocq source),
-`~/bonak/lean` (Lean 4 mirror precedent),
-`~/bonak/notes/PathP-self-similarity.md` (V2/V3 design),
-`~/bonak/cubical-probes/` (RewTrick + Coh2Frame probes).
+Reference material (separate checkouts, not part of this repo): the
+Rocq Bonak source (`theories/νSet/νSet.v`, `νGpd.v`), its Lean 4
+mirror, the PathP-self-similarity design note (V2/V3), and the
+RewTrick + Coh2Frame probe collection.
