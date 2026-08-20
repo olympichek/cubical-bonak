@@ -590,5 +590,32 @@ restr-frame..coh2-layer-suc group.  The boundary matches the fuel
 discipline exactly: the coh2 statements write occurrences up to suc⁴
 of the member's fuel, as νSet's suc³ statements need depth 3.
 
-Still in flight: the `conv-cost` worktree experiments and the
-DeadCode memoization prototype.
+The `conv-cost` experiments concluded (2026-08-20, later) with a
+corrected diagnosis: the kit's checking cost is per-binding section
+overhead — every definition processed over the full ~60-parameter
+telescope at ~5–9 s per binding regardless of content — and NOT the
+pasting composites (flattening `junctionP` is perf-neutral; the
+conversion cache is a wash).  The adopted fix is the staged
+telescope: three nested anonymous modules binding parameters as late
+as possible, each private binding in the innermost module it needs;
+full-file check 766 → ~400 s (2×), lifted parameter order unchanged
+so νGpd needed no edit.  Details and receipts: `CONV-COST.md`,
+branch `conv-cost`.
+
+The νGpd gate is in (2026-08-20, latest): `probes/ExamplesGpd.agda`
+mirrors the νSet gate one storey up — νGpd at ⊤/Bool arity, the
+level-5 point prefix of `gunit` fillers, and the compute gate
+`frame5 = GDom (frame 5 5 0 tt pt5)`.  Marginal check 0.36 s / 42 MB;
+`frame5` normalizes to a closed Σ/Π/⊤ nest with zero transp/hcomp —
+the tower fully computes through the coh2 storey.
+
+The DeadCode memoization prototype concluded (2026-08-20, latest)
+with a clean negative: a StableName-keyed node memo over the
+reachability fold, verified byte-identical on interfaces, hits 99.7%
+and is still SLOWER than stock — instrumentation shows the lifted
+signature is genuinely tree-sized (~89 K distinct nodes through
+~33.5 M spine slots, sharing only at atoms), so there is no DAG for
+a memo to exploit.  The pass is also untouched by the staged
+telescope (2,428 s either way).  The practical answer stays the
+bypass; the upstream ask becomes storing/sharing less per solved
+meta and section-lifted type.  Full data: `DEADCODE-COST.md`.
