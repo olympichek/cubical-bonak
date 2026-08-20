@@ -36,9 +36,11 @@ their groupoid structure), kept on branches / worktrees:
   `subst` chains, no path composites), per the validated
   `RewTrick.agda` discipline — funExt round-trips definitionally, one
   interface lemma per level shift.
-- `conv-cost` (worktree `../conv-cost`) — experiment line off `main`:
-  restructurings of the GpdLemmas kit aimed at cutting its boundary
-  conversion count (see `CONV-COST.md`, "Directions").
+- `conv-cost` (worktree `../conv-cost`) — the kit-cost experiment
+  line off `main`; its findings (per-binding section overhead, the
+  staged telescope, flat `junctionP`) are adopted on `main` and
+  written up in `CONV-COST.md`, and the branch keeps the probes and
+  raw numbers (`CONV-EXP-NOTES.md`).
 
 Self-contained: builtin cubical primitives only (`Bonak/Prelude.agda`),
 no external library. Toolchain: Agda 2.8.0,
