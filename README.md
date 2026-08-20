@@ -49,7 +49,9 @@ Feasibility probes live in `probes/` (P00: the three flags coexist;
 Prop-valued `leR` is definitionally irrelevant in index positions;
 coinductive records check).
 
-Reference material (separate checkouts, not part of this repo): the
-Rocq Bonak source (`theories/νSet/νSet.v`, `νGpd.v`), its Lean 4
-mirror, the PathP-self-similarity design note (V2/V3), and the
-RewTrick + Coh2Frame probe collection.
+Reference material (separate repos): the Rocq Bonak source
+(`theories/νSet/νSet.v`, `νGpd.v` at
+<https://github.com/artagnon/bonak>), its Lean 4 mirror
+(<https://github.com/olympichek/bonak-lean>), the
+PathP-self-similarity design note (V2/V3), and the RewTrick +
+Coh2Frame probe collection.
