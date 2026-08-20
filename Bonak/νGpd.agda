@@ -20,9 +20,15 @@
 --   * The only truncation site is isGroupoid→Cube inside coh2-layer:
 --     the four-face permutahedron cube in the HGpd of frames, the
 --     cubical form of Rocq's single GUIP use (νGpd.v:918).
+--   * Termination stays checked, no pragma: the coh2 statements write
+--     occurrences up to suc⁴ of the member's fuel (coh2-layer's
+--     premise pack lives four storeys up), so the call matrices carry
+--     +4 increases and the checker needs --termination-depth=4 —
+--     rejected at 3 on the restr-frame..coh2-layer-suc group, exactly
+--     as Bonak.νSet's +3 statements need depth 3.
 ------------------------------------------------------------------------
 
-{-# OPTIONS --rewriting --termination-depth=5 #-}
+{-# OPTIONS --rewriting --termination-depth=4 #-}
 
 module Bonak.νGpd (arity : Set) where
 
@@ -378,7 +384,6 @@ coh2-painting : (n p k : ℕ) .(e : EqN n (p + k))
 -- The block: definitions
 ------------------------------------------------------------------------
 
-{-# TERMINATING #-}
 frame n zero    k e D = gunit
 frame n (suc p) k e D =
   gΣ (frame n p (suc k) e D) (λ d → layer n p k e D d)
