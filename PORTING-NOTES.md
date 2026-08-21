@@ -616,6 +616,16 @@ and is still SLOWER than stock — instrumentation shows the lifted
 signature is genuinely tree-sized (~89 K distinct nodes through
 ~33.5 M spine slots, sharing only at atoms), so there is no DAG for
 a memo to exploit.  The pass is also untouched by the staged
-telescope (2,428 s either way).  The practical answer stays the
-bypass; the upstream ask becomes storing/sharing less per solved
-meta and section-lifted type.  Full data: `DEADCODE-COST.md`.
+telescope (2,428 s either way).
+
+The DeadCode question CLOSED (2026-08-21): a second traversal-side
+redesign (serializer-style interning, 99.87% hit rate) also landed
+at parity — a forcing-only control bounds all discipline at ≤15% of
+the pass — and the true seat of the cost was found: `goMeta` walks
+every solved meta's judgement type, which with `--save-metas` off is
+discarded before serialization anyway.  Skipping `jMetaType` under
+that condition collapses the pass 164× (2,726 s → 16.6 s, module
+total ~3,200 s → 428 s) with a byte-identical interface — the
+upstreamable fix, replacing both the bypass and the "store less"
+program for the default configuration.  Full data:
+`DEADCODE-COST.md`.
