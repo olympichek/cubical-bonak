@@ -43,9 +43,50 @@ their groupoid structure), kept on branches / worktrees:
   raw numbers (`CONV-EXP-NOTES.md`).
 
 Self-contained: builtin cubical primitives only (`Bonak/Prelude.agda`),
-no external library. Toolchain: Agda 2.8.0,
-flags `--cubical --prop --guardedness` (set library-wide in
-`cubical-bonak.agda-lib`).
+no external library. Flags `--cubical --prop --guardedness` are set
+library-wide in `cubical-bonak.agda-lib`, so no file needs its own
+`OPTIONS` beyond `--termination-depth`.
+
+## Toolchain
+
+Agda 2.8.0 checks the tree, but the preferred toolchain is an Agda
+2.9.0 nightly: it carries the fix for the interface pass analysed in
+`DEADCODE-COST.md`, which is the difference between a ~39 min and a
+~5.5 min cold build of the νGpd storey. Hackage carries releases only,
+so the nightly is built from source: `cabal.project` holds nothing but
+the URL of Agda's rolling `nightly` tag, and building it from the
+repository root installs the compiler.
+
+```sh
+cabal install exe:agda -w ghc-9.12.2 --program-suffix=-nightly \
+      --installdir=~/.local/bin --overwrite-policy=always
+```
+
+That leaves `agda-nightly` on the PATH beside whatever `agda` is.
+`-w` is optional and picks a GHC whose package store is already
+populated (Agda 2.9.0 supports 9.2.8 to 9.14.1); the tag moves with
+master, and `cabal.project` says how to pin a commit instead.
+`install` also builds `agda-mode` and the
+`agda-tests` executable with its tasty dependencies (14 units against
+2); to skip them, `cabal build exe:agda` with the same flags and
+symlink `cabal list-bin exe:agda` instead. Interfaces are cached per
+Agda version under `_build/<version>/agda/`, so a release and a
+nightly can be used alternately without invalidating each other's
+caches.
+
+## Building
+
+```sh
+agda --build-library
+```
+
+checks every module the `.agda-lib` includes. To check one root
+instead: `agda probes/Examples.agda` is the νSet gate and
+`agda probes/ExamplesGpd.agda` the νGpd gate, each pulling in what it
+imports. `--parallel` / `-j` exists on 2.9.0 but loses on this tree —
+6 min 42 s against 5 min 34 s sequential for the full library, the
+chain `Prelude → … → GpdLemmas → νGpd` being linear (cf.
+agda/agda#8477).
 
 Feasibility probes live in `probes/` (P00: the three flags coexist;
 Prop-valued `leR` is definitionally irrelevant in index positions;
