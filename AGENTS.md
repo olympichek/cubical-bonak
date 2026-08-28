@@ -77,6 +77,25 @@ branches; port findings back via `agents/notes/PORTING-NOTES.md`.
   proofs, reorder their clauses, or change how they are abstracted,
   even when a shorter proof checks.
 
+## Code style
+
+- Code lines may run to ~90 columns; comments stay wrapped at ~72.
+  Keep the final arguments of an application on the same line as the
+  rest of the call rather than dangling on a short continuation line;
+  when an expression must break, break before a subexpression (an
+  opening parenthesis starts its own line, as with `(compPathP` in
+  νGpd's coh-layer), never after one.
+- Iterated successors are written with the postfix pattern synonyms
+  `_+1` … `_+4` from Bonak.Prelude: `(n +3)`, `(p + k +2)`. They must
+  stay pattern synonyms — a defined function in their place hides the
+  constructors from the termination checker's call matrices and the
+  mutual blocks stop checking.
+- The bound lemmas are applied with explicit indices
+  (`le-trans s r k Hs Hr`, `le-up q k Hq`). The implicit-argument
+  operators `_↕_`/`↑_`/`↓_` in Bonak.LeProp fail inference at tower
+  call sites: `_≤_` is a defined function, so Agda cannot recover the
+  bounds from a proof's type.
+
 ## Writing preferences
 
 For code comments, PR descriptions, and durable documentation:

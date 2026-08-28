@@ -1101,13 +1101,11 @@ module _
             {aR = F̂sq bC (subst T̃ κ'C c̃C)}
             (Hqs bC (subst T̃ κ'C c̃C)) sqC)
           (compPathP {P = P}
-            (λ j → Fq (sC j)
-                     (subst-filler S sC (Ĝs bC (subst T̃ κ'C c̃C)) j))
+            (λ j → Fq (sC j) (subst-filler S sC (Ĝs bC (subst T̃ κ'C c̃C)) j))
             (subst-filler P (κqf dRC)
               (Fq (w⁺ dRC) (subst S sC (Ĝs bC (subst T̃ κ'C c̃C))))))
           (compPathP {P = P}
-            (λ j → Fs (D2C j)
-                     (subst-filler S D2C (F̂sq bC (subst T̃ κ'C c̃C)) j))
+            (λ j → Fs (D2C j) (subst-filler S D2C (F̂sq bC (subst T̃ κ'C c̃C)) j))
             (subst-filler P (κsf dEC)
               (Fs (w⁺ dEC) (subst S D2C (F̂sq bC (subst T̃ κ'C c̃C)))))))
       (fillD : SquareP (λ j i → P (sqD j i))
@@ -1119,13 +1117,11 @@ module _
             {aR = F̂sr bD (subst T̃ κ'E c̃E)}
             (Hrs bD (subst T̃ κ'E c̃E)) sqD)
           (compPathP {P = P}
-            (λ j → Fr (sD j)
-                     (subst-filler S sD (Ĝs bD (subst T̃ κ'E c̃E)) j))
+            (λ j → Fr (sD j) (subst-filler S sD (Ĝs bD (subst T̃ κ'E c̃E)) j))
             (subst-filler P (κrf dRD)
               (Fr (w⁺ dRD) (subst S sD (Ĝs bD (subst T̃ κ'E c̃E))))))
           (compPathP {P = P}
-            (λ j → Fs (D1E1 j)
-                     (subst-filler S D1E1 (F̂sr bD (subst T̃ κ'E c̃E)) j))
+            (λ j → Fs (D1E1 j) (subst-filler S D1E1 (F̂sr bD (subst T̃ κ'E c̃E)) j))
             (subst-filler P (κsf dED)
               (Fs (w⁺ dED) (subst S D1E1 (F̂sr bD (subst T̃ κ'E c̃E)))))))
       -- the premise: the painting 2-coherence at the arity-point-restricted
@@ -1135,10 +1131,8 @@ module _
       (σp : SquareP (λ i j → P (B₀ i j))
               (Hqr mSb cS̃)
               (λ jj → Fs (KE1 jj) (HCPE1 jj))
-              (compPathP {P = P} (λ ii → Fq (KC2 ii) (HCPC2 ii))
-                 (Hqs nRb c̃C))
-              (compPathP {P = P} (λ ii → Fr (KD2 ii) (HCPD2 ii))
-                 (Hrs nEb c̃E)))
+              (compPathP {P = P} (λ ii → Fq (KC2 ii) (HCPC2 ii)) (Hqs nRb c̃C))
+              (compPathP {P = P} (λ ii → Fr (KD2 ii) (HCPD2 ii)) (Hrs nEb c̃E)))
       -- the goal base square and the base cells padding its side edges
       -- from the applied composites to the laterals' pointwise composites
       (BG : Square (cong (λ y → R y t) E1K)
@@ -1183,8 +1177,7 @@ module _
              (λ m → fillK m i0))
           (compPathP {P = P} (λ m → Fs (sqE1 m i0) (fillPE1 m i0))
              (λ m → subst-filler P (κE1 i0) (aE1 i0) m))
-        LC = padP {P = P} (∙sliceP {P = P} σu' σv) ccK
-               (λ o m → ccE (~ o) m)
+        LC = padP {P = P} (∙sliceP {P = P} σu' σv) ccK (λ o m → ccE (~ o) m)
         LD : SquareP (λ m ii → P (LDb m ii))
           (compPathP {P = P} (λ ii → Fr (KD2 ii) (HCPD2 ii)) (Hrs nEb c̃E))
           (compPathP {P = P} (λ ii → subst P (κD ii) (aD ii))
@@ -1193,12 +1186,10 @@ module _
               {C2 = sD} {D2 = D1E1} {C1 = κrf dRD} {D1 = κsf dED}
               {K = Krs bD} {aL = XD} {aR = aRD}
               (Hrs bD lED) sqD))
-          (compPathP {P = P} (λ m → Hqr (κ' m) (ŝf m) i1)
-             (λ m → fillK m i1))
+          (compPathP {P = P} (λ m → Hqr (κ' m) (ŝf m) i1) (λ m → fillK m i1))
           (compPathP {P = P} (λ m → Fs (sqE1 m i1) (fillPE1 m i1))
              (λ m → subst-filler P (κE1 i1) (aE1 i1) m))
-        LD = padP {P = P} (∙sliceP {P = P} σd' σe) cc0D
-               (λ o m → cc1D (~ o) m)
+        LD = padP {P = P} (∙sliceP {P = P} σd' σe) cc0D (λ o m → cc1D (~ o) m)
 
         -- the cube: the painting 2-coherence premise transported across the
         -- isGroupoid interior along the four laterals

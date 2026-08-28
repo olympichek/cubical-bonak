@@ -29,6 +29,17 @@ open import Agda.Builtin.Bool public
 open import Agda.Builtin.Nat public
   using (zero; suc) renaming (Nat to ℕ)
 
+-- Postfix successor iterates. Pattern synonyms rather than
+-- definitions: occurrences elaborate to suc constructors, so iterated
+-- successors in signatures stay visible to the termination checker's
+-- call matrices.
+infixl 5 _+1 _+2 _+3 _+4
+
+pattern _+1 n = suc n
+pattern _+2 n = suc (suc n)
+pattern _+3 n = suc (suc (suc n))
+pattern _+4 n = suc (suc (suc (suc n)))
+
 private variable
   ℓ ℓ' ℓ'' : Level
   A B C : Set ℓ
