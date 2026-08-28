@@ -96,7 +96,6 @@ module Bonak.νSet (arity : Set) where
 
 open import Bonak.Prelude
 open import Bonak.LeProp
-open import Bonak.EqProp
 open import Bonak.RewLemmas
 open import Bonak.NatRew
 

@@ -1,7 +1,8 @@
 ------------------------------------------------------------------------
--- Bonak.LeProp — the recursive ≤, mirroring Rocq's LeSProp.v.
+-- Bonak.LeProp — the recursive ≤ on ℕ (mirroring Rocq's LeSProp.v)
+-- and the recursive equality EqN.
 --
--- Design (probes/P01-le-transport.agda): Prop-valued ≤ breaks Cubical
+-- Design (agents/probes/P01-le-transport.agda): Prop-valued ≤ breaks Cubical
 -- Agda's transport-clause generation for indexed matches
 -- (CannotGenerateTransportClause), so ≤ is Set-valued — recursive into
 -- η-⊤ / ⊥ — and *all proof arguments throughout the development are
@@ -63,3 +64,20 @@ infix 40 ↑_
 infix 40 ↓_
 ↓_ : {n m : ℕ} → .(suc n ≤ m) → n ≤ m
 ↓_ {n} {m} h = le-down n m h
+
+-- EqN, the recursive equality on ℕ, follows the same design.  The
+-- dimension columns of Bonak.νSet tie the explicit ℕ argument to the
+-- member's indices with a proof of `EqN n m`: `EqN (suc n) (suc m)`
+-- REDUCES to `EqN n m`, so one proof is passed down every level of
+-- the tower verbatim — no `injSuc`, no transport — and the impossible
+-- dimension shapes close with an absurd pattern.
+
+EqN : ℕ → ℕ → Set
+EqN zero    zero    = ⊤
+EqN zero    (suc m) = ⊥
+EqN (suc n) zero    = ⊥
+EqN (suc n) (suc m) = EqN n m
+
+eqN-refl : (n : ℕ) → EqN n n
+eqN-refl zero    = tt
+eqN-refl (suc n) = eqN-refl n

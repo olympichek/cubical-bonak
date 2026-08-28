@@ -34,7 +34,6 @@ module Bonak.νGpd (arity : Set) where
 
 open import Bonak.Prelude
 open import Bonak.LeProp
-open import Bonak.EqProp
 open import Bonak.RewLemmas
 open import Bonak.GpdLemmas
 open import Bonak.NatRew
