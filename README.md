@@ -45,14 +45,21 @@ Self-contained: everything is built from the builtin cubical primitives collecte
 
 ## Toolchain
 
-The tree checks with Agda 2.8.0; the preferred toolchain is an Agda 2.9.0 nightly, which carries the interface-pass fix for the νGpd pasting kit's large telescopes. In cold sequential builds of the same checkout on the same machine, the νGpd tower took approximately 39 minutes with Agda 2.8.0 and 5.5 minutes with the nightly. The nightly is built from source: `cabal.project` holds the URL of Agda's rolling `nightly` tag, and building it from the repository root installs the compiler.
+The tree checks with Agda 2.8.0; the preferred toolchain is an Agda 2.9.0 nightly, which carries the interface-pass fix for the νGpd pasting kit's large telescopes. In cold sequential builds of the same checkout on the same machine, the νGpd tower took approximately 39 minutes with Agda 2.8.0 and 5.5 minutes with the nightly. The nightly is built from the source archive of Agda's rolling `nightly` tag.
+
+Starting from a bare machine, [GHCup](https://www.haskell.org/ghcup/) provides the Haskell toolchain; the versions below are the ones this sequence is verified with, and the nightly's own `tested-with` currently spans GHC 9.4 through 9.14. Unpack the archive anywhere outside this repository — `agda --build-library` checks every Agda file under the library root, so the compiler's own test files must not land there — and install from the unpacked directory:
 
 ```sh
+ghcup install ghc 9.12.2
+ghcup install cabal 3.18.1.0 --set
+cabal update
+curl -L https://github.com/agda/agda/archive/refs/tags/nightly.tar.gz | tar xz
+cd agda-nightly
 cabal install exe:agda -w ghc-9.12.2 --program-suffix=-nightly \
-      --installdir=~/.local/bin --overwrite-policy=always
+      --installdir="$HOME/.local/bin" --overwrite-policy=always
 ```
 
-That leaves `agda-nightly` on the PATH beside whatever `agda` is. `-w` is optional and selects the GHC version. The tag moves with master, and `cabal.project` shows how to pin a commit instead. To build just the compiler, run `cabal build exe:agda -w ghc-9.12.2`, obtain its path with `cabal list-bin exe:agda`, and symlink it as `agda-nightly`. Interfaces are cached per Agda version under `_build/<version>/agda/`, so a release and a nightly can be used alternately while keeping each other's caches intact.
+That leaves `agda-nightly` on the PATH beside whatever `agda` is. `-w` selects the GHC version; write the install directory with `$HOME`, since the shell does not expand `~` inside `--installdir=`. The tag moves with master; to pin a commit, download `archive/<sha>.tar.gz` instead (it unpacks to `agda-<sha>`). Keeping the unpacked directory allows incremental rebuilds across nightly bumps: run `cabal build exe:agda -w ghc-9.12.2` there, obtain the binary's path with `cabal list-bin exe:agda`, and symlink it as `agda-nightly`. Interfaces are cached per Agda version under `_build/<version>/agda/`, so a release and a nightly can be used alternately while keeping each other's caches intact.
 
 ## Building
 

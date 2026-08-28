@@ -27,7 +27,9 @@ branches, build discipline, and writing preferences.
   `V4-REPORT.md` narrates the fillers-only design, `CONV-COST.md` the
   pasting kit's conversion profile, `DEADCODE-COST.md` the Agda
   interface-pass overhead, `PARALLEL-BUILD.md` the `--parallel`/`-j`
-  measurement.
+  measurement, `NIGHTLY-TOOLCHAIN.md` the cabal mechanisms that
+  cannot drive the nightly compiler build (why there is no
+  `cabal.project`).
 
 ## Branches and worktrees
 
