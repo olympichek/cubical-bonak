@@ -4,16 +4,16 @@ Worktree `/home/olympichek/bonak/cubical-bonak/fillers-only`, branch
 `fillers-only`, Agda 2.8.0 (optimise-heavily), 2026-08-14.
 
 **Canonicalized (same day, later):** variant (b) is the canonical
-`Bonak/νSet.agda` of this branch (gate: `probes/Examples.agda`);
+`Bonak/νSet.agda` of this branch (gate: `examples/Examples.agda`);
 variant (a) and the V1 mirror's `νSet.agda`/`Examples.agda` are removed
 here (V1 lives on `main`). File names below are the build-time ones;
 the measurements are unaffected.
 
-**Canonicalized again (2026-08-17, later):** the fuel tower is now the
+**Canonicalized again (2026-08-17, later):** the dimension-column tower is now the
 canonical `Bonak/νSet.agda` of this branch — `Bonak/νSetF.agda` and its
-gate `probes/ExamplesF.agda` are renamed to `Bonak/νSet.agda` and
-`probes/Examples.agda`, and the 1-pragma tower they sat beside is
-removed. The output-fuel section's side-by-side comparison below keeps
+gate `agents/probes/ExamplesF.agda` are renamed to `Bonak/νSet.agda` and
+`examples/Examples.agda`, and the 1-pragma tower they sat beside is
+removed. The output-dimension section's side-by-side comparison below keeps
 the pre-rename names.
 
 **Result: V4 builds, computes, and is 8× cheaper than V1 to typecheck.**
@@ -29,8 +29,8 @@ addition, and six of eleven members carrying `{-# TERMINATING #-}`.
 | `Bonak/NatRew.agda` | 49 l — `+-zero`, `+-suc` as REWRITE rules |
 |  `Bonak/νSetV4.agda` (removed) | 291 l (≈205 code) — the full tower, prefix = `Σ` (variant a) |
 |  `Bonak/νSetV4R.agda` (now `Bonak/νSet.agda`) | 309 l — same, prefix = no-eta record (variant b) |
-| `probes/ExamplesV4.agda` (removed), `probes/ExamplesV4R.agda` (now `probes/Examples.agda`) | the gates |
-| `probes/V4-P00-rewrite.agda` | the decisive first probe (below) |
+| `agents/probes/ExamplesV4.agda` (removed), `agents/probes/ExamplesV4R.agda` (now `examples/Examples.agda`) | the gates |
+| `agents/probes/V4-P00-rewrite.agda` | the decisive first probe (below) |
 
 All eleven members are present and closed: `Pre`, `Fil`, `frame`,
 `layer`, `painting`, `restr-{frame,layer,painting}`,
@@ -71,7 +71,7 @@ which Agda does not have), and carrying `n` as an independent third index
 (then `p ≡ n` at `k = 0` is not definitional and `recover-nat-eq` comes
 back).
 
-`probes/V4-P00-rewrite.agda` tests the way out. Gates, all green:
+`agents/probes/V4-P00-rewrite.agda` tests the way out. Gates, all green:
 
 - `--cubical --prop --guardedness --rewriting` coexist;
 - the **cubical Path type is accepted as the REWRITE relation** (no
@@ -189,7 +189,7 @@ V4 does not have.
 
 ## 4. Gate
 
-`probes/ExamplesV4.agda` mirrors `Bonak/Examples.agda`:
+`agents/probes/ExamplesV4.agda` mirrors `Bonak/Examples.agda`:
 `AugmentedSemiSimplicial`, `SemiSimplicial`, `SemiCubical`, and
 `SemiSimplicial4 = Pre 4` (V1's `prefix (νSetAt 4)` *is* the list of four
 fillers, which fillers-only storage calls `Pre 4`), plus an inhabitant
@@ -401,7 +401,7 @@ peel moves into `frame`'s own clause. `Pre 4`'s normal form changes
 accordingly. Verdict: **still rejected, same seven members**.
 
 **(b) `Pre` being a type defined by recursion on ℕ rather than an
-inductive family.** New probe `probes/V4-P01-termination.agda` isolates
+inductive family.** New probe `agents/probes/V4-P01-termination.agda` isolates
 this. `FunPre` is the loop of §2 and nothing else — seven members, ten
 calls, same columns, same index discipline, same no-eta prefix, results
 erased to `Box` — and it reproduces the rejection exactly, member for
@@ -441,12 +441,12 @@ kept, for readability.
 | conversions (`--profile=conversion`) | 3,859 | **3,859** |
 | cold full check incl. the gate | 1.11 s | 0.83 / 0.88 / 0.89 s |
 
-`probes/Examples.agda` green. `frame4` and `SemiSimplicial4` normal
+`examples/Examples.agda` green. `frame4` and `SemiSimplicial4` normal
 forms **byte-identical** to the committed state (captured through
 `agda --interaction`, `Cmd_compute_toplevel`); `frame4` still has zero
 `transp`/`hcomp`. The `q = 0` / `r = 0` bottom-index reductions at
 variable prefixes are untouched — nothing in the shipped diff touches a
-clause. `probes/V4-P01-termination.agda` is green (its `FunPre` carries
+clause. `agents/probes/V4-P01-termination.agda` is green (its `FunPre` carries
 the pragma; remove it to reproduce the rejection).
 
 ### 7. Trust posture
@@ -471,19 +471,19 @@ unchecked termination pragma — not six.
 
 ---
 
-## The fuel column (2026-08-15): attempted, refuted
+## The dimension column (2026-08-15): attempted, refuted
 
-**Goal: replace the pragma by an explicit fuel argument, per the recipe
-of `probes/V4-P02-fuel.agda`. Not reached.** Two complete variants of
+**Goal: replace the pragma by an explicit dimension argument, per the recipe
+of `agents/probes/V4-P02-dimension.agda`. Not reached.** Two complete variants of
 the block were built and typecheck; each is rejected by the termination
 checker, for opposite reasons, and the reasons combine into an
-obstruction that no single fuel column can avoid. The file is back to
+obstruction that no single dimension column can avoid. The file is back to
 its one-pragma state, byte-for-byte. Measured on this machine,
 Agda 2.8.0.
 
 ### 1. What the port needs before it can even be written
 
-- **A definitional equation on ℕ.** The probe carries the fuel with
+- **A definitional equation on ℕ.** The probe carries the dimension with
   `e : n ≡ p + k` and peels it with `injSuc`. At scale that is unusable:
   `injSuc e` is a term, it appears in the types of every member, and two
   peels of the same equation are not syntactically equal, so the
@@ -501,30 +501,30 @@ Agda 2.8.0.
   (`.(e : EqN n …)`, as the `q ≤ k` bounds already are) gives
   definitional proof irrelevance, so no proof term ever has to be
   matched with another. With it the port is transport-free.
-- **A fuel-polymorphic filler.** `Fil p k D` becomes
+- **A dimension-polymorphic filler.** `Fil p k D` becomes
   `(m : ℕ) .(f : EqN m (p + k)) → Dom (frame m p k f D) → HSet₀`: a
-  stored filler eats a point at any fuel, which is what lets
-  `painting p 0 D E d = E _ _ d` still fire when the point's fuel is a
+  stored filler eats a point at any dimension, which is what lets
+  `painting p 0 D E d = E _ _ d` still fire when the point's dimension is a
   variable. Without it the k = 0 clause does not typecheck.
 
 ### 2. Two variants, two rejections
 
-**(a) Fuel = the member's index sum `p + k`.** Every frame / layer /
-painting occurrence in a type carries the fuel of its own dimension,
+**(a) Dimension = the member's index sum `p + k`.** Every frame / layer /
+painting occurrence in a type carries its own dimension,
 written `n`, `suc n`, `suc (suc n)`, `suc (suc (suc n))`. The block
 typechecks. Rejected: `restr-frame`, `restr-layer`, `coh-frame`,
 `coh-layer`, `coh-painting`. Cause: a member's *statement* mentions
 members at a HIGHER dimension — its own point and layer arguments live
 over the full prefix — so those statement-borne calls (which the checker
 counts, as they reappear as solved implicits in the bodies) *increase*
-the column, e.g. `coh-frame` at fuel `n` mentions
+the column, e.g. `coh-frame` at dimension `n` mentions
 `restr-frame (suc (suc n)) …`.
 
-**(b) Fuel = the length of the member's own prefix.** Now every
+**(b) Dimension = the length of the member's own prefix.** Now every
 statement occurrence points downward or stays level, and the three
 coherences pass. Rejected: `frame`, `layer`, `restr-frame`,
 `restr-layer`, `restr-painting`. Cause: a signature has no way to name
-"one less than my fuel" except `predℕ n`, and **the termination checker
+"one less than my dimension" except `predℕ n`, and **the termination checker
 does not reduce `predℕ (suc n)`** — three-line probe, rejected:
 
 ```
@@ -540,7 +540,7 @@ contributes an unknown entry in the very column the measure lives in.
 Give every application a level, and write it as `|prefix| + c_M` with a
 constant per member. Two forces act on it:
 
-- *expressibility*: a signature can only write `suc^j` of its own fuel
+- *expressibility*: a signature can only write `suc^j` of its own dimension
   variable, so every application named in a member's statement must have
   level ≥ that member's;
 - *the checker*: every call, statement-borne ones included, must have
@@ -552,27 +552,27 @@ all the `c_M` equal, i.e. level = `p + const` — and `p` increases on
 `coh-painting`'s p↔k trading clause. Hence no level of that shape is
 both expressible and non-increasing. The `frame → frame` edge pins the
 rest: `layer`'s point argument has to be typed
-`Dom (frame <layer's own fuel> …)` for that edge to keep a known column,
-so the fuel cannot be kept out of the types, which is exactly what the
+`Dom (frame <layer's own dimension> …)` for that edge to keep a known column,
+so the dimension cannot be kept out of the types, which is exactly what the
 probe's model avoids by erasing all results to `Box`.
 
 ### 4. The route not taken
 
-Give every restriction and coherence an **output fuel**, universally
+Give every restriction and coherence an **output dimension**, universally
 quantified as `Fil` already has one. Then a peel is free — the caller
-instantiates the output fuel with a pattern-derived value, so no
+instantiates the output dimension with a pattern-derived value, so no
 `predℕ` and no unknown entries — and the loop's descent
 (`coh-layer → coh-painting`, where the premise comes from a layer's Π
-and therefore lives one fuel below) becomes visible. It fragments
+and therefore lives one dimension below) becomes visible. It fragments
 quickly: the two sides of the frame coherence restrict through different
-intermediate objects, so `coh-frame` needs two intermediate output fuels
+intermediate objects, so `coh-frame` needs two intermediate output dimensions
 and the layer and painting coherences inherit them, putting 4–6 extra
 arguments on every coherence statement. Not attempted here.
 
 ### 5. State and numbers after the attempt
 
 `Bonak/νSet.agda` and `Bonak/NatRew.agda` are back to their pre-attempt
-content; `probes/V4-P02-fuel.agda` is unchanged and still green.
+content; `agents/probes/V4-P02-dimension.agda` is unchanged and still green.
 
 | | before the attempt | after |
 |---|---|---|
@@ -581,7 +581,7 @@ content; `probes/V4-P02-fuel.agda` is unchanged and still green.
 | conversions (`--profile=conversion`) | 3,859 | 3,859 |
 | cold full check incl. the gate | 0.93 s | 0.90 s |
 
-`probes/Examples.agda` green; `frame4` and `SemiSimplicial4` normal
+`examples/Examples.agda` green; `frame4` and `SemiSimplicial4` normal
 forms (captured through `agda --interaction`, `Cmd_compute_toplevel`)
 byte-identical to the captures taken before the attempt — 485 and 466
 characters, character for character. The trust posture of the previous
@@ -590,64 +590,64 @@ and one termination pragma on the mutual block.
 
 ---
 
-## The output fuel route (2026-08-17): the pragma falls
+## The output dimension route (2026-08-17): the pragma falls
 
-**Goal: implement §4 of the previous section — output fuels on the
+**Goal: implement §4 of the previous section — output dimensions on the
 restrictions and coherences — and reach zero `{-# TERMINATING #-}`.
 Reached, though not by the sketched design.** The sketch's free output
-fuels are refuted by definitional equality; what conversion forces
-instead is exactly variant (a) of the fuel attempt, and variant (a)'s
+dimensions are refuted by definitional equality; what conversion forces
+instead is exactly variant (a) of the dimension attempt, and variant (a)'s
 rejection turns out to be a `--termination-depth` artifact.
-`Bonak/νSetF.agda` is the resulting tower: fuel columns, no pragma, no
+`Bonak/νSetF.agda` is the resulting tower: dimension columns, no pragma, no
 postulates, accepted at `--termination-depth ≥ 3`, and its `frame4`
 normal form is byte-identical to `Bonak/νSet.agda`'s. Everything below
 is measured on this machine, Agda 2.8.0.
 
-### 1. Free output fuels are unusable (probes/V4-P03-output-fuel.agda)
+### 1. Free output dimensions are unusable (agents/probes/V4-P03-output-dimension.agda)
 
-The sketch was: a restriction takes its result's fuel `m` as a fresh
+The sketch was: a restriction takes its result's dimension `m` as a fresh
 universally quantified argument, so no signature ever writes `predℕ`,
 and the caller instantiates `m` with a pattern-derived value. Two
 walls, both mechanical consequences of one fact — **a layer's
-components only reduce at a constructor-form fuel, and the reduction
-pins them to the pattern fuel**:
+components only reduce at a constructor-form dimension, and the reduction
+pins them to the pattern dimension**:
 
 - `restr-painting`'s q = 0 clause is `l ε`, and `l`'s Π-type only
-  fires after matching the input fuel as `suc n₀`, producing a
-  painting at fuel `n₀` where the signature promises fuel `m`.
+  fires after matching the input dimension as `suc n₀`, producing a
+  painting at dimension `n₀` where the signature promises dimension `m`.
   Rejected: `n₀ != m of type ℕ`. The two are propositionally equal
   (both `EqN`-related to `p + k`) but a cast between them is exactly
-  the recursive fuel coercion this design exists to avoid.
+  the recursive dimension coercion this design exists to avoid.
 - `restr-layer`'s result `Dom (layer m …)` is stuck at the free `m`,
   so its clause cannot even take the arity argument:
   `Cannot eliminate type … with variable pattern ω`.
 
-So the output's fuel must be the member's *own* variable with the
-input written `suc` of it — and then the two intermediate fuels §4
+So the output's dimension must be the member's *own* variable with the
+input written `suc` of it — and then the two intermediate dimensions §4
 expected `coh-frame` to need are forced equal (the outer restriction's
 input IS the inner's output), and the whole discipline collapses into
-variant (a): one fuel per member, every occurrence written `suc^j` of
-it. The bill is two extra arguments per member — the fuel and one
+variant (a): one dimension per member, every occurrence written `suc^j` of
+it. The bill is two extra arguments per member — the dimension and one
 irrelevant `EqN` proof — not §4's four-to-six: since
 `EqN (suc n) (suc m)` reduces to `EqN n m`, the single proof a member
 holds types every occurrence verbatim, at any depth.
 
-### 2. Variant (a)'s rejection was a depth artifact (probes/V4-P04-depth.agda)
+### 2. Variant (a)'s rejection was a depth artifact (agents/probes/V4-P04-depth.agda)
 
-Variant (a) was rejected because statement-borne calls carry fuels
+Variant (a) was rejected because statement-borne calls carry dimensions
 above the caller's own — by up to three constructors (`coh-layer`'s
-point is a `frame` at `suc³` of its fuel). Those are *bounded*
+point is a `frame` at `suc³` of its dimension). Those are *bounded*
 increases, and bounded increases are precisely what
-`--termination-depth` exists for; the fuel attempt ran at the file's
+`--termination-depth` exists for; the dimension attempt ran at the file's
 depth 2 and the depth sweep of the pragma section was only ever run on
-the fuel-less file. The probe settles it: V4-P02's ACCEPTED `FuelPre`
+the column-free file. The probe settles it: V4-P02's ACCEPTED `DimPre`
 model plus one explicit call per statement-borne occurrence of the
 variant-(a) signatures, at its real offset, is rejected at depths
 1–3 and **accepted at depth 4**, no pragma.
 
 ### 3. The tower: Bonak/νSetF.agda
 
-The port (with `Bonak/EqProp.agda` supplying `EqN`, mirroring
+The port (with `Bonak/LeProp.agda` supplying `EqN`, mirroring
 `LeProp`):
 
 - every member takes `(n : ℕ)` first plus one irrelevant
@@ -655,17 +655,17 @@ The port (with `Bonak/EqProp.agda` supplying `EqN`, mirroring
   lowest-dimensional occurrence (`p + k` for frame / painting /
   restr-frame / restr-painting / coh-frame / coh-painting,
   `suc (p + k)` for layer / restr-layer / coh-layer);
-- `Fil` is the one fuel-polymorphic spot:
+- `Fil` is the one dimension-polymorphic spot:
   `Fil p k D = (m : ℕ) .(f : EqN m (p + k)) → Dom (frame m p k f D) →
   HSet₀`, which is what lets `painting`'s base case apply a stored
-  filler at the variable fuel a peel produces;
-- fuel is matched in exactly three places — `layer`, `restr-layer`,
+  filler at the variable dimension a peel produces;
+- dimension is matched in exactly three places — `layer`, `restr-layer`,
   `coh-layer` peel one `suc` in step with the prefix — adding three
   absurd clauses (`EqN zero (suc _)` is ⊥); everything else receives
-  its fuel as a determined term;
-- the clause bodies are Bonak.νSet's with fuels filled in by
+  its dimension as a determined term;
+- the clause bodies are Bonak.νSet's with dimensions filled in by
   dimension, `coh-layer`'s `rew-cohLayer33` paste included; the
-  discipline is rigid enough that the only porting error made (a fuel
+  discipline is rigid enough that the only porting error made (a dimension
   one `suc` short on `coh-layer`'s `dR`/`dE`) was caught by the type
   checker.
 
@@ -683,14 +683,14 @@ a search knob, not an assumption.
 | compare by reduction | 795 | 952 |
 | cold check incl. its gate | 0.74 s | 1.21 s |
 
-`probes/ExamplesF.agda` green (fillers written `λ m f d → …`).
+`agents/probes/ExamplesF.agda` green (fillers written `λ m f d → …`).
 `frame4`'s normal form (captured through `agda --interaction`,
 `Cmd_compute_toplevel`) is **byte-identical** across the two towers —
-at closed dimensions every fuel reduces away — and still has zero
+at closed dimensions every dimension reduces away — and still has zero
 `transp`/`hcomp`. `SemiSimplicial4`'s normal form is the one
-observable change: each stored filler type now carries its fuel
+observable change: each stored filler type now carries its dimension
 quantifier, `(m : ℕ) .(f : EqN m <n>) → Dom (frame m <n> 0 f D) →
-HSet₀`, with the frame under it stuck at the variable fuel until a
+HSet₀`, with the frame under it stuck at the variable dimension until a
 point is eaten.
 
 ### 5. Trust posture
@@ -701,25 +701,25 @@ point is eaten.
 - **The termination pragma: gone.** The recursion of the fillers-only
   tower is now checked, with the prefix length as an explicit
   structural column. The residue is `--termination-depth=3` and the
-  two fuel arguments in every member's signature.
+  two dimension arguments in every member's signature.
 
 `νSetF.agda` sits beside `νSet.agda` rather than replacing it: the
-swap costs the filler-facing API change (fuel-polymorphic fillers, a
-fuel argument on every member), a 2.4× marginal check, and the same
+swap costs the filler-facing API change (dimension-polymorphic fillers, a
+dimension argument on every member), a 2.4× marginal check, and the same
 treatment for anything built on top (the νGpd storey, if ported to
 this branch). Whether a checked termination argument is worth that
 trade for the canonical file is a judgement call the measurements
 above are meant to inform.
 
-### 6. Can the fuel column shrink? (same day, later)
+### 6. Can the dimension column shrink? (same day, later)
 
 Two candidate simplifications, one refuted long since and one tested
-now (probes/V4-P05-fuel-no-proof.agda):
+now (agents/probes/V4-P05-dimension-no-proof.agda):
 
-**The fuel `n` itself cannot go.** It is the structural column the
-whole result rests on: the fuel-less block is the pragma sections'
+**The dimension `n` itself cannot go.** It is the structural column the
+whole result rests on: the column-free block is the pragma sections'
 subject, rejected at --termination-depth 1..10 alike, and §3 of the
-fuel section shows no expressible single measure over the existing
+dimension section shows no expressible single measure over the existing
 arguments works. Nor can `n` be fused into an existing index: retyping
 the prefix as `Pre n` moves the k = 0 coercion from the prefix length
 to the frame's p-index (`frame m p 0` against `frame m n 0`), which is
@@ -730,7 +730,7 @@ frame application happens to appear in a visible type.
 
 **The proof `.(e : EqN n (p + k))` is syntactically dead weight — and
 kept anyway.** It is never used computationally: it closes the three
-impossible-fuel clauses and guards `Fil`'s quantifier. `V4-P05` is the
+impossible-dimension clauses and guards `Fil`'s quantifier. `V4-P05` is the
 full tower with the proof deleted, the absurd clauses turned into junk
 clauses (`layer zero … = hunit`, whence `restr-layer zero … = tt` and
 `coh-layer zero … = refl` by η-⊤), and `Fil p k D = (m : ℕ) →
@@ -741,15 +741,15 @@ proof's price measured at 3–7 % (tower + gate: 0.80 s / 3,271 compare
 equal / 371 compare irrelevant with the proof, 0.77 s / 3,051 / 142
 without).
 
-The reason to keep the proof is what it does to the WRONG-fuel sector
-of `Fil`. Without the guard, `frame m p k D` at a wrong fuel reduces
+The reason to keep the proof is what it does to the WRONG-dimension sector
+of `Fil`. Without the guard, `frame m p k D` at a wrong dimension reduces
 to an inhabited ⊤-tower (the junk layers are `hunit`), so a filler
-genuinely carries one HSet-family per wrong fuel and two ν-sets can
+genuinely carries one HSet-family per wrong dimension and two ν-sets can
 differ there: the proof-free `Fil` is strictly bigger than νSet's.
-With the guard, the wrong-fuel fibers are functions out of an
+With the guard, the wrong-dimension fibers are functions out of an
 irrelevant ⊥ — any two are identified pointwise by an absurd
-irrelevant match, under funExt — so the fueled filler type is
-equivalent to the unfueled one and the fuel column is structure-free.
+irrelevant match, under funExt — so the dimensioned filler type is
+equivalent to the dimension-free one and the dimension column is structure-free.
 (A mathematical remark about the intended νSet ⟷ νSetF comparison,
 not a mechanized one.) Since the proof's syntactic cost is one
 threaded argument at 3–7 % of the check, νSetF keeps it.
@@ -765,7 +765,7 @@ painting-family (painting, restr-painting, coh-painting) matches k —
 induction on the levels remaining, base `k = 0` where the stored
 filler applies. The layer-family (layer, restr-layer, coh-layer)
 matches n — the peel of the prefix, which was always the third
-recursion (driven by matching `(D ∷ E)` before the fuel port); n is
+recursion (driven by matching `(D ∷ E)` before the dimension port); n is
 that recursion's ℕ-shadow, present because the checker cannot read
 the prefix's length under a recursively defined `Pre`.
 
@@ -785,8 +785,8 @@ family, plus the irrelevant witness of §6.
 
 No — and the reason is a finding in its own right. Tested on the
 bonak-patched-rocq switch (Rocq 9.4+alpha, the patched-CI toolchain);
-receipts in probes/V4_P06_rocq_backport.v, a Rocq file among the Agda
-probes.
+receipts in agents/probes/V4_P06_rocq_backport.v, a Rocq file among the Agda
+agents.probes.
 
 **The guard is the fatal blocker.** νSetF's termination is a
 size-change argument — three families descending on three different
@@ -799,13 +799,13 @@ argument, and rejects the block's call skeleton on its first edge:
     "n" instead of "p'".
 
 No struct assignment fares better (frame → layer and painting →
-layer pass an equal fuel), and Rocq has no pragma escape. The
+layer pass an equal dimension), and Rocq has no pragma escape. The
 workarounds forfeit the design: well-founded recursion (Equations /
 Program) unfolds only on closed accessibility witnesses, killing the
 variable-index reductions the conversion story needs (the r = 0
 restriction, the coercion-free painting base); and restaging on the
-fuel is blocked by the suc-written UP-references in the coherence
-statements — a coherence at fuel m mentions restrictions at suc m and
+dimension is blocked by the suc-written UP-references in the coherence
+statements — a coherence at dimension m mentions restrictions at suc m and
 suc² m, so staging demands re-indexing every statement downward over
 stored per-stratum data, which re-derives the existing Rocq
 architecture, Deps records and all. **The stored-strata Rocq original

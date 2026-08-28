@@ -5,7 +5,7 @@
 -- clauses)?  Reproduces the CannotGenerateTransportClause error from
 -- νSet.agda's mkRestrPainting and tests the alternatives.
 
-module probes.P01-le-transport where
+module agents.probes.P01-le-transport where
 
 open import Agda.Builtin.Nat renaming (Nat to ℕ)
 open import Agda.Primitive.Cubical renaming (primTransp to transp)

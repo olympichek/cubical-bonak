@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------
--- probes.V4-P02-fuel — can an explicit length argument replace the
--- TERMINATING pragma?
+-- agents.probes.V4-P02-dimension — can an explicit length argument
+-- replace the TERMINATING pragma?
 --
--- `FuelPre` is probes.V4-P01-termination's rejected `FunPre` cycle —
+-- `DimPre` is agents.probes.V4-P01-termination's rejected `FunPre` cycle —
 -- same seven members, same ten calls, `Pre` still a type defined by
 -- recursion on ℕ — with two arguments added to every member: the prefix
 -- length `n : ℕ` and the equation `e : n ≡ p + k`.  `n` occurs in no
@@ -18,21 +18,21 @@
 --
 -- No TERMINATING pragma anywhere in this file.  ACCEPTED — and at the
 -- default termination depth as well (the --termination-depth=2 below
--- only mirrors the main block's options): the fuel column alone
+-- only mirrors the main block's options): the dimension column alone
 -- carries the argument, no depth is involved.
 --
 -- The scope of that result is set by the erasure: every member here
--- returns `Box`, so the fuel occurs in no type.  A tower whose members
--- take points and paths of the frames they build puts the fuel into the
+-- returns `Box`, so the dimension occurs in no type.  A tower whose members
+-- take points and paths of the frames they build puts the dimension into the
 -- types of those arguments, and the column is then pinned: a statement
 -- names objects both above and below its own prefix, and one of the two
--- directions stops being expressible from a single fuel variable.  The
--- account is in V4-REPORT.md, "The fuel column".
+-- directions stops being expressible from a single dimension variable.  The
+-- account is in V4-REPORT.md, "The dimension column".
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting --termination-depth=2 #-}
 
-module probes.V4-P02-fuel where
+module agents.probes.V4-P02-dimension where
 
 open import Bonak.Prelude
 open import Bonak.NatRew
@@ -63,10 +63,10 @@ injSuc : {m n : ℕ} → suc m ≡ suc n → m ≡ n
 injSuc = cong predℕ
 
 ------------------------------------------------------------------------
--- FunPre's cycle with the fuel column.
+-- FunPre's cycle with the dimension column.
 ------------------------------------------------------------------------
 
-module FuelPre where
+module DimPre where
 
   record Snoc (A : Set₁) (B : A → Set₁) : Set₁ where
     no-eta-equality; pattern

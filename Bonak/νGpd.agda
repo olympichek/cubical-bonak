@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 -- Bonak.νGpd — the νGpd tower: the groupoid storey of Bonak.νSet, on
--- the same storage, index, fuel and equality disciplines (see that
+-- the same storage, index, dimension and equality disciplines (see that
 -- file's header; everything said there carries over verbatim).
 --
 -- What changes at the groupoid level:
@@ -21,7 +21,7 @@
 --     the four-face permutahedron cube in the HGpd of frames, the
 --     cubical form of Rocq's single GUIP use (νGpd.v:918).
 --   * Termination stays checked, no pragma: the coh2 statements write
---     occurrences up to suc⁴ of the member's fuel (coh2-layer's
+--     occurrences up to suc⁴ of the member's dimension (coh2-layer's
 --     premise pack lives four storeys up), so the call matrices carry
 --     +4 increases and the checker needs --termination-depth=4 —
 --     rejected at 3 on the restr-frame..coh2-layer-suc group, exactly
@@ -61,13 +61,13 @@ Fil : (p k : ℕ) (D : Pre (p + k)) → Set₁
 Pre zero    = Unit*
 Pre (suc n) = Snoc (Pre n) (Fil n 0)
 
--- frame(p) at dimension p + k, at fuel n ~ p + k.
+-- frame(p) at dimension p + k, carried as the argument n ~ p + k.
 frame : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k)) → HGpd₀
 
--- A filler eats a point of the full frame AT ANY FUEL.
+-- A filler eats a point of the full frame AT ANY DIMENSION.
 Fil p k D = (m : ℕ) .(f : EqN m (p + k)) → GDom (frame m p k f D) → HGpd₀
 
--- layer(p) at dimension p + k + 1; its fuel is its point's.
+-- layer(p) at dimension p + k + 1; its dimension argument is its point's.
 layer : (n p k : ℕ) .(e : EqN n (suc (p + k))) (D : Pre (suc (p + k)))
         (d : GDom (frame n p (suc k) e D)) → HGpd₀
 
@@ -77,8 +77,8 @@ painting : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k))
            (d : GDom (frame n p k e D)) → HGpd₀
 
 -- The three restrictions: dimension p + k + 1 ↦ dimension p + k along
--- the q-th face (q ≤ k); the fuel is the OUTPUT's, the input's is
--- suc of it.
+-- the q-th face (q ≤ k); the dimension argument is the OUTPUT's,
+-- the input's is suc of it.
 restr-frame : (n p k : ℕ) .(e : EqN n (p + k))
               (D : Pre (suc (p + k)))
               (q : ℕ) .(Hq : q ≤ k) (ε : arity)
@@ -102,7 +102,7 @@ restr-painting : (n p k : ℕ) .(e : EqN n (p + k))
                            (restr-frame n p k e D q Hq ε d))
 
 -- The three coherences: the faces q and r commute (r ≤ q ≤ k); the
--- fuel is the final output's, two below the point's.
+-- dimension argument is the final output's, two below the point's.
 coh-frame : (n p k : ℕ) .(e : EqN n (p + k))
             (D : Pre (suc (suc (p + k))))
             (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
@@ -152,7 +152,7 @@ coh-painting : (n p k : ℕ) .(e : EqN n (p + k))
                          Hq ε d c))
 
 -- The three 2-coherences: the faces q, r and s commute (s ≤ r ≤ q ≤ k);
--- the fuel is the final output's, three below the point's.  The
+-- the dimension argument is the final output's, three below the point's.  The
 -- 2-dimensional frame coherence is the three-face hexagon in Square
 -- form — the square coh-layer's proof consumes, with the s-th face
 -- generalized from the layer direction (s = 0) to any s ≤ r: the
@@ -1070,7 +1070,7 @@ coh2-painting n p (suc k) e (((D ∷ E₁) ∷ E₂) ∷ E₃) E (suc q) Hq (suc
 ------------------------------------------------------------------------
 
 -- The full frame at dimension n: the one whose index is the length,
--- at the fuel that IS the length.
+-- at the dimension that IS the length.
 fullframe : {n : ℕ} (D : Pre n) → HGpd₀
 fullframe {n} D = frame n n 0 (eqN-refl n) D
 

@@ -1,36 +1,37 @@
 ------------------------------------------------------------------------
--- probes.V4-P03-output-fuel — the "output fuel" route of V4-REPORT.md
--- §"The fuel column" item 4: restrictions and coherences take their
--- result's fuel as a universally quantified argument, so no signature
--- ever writes `predℕ` and the caller instantiates the output fuel with
--- a pattern-derived value.
+-- agents.probes.V4-P03-output-dimension — the "output dimension"
+-- route of V4-REPORT.md §"The dimension column" item 4: restrictions
+-- and coherences take their result's dimension as a universally
+-- quantified argument, so no signature ever writes `predℕ` and the
+-- caller instantiates the output dimension with a pattern-derived
+-- value.
 --
 -- This probe tests the route's CONVERSION obligations, on a mini-tower
--- with the real types (HSet frames, Π-layers, fuel-polymorphic
+-- with the real types (HSet frames, Π-layers, dimension-polymorphic
 -- fillers) and the real bodies of the structural members; the members
 -- whose bodies are irrelevant to the question are closed with a
 -- postulated inhabitant, and the block carries a TERMINATING pragma —
 -- termination is NOT this probe's question, definitional equality is.
 --
 -- `Wall` is the route as sketched: every restriction takes its output
--- fuel `m` as a free variable.  Its `restr-painting` q = 0 clause is
--- `l ε` — and `l`'s type only reduces after matching the INPUT fuel as
--- `suc n₀`, which pins the layer's components to the pattern fuel n₀,
--- while the signature promises them at the free fuel m.  n₀ and m are
+-- dimension `m` as a free variable.  Its `restr-painting` q = 0 clause is
+-- `l ε` — and `l`'s type only reduces after matching the INPUT dimension as
+-- `suc n₀`, which pins the layer's components to the pattern dimension n₀,
+-- while the signature promises them at the free dimension m.  n₀ and m are
 -- propositionally equal (both are EqN-related to p + k) but not
 -- convertible, and no cast between the two is expressible without the
 -- recursive coercions the fillers-only design exists to avoid.
 --
--- OUTCOME: the two walls force the single suc-written fuel per member
--- (fuel variant (a) of the report), whose statement-borne up-calls the
+-- OUTCOME: the two walls force the single suc-written dimension per member
+-- (dimension variant (a) of the report), whose statement-borne up-calls the
 -- checker composes at --termination-depth ≥ 3 — see
--- probes/V4-P04-depth.agda for the mechanism and Bonak.νSet for the
+-- agents/probes/V4-P04-depth.agda for the mechanism and Bonak.νSet for the
 -- resulting pragma-free tower.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting --termination-depth=2 #-}
 
-module probes.V4-P03-output-fuel where
+module agents.probes.V4-P03-output-dimension where
 
 open import Bonak.Prelude
 open import Bonak.LeProp using (⊥)
@@ -41,7 +42,7 @@ postulate arity : Set
 -- Scaffold for bodies whose content is irrelevant to the probe.
 postulate ANY : ∀ {ℓ} {A : Set ℓ} → A
 
--- The recursive equality on ℕ (the fuel attempt's replacement for
+-- The recursive equality on ℕ (the dimension attempt's replacement for
 -- `injSuc`-peeled paths): `EqN (suc n) (suc m)` REDUCES to `EqN n m`,
 -- so a proof is passed down verbatim, and it is used irrelevantly
 -- throughout, so no two proofs are ever compared.
@@ -52,7 +53,7 @@ EqN (suc n) zero    = ⊥
 EqN (suc n) (suc m) = EqN n m
 
 ------------------------------------------------------------------------
--- The route as sketched: free output fuels.
+-- The route as sketched: free output dimensions.
 ------------------------------------------------------------------------
 
 module Wall where
@@ -73,7 +74,8 @@ module Wall where
 
   frame : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k)) → HSet lzero
 
-  -- Fuel-polymorphic filler: a stored filler eats a point at any fuel.
+  -- Dimension-polymorphic filler: a stored filler eats a point at
+  -- any dimension.
   Fil p k D = (m : ℕ) .(f : EqN m (p + k)) → Dom (frame m p k f D) → HSet lzero
 
   layer : (n p k : ℕ) .(e : EqN n (suc (p + k))) (D : Pre (suc (p + k)))
@@ -128,8 +130,9 @@ module Wall where
   restr-layer n m p k e em D q ε d l = ANY
 
   -- THE TEST.  The q = 0 clause: `l`'s type reduces only after the
-  -- input fuel is matched, which produces the layer's components at
-  -- the pattern fuel n₀ where the signature demands the free fuel m.
+  -- input dimension is matched, which produces the layer's
+  -- components at the pattern dimension n₀ where the signature
+  -- demands the free dimension m.
   -- REJECTED: `n₀ != m of type ℕ` — flip TEST-WALL to reproduce.
   restr-painting zero     m p k ()
   restr-painting (suc n₀) m p k e em (D ∷ E₁) E zero    ε d (l , c) = wall
@@ -137,12 +140,12 @@ module Wall where
   restr-painting (suc n₀) m p k e em (D ∷ E₁) E (suc q) ε d c = ANY
 
 ------------------------------------------------------------------------
--- The repair forced by the wall: `restr-painting`'s single fuel
+-- The repair forced by the wall: `restr-painting`'s single dimension
 -- variable is its OUTPUT's, the input is written `suc m`.  Its q = 0
 -- clause then typechecks — `layer`'s clause fires at `suc m` and
--- produces components at exactly the promised fuel m.  The question is
+-- produces components at exactly the promised dimension m.  The question is
 -- whether the repair stops there: `restr-layer` still carries a free
--- output fuel here, and its own body meets the same wall.
+-- output dimension here, and its own body meets the same wall.
 ------------------------------------------------------------------------
 
 module Cascade where
@@ -186,7 +189,7 @@ module Cascade where
                 → Dom (layer m p k em (pre D)
                          (restr-frame n m p (suc k) e em D (suc q) ε d))
 
-  -- Repaired: input fuel written `suc m` from the output's variable.
+  -- Repaired: input dimension written `suc m` from the output's variable.
   restr-painting : (m p k : ℕ) .(em : EqN m (p + k))
                    (D : Pre (suc (p + k))) (E : Fil (suc (p + k)) 0 D)
                    (q : ℕ) (ε : arity)
@@ -196,9 +199,9 @@ module Cascade where
                             (restr-frame (suc m) m p k em em D q ε d))
 
   -- The r = 0 frame coherence, as `restr-layer`'s body needs it: with
-  -- both restrictions' fuels free, the two sides restrict through
-  -- intermediate objects whose fuels differ, so the statement carries
-  -- one intermediate fuel per side (mL, mR) plus the common final m₂.
+  -- both restrictions' dimensions free, the two sides restrict through
+  -- intermediate objects whose dimensions differ, so the statement carries
+  -- one intermediate dimension per side (mL, mR) plus the common final m₂.
   coh-frame : (n mL mR m₂ p k : ℕ)
               .(e : EqN n (suc (suc (p + k))))
               .(eL : EqN mL (suc (p + k))) .(eR : EqN mR (suc (p + k)))
@@ -231,19 +234,19 @@ module Cascade where
 
   -- THE TEST.  The real body of restr-layer is a function of the arity
   -- ω — but its result type `Dom (layer m …)` is STUCK at the free
-  -- output fuel m, so the clause cannot even take ω:
+  -- output dimension m, so the clause cannot even take ω:
   --
   --   Cannot eliminate type Dom (layer m p k _ (D ∷ E₁) …)
   --   with variable pattern ω
   --
   -- (flip TEST-WALL to reproduce).  The body would have to match its
-  -- input fuel two deep — `l`'s layer fires at suc (suc n''), pinning
+  -- input dimension two deep — `l`'s layer fires at suc (suc n''), pinning
   -- everything it builds to the n''-chain — while the goal lives on
   -- the chain of m; the chains never meet.  So restr-layer must be
-  -- suc-written too, and then coh-frame's two intermediate fuels are
+  -- suc-written too, and then coh-frame's two intermediate dimensions are
   -- forced equal (the outer restriction's input IS the inner's
   -- output), collapsing the whole discipline into single suc-written
-  -- fuels: variant (a) of the report, already rejected by the
+  -- dimensions: variant (a) of the report, already rejected by the
   -- termination checker.
   restr-layer n m p k e em D q ε d l = wall
     where postulate wall : _   -- TEST-WALL: replace by the real body

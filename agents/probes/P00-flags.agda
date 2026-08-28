@@ -8,7 +8,7 @@
 --   (c) --guardedness        (coinductive record for νSetFrom)
 -- Each gate is annotated PASS/FAIL after running.
 
-module probes.P00-flags where
+module agents.probes.P00-flags where
 
 open import Agda.Primitive
 open import Agda.Builtin.Nat renaming (Nat to ℕ)

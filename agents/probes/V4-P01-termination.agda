@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
--- probes.V4-P01-termination — the decisive termination probe for the
+-- agents.probes.V4-P01-termination — the decisive termination probe for the
 -- fillers-only νSet block (V4-REPORT.md, "Termination established?").
 --
 -- `FunPre` below is the whole rejected cycle of Bonak.νSet and nothing
@@ -22,7 +22,7 @@
 
 {-# OPTIONS --rewriting --termination-depth=2 -WnoUnsupportedIndexedMatch #-}
 
-module probes.V4-P01-termination where
+module agents.probes.V4-P01-termination where
 
 open import Bonak.Prelude
 open import Bonak.NatRew

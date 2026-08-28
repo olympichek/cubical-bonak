@@ -1,15 +1,16 @@
 ------------------------------------------------------------------------
--- probes.ExamplesGpd — the νGpd gate: instantiations and the level-5
--- example.  Fillers are written with the fuel-polymorphic prefix
--- `λ m f d → …`; the compute gate `frame5` normalizes with every fuel
--- closed, so all of them — and the frame / layer / painting / restr-* /
--- coh-* / coh2-* bodies at dimensions 0..4 they force — reduce away:
+-- examples.ExamplesGpd — the νGpd gate: instantiations and the level-5
+-- example.  Fillers are written with the dimension-polymorphic prefix
+-- `λ m f d → …`; the compute gate `frame5` normalizes with every
+-- dimension argument closed, so all of them — and the frame / layer /
+-- painting / restr-* / coh-* / coh2-* bodies at dimensions 0..4 they
+-- force — reduce away:
 -- its normal form is a closed Σ/Π/⊤ nest with zero transp/hcomp.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting #-}
 
-module probes.ExamplesGpd where
+module examples.ExamplesGpd where
 
 open import Bonak.Prelude
 open import Bonak.NatRew

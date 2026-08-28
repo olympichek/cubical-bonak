@@ -1,13 +1,13 @@
 ------------------------------------------------------------------------
--- probes.Examples — the νSet gate: instantiations and the level-4
--- example.  Fillers are written with the fuel-polymorphic prefix
--- `λ m f d → …`; the compute gate `frame4` normalizes with every fuel
--- closed, so all of them reduce away.
+-- examples.Examples — the νSet gate: instantiations and the level-4
+-- example.  Fillers are written with the dimension-polymorphic prefix
+-- `λ m f d → …`; the compute gate `frame4` normalizes with every
+-- dimension argument closed, so all of them reduce away.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting #-}
 
-module probes.Examples where
+module examples.Examples where
 
 open import Bonak.Prelude
 open import Bonak.NatRew

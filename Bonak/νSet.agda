@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 -- Bonak.νSet — the νSet tower, fillers-only storage with (p , k)
--- indexing and a CHECKED termination argument: the fuel column.
+-- indexing and a CHECKED termination argument: the dimension column.
 --
 -- Storage discipline: only the fillers are stored.  `Pre n` is the list
 -- of the n fillers below the current level and every other notion —
@@ -45,49 +45,51 @@
 -- fillers connect it to the untransported side.
 --
 -- Termination is checked through one extra argument per member: the
--- fuel `n`, a ℕ tied to the member's base dimension by an irrelevant
--- proof of the recursive equality `EqN n (p + k)` (Bonak.EqProp), so
+-- base dimension `n`, a ℕ tied to the member's indices by an irrelevant
+-- proof of the recursive equality `EqN n (p + k)` (Bonak.LeProp), so
 -- that the prefix's length — the well-founded measure the termination
 -- checker cannot read off a recursively defined `Pre` — becomes a
 -- plain structural argument.  No `{-# TERMINATING #-}`.
 --
--- The fuel discipline is forced by definitional equality
--- (probes/V4-P03-output-fuel.agda): each member carries exactly ONE
--- fuel variable, the fuel of its LOWEST-dimensional occurrence, and
+-- The dimension discipline is forced by definitional equality
+-- (agents/probes/V4-P03-output-dimension.agda): each member carries
+-- exactly ONE dimension variable, that of its LOWEST-dimensional
+-- occurrence, and
 -- every higher-dimensional frame / layer / painting / restriction
 -- occurrence in its statement is written `suc^j` of it.  A free
--- ("output") fuel variable is unusable: a layer's components only
--- reduce at a constructor-form fuel, which pins everything a body
--- builds to the pattern fuel, and a free fuel is not convertible with
--- it.  Fillers are the one fuel-polymorphic spot (`Fil` quantifies
--- over the fuel of the point it eats): at k = 0 the point arrives at a
--- variable fuel, and this is what lets `painting`'s base case apply a
--- stored filler with no coercion.
+-- ("output") dimension variable is unusable: a layer's components only
+-- reduce at a constructor-form dimension, which pins everything a
+-- body builds to the pattern dimension, and a free dimension is not
+-- convertible with it.  Fillers are the one dimension-polymorphic
+-- spot (`Fil` quantifies over the dimension of the point it eats): at
+-- k = 0 the point arrives at a variable dimension, and this is what
+-- lets `painting`'s base case apply a stored filler with no coercion.
 --
 -- The EqN proof is computationally inert — it closes three
--- impossible-fuel clauses and guards `Fil`'s quantifier — and the
+-- impossible-dimension clauses and guards `Fil`'s quantifier — and the
 -- tower typechecks without it, with junk clauses instead (V4-REPORT,
--- "Can the fuel column shrink?").  It is kept because it is what
--- makes the wrong-fuel sector of `Fil` contractible (functions out of
--- an irrelevant ⊥): without it, wrong-fuel frames are inhabited
+-- "Can the dimension column shrink?").  It is kept because it is what
+-- makes the wrong-dimension sector of `Fil` contractible (functions out of
+-- an irrelevant ⊥): without it, wrong-dimension frames are inhabited
 -- ⊤-towers and fillers carry genuine extra data there.
 --
--- The suc-written occurrences make some calls carry fuels ABOVE the
+-- The suc-written occurrences make some calls carry dimensions ABOVE the
 -- caller's own — by up to three constructors, in the coherences'
 -- statements — so the call matrices contain bounded increases, and the
 -- checker needs --termination-depth ≥ 3 to compose them (this file is
--- rejected at 2; probes/V4-P04-depth.agda shows the mechanism on a
+-- rejected at 2; agents/probes/V4-P04-depth.agda shows the mechanism on a
 -- model of exactly these calls).  Proof obligations never grow: `EqN`
 -- proofs are irrelevant and `EqN (suc n) (suc m)` reduces to
 -- `EqN n m`, so the single proof each member holds is passed to every
 -- occurrence verbatim.
 --
--- Fuel is matched in exactly three places — `layer`, `restr-layer` and
--- `coh-layer` peel one `suc` so their bodies can name the dimension
--- below — and each match adds one absurd clause (`EqN zero (suc _)` is
--- ⊥).  Everything else receives its fuel as a determined term, so at
--- closed dimensions every fuel reduces away and the compute gate's
--- normal forms are fuel-free.
+-- The dimension is matched in exactly three places — `layer`,
+-- `restr-layer` and `coh-layer` peel one `suc` so their bodies can
+-- name the dimension below — and each match adds one absurd clause
+-- (`EqN zero (suc _)` is ⊥).  Everything else receives its dimension
+-- as a determined term, so at closed dimensions every dimension
+-- argument reduces away and the compute gate's normal forms carry none
+-- of them.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting --termination-depth=3 #-}
@@ -115,7 +117,7 @@ open Snoc public
 ------------------------------------------------------------------------
 -- The block: signatures
 --
--- ARGUMENT LAYOUT.  The fuel is the FIRST argument of every member, so
+-- ARGUMENT LAYOUT.  The dimension is the FIRST argument of every member, so
 -- it occupies the same column throughout and the checker reads the
 -- descents positionally; then p, k, the irrelevant EqN proof, the
 -- prefix, and the member's own arguments.
@@ -135,13 +137,13 @@ Fil : (p k : ℕ) (D : Pre (p + k)) → Set₁
 Pre zero    = Unit*
 Pre (suc n) = Snoc (Pre n) (Fil n 0)
 
--- frame(p) at dimension p + k, at fuel n ~ p + k.
+-- frame(p) at dimension p + k, carried as the argument n ~ p + k.
 frame : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k)) → HSet₀
 
--- A filler eats a point of the full frame AT ANY FUEL.
+-- A filler eats a point of the full frame AT ANY DIMENSION.
 Fil p k D = (m : ℕ) .(f : EqN m (p + k)) → Dom (frame m p k f D) → HSet₀
 
--- layer(p) at dimension p + k + 1; its fuel is its point's.
+-- layer(p) at dimension p + k + 1; its dimension argument is its point's.
 layer : (n p k : ℕ) .(e : EqN n (suc (p + k))) (D : Pre (suc (p + k)))
         (d : Dom (frame n p (suc k) e D)) → HSet₀
 
@@ -151,8 +153,8 @@ painting : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k))
            (d : Dom (frame n p k e D)) → HSet₀
 
 -- The three restrictions: dimension p + k + 1 ↦ dimension p + k along
--- the q-th face (q ≤ k); the fuel is the OUTPUT's, the input's is
--- suc of it.
+-- the q-th face (q ≤ k); the dimension argument is the OUTPUT's,
+-- the input's is suc of it.
 restr-frame : (n p k : ℕ) .(e : EqN n (p + k))
               (D : Pre (suc (p + k)))
               (q : ℕ) .(Hq : q ≤ k) (ε : arity)
@@ -176,7 +178,7 @@ restr-painting : (n p k : ℕ) .(e : EqN n (p + k))
                           (restr-frame n p k e D q Hq ε d))
 
 -- The three coherences: the faces q and r commute (r ≤ q ≤ k); the
--- fuel is the final output's, two below the point's.
+-- dimension argument is the final output's, two below the point's.
 coh-frame : (n p k : ℕ) .(e : EqN n (p + k))
             (D : Pre (suc (suc (p + k))))
             (q : ℕ) .(Hq : q ≤ k) (r : ℕ) .(Hr : r ≤ q) (ε ω : arity)
@@ -233,7 +235,7 @@ frame n zero    k e D = hunit
 frame n (suc p) k e D =
   hΣ (frame n p (suc k) e D) (λ d → layer n p k e D d)
 
--- The prefix is matched, not projected, and the fuel is peeled in step
+-- The prefix is matched, not projected, and the dimension is peeled in step
 -- with it: the components live one dimension — one suc — below.
 layer zero    p k ()
 layer (suc n) p k e (D ∷ E) d =
@@ -342,7 +344,7 @@ coh-painting n p (suc k) e ((D ∷ E₁) ∷ E₂) E (suc q) Hq (suc r) Hr ε ω
 ------------------------------------------------------------------------
 
 -- The full frame at dimension n: the one whose index is the length,
--- at the fuel that IS the length.
+-- at the dimension that IS the length.
 fullframe : {n : ℕ} (D : Pre n) → HSet₀
 fullframe {n} D = frame n n 0 (eqN-refl n) D
 

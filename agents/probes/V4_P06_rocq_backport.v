@@ -1,5 +1,5 @@
-(* probes/V4_P06_rocq_backport.v — can Bonak.νSetF's fuel discipline
-   be backported to Rocq?  (V4-REPORT.md §8.)
+(* agents/probes/V4_P06_rocq_backport.v — can Bonak.νSetF's dimension
+   discipline be backported to Rocq?  (V4-REPORT.md §8.)
 
    A Rocq file among the Agda probes: it tests the two mechanisms the
    νSetF tower stands on, against the toolchain the Rocq development's
@@ -12,7 +12,7 @@
    because its whole point is that it does NOT compile.
 
    1. THE GUARD (fatal).  νSetF's termination is a size-change
-   argument: frame descends on p, painting on k, layer on the fuel n,
+   argument: frame descends on p, painting on k, layer on the dimension n,
    most sibling edges level, strictness emerging only around composed
    cycles.  Rocq's guard requires every sibling call to descend
    strictly on the CALLER's single {struct} argument, and rejects the
@@ -39,12 +39,12 @@
      "n" instead of "p'".
 
    No struct assignment fares better (frame -> layer and
-   painting -> layer pass an EQUAL fuel), and there is no pragma
+   painting -> layer pass an EQUAL dimension), and there is no pragma
    escape.  The standard workarounds forfeit the design: well-founded
    recursion (Equations/Program) unfolds only on closed accessibility
    witnesses, killing the variable-index reductions the fillers-only
    conversion story needs (the r = 0 restriction, the coercion-free
-   painting base); and restaging on the fuel is blocked by the
+   painting base); and restaging on the dimension is blocked by the
    suc-written UP-references in the coherence statements — re-indexing
    them downward means stating each level over stored data of the
    current stratum, which is the existing Rocq architecture (Deps

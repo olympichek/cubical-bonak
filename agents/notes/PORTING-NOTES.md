@@ -26,7 +26,7 @@ backport Rocq conversion-cache ideas (`~/rocq` conv-instrument, 22x).
    `mkCohPainting` becomes `refl` (Rocq needed `nth_lmap`).
 2. **≤ is Set-valued recursive into η-⊤/⊥ with irrelevant (.) proof
    args everywhere** (`Bonak/LeProp.agda`). NOT Prop: `--prop` +
-   indexed match ⇒ CannotGenerateTransportClause (probes/P01, gate 1).
+   indexed match ⇒ CannotGenerateTransportClause (agents/probes/P01, gate 1).
    Dot-irrelevance restores SProp-like conversion (P01 gate 4).
    `suc n ≤ suc m` REDUCES to `n ≤ m`, so Rocq's ⇑/⇓ vanish; use
    `le-trans`/`le-up`/`le-down` (explicit ℕ args — ≤ is a defined
@@ -284,7 +284,7 @@ single family, with `compose` and `length` proved once generically.
 ### Review findings (2026-08-14)
 
 Design review against `~/bonak/notes/index-structures.md` (same day:
-the fuel-vs-algebra split, the one-variable law `S^a(x)`, and the
+the dimension-vs-algebra split, the one-variable law `S^a(x)`, and the
 bound-vs-inventory division of labor). Verdict: sound; V4 is the
 fourth quadrant of the storage × indexing square, and the
 cost-complementarity claim holds up. Refinements:
@@ -322,7 +322,7 @@ cost-complementarity claim holds up. Refinements:
    definitionally, this is where V4's conversion budget concentrates.
    The deciding question — `compose`-commutation *proved* vs *holding
    by clause unfolding* at the consuming sites — goes into the probe.
-5. **Risk 2 may invert.** Alice's fuel is a projected record field;
+5. **Risk 2 may invert.** Alice's dimension is a projected record field;
    V4's is a bare `k : ℕ` in constructor position, which the
    termination checker reads directly. Hypothesis (untested): the
    block needs depth 2, not 3. Cheap to measure in the probe.
@@ -447,7 +447,7 @@ isolated, each eliminated experimentally without changing the verdict:
 rewrite removes them: −9% conversions, +30% wall, still rejected, and
 `frame` loses its variable-prefix reduction — not kept), and `Pre`
 being a defined type rather than an inductive family
-(`probes/V4-P01-termination.agda`: the stripped ten-edge model is
+(`agents/probes/V4-P01-termination.agda`: the stripped ten-edge model is
 ACCEPTED over a length-indexed `data Pre`, rejected over the function —
 but the full block is rejected either way). The §5 `where`-block claim
 is not reproducible. Trust posture: two hand-checked meta-obligations
@@ -463,9 +463,9 @@ orthogonal and carry over verbatim. So does the V2/V3 axis: V4 is about
 what is stored, PathP/rew are about how equalities are represented, and the
 four combine freely.
 
-## Rocq backport of the fuel tower: refuted (2026-08-17)
+## Rocq backport of the dimension-column tower: refuted (2026-08-17)
 
-`Bonak/νSetF.agda` (fillers-only + fuel columns, zero TERMINATING
+`Bonak/νSetF.agda` (fillers-only + dimension columns, zero TERMINATING
 pragmas) does not backport to Rocq: its termination is a size-change
 argument (three families descending on three different columns,
 strictness only around composed cycles) and Rocq's guard demands
@@ -477,14 +477,14 @@ this construction, and the fillers-only block exists only under
 size-change termination. The NatRew rewrite rules DO port (Symbol
 addition under -allow-rewrite-rules, verified on bonak-patched-rocq /
 Rocq 9.4+alpha), and EqN is LeSProp.v's pattern mirrored back.
-Receipts: probes/V4_P06_rocq_backport.v; full account: V4-REPORT.md
-§8 of the output-fuel section.
+Receipts: agents/probes/V4_P06_rocq_backport.v; full account: V4-REPORT.md
+§8 of the output-dimension section.
 
-## Fuel tower canonicalized (2026-08-17, later)
+## Dimension tower canonicalized (2026-08-17, later)
 
-The fuel tower is the branch's canonical `Bonak/νSet.agda`:
-`Bonak/νSetF.agda` and `probes/ExamplesF.agda` are renamed to
-`Bonak/νSet.agda` and `probes/Examples.agda`, and the 1-pragma tower
+The dimension-column tower is the branch's canonical `Bonak/νSet.agda`:
+`Bonak/νSetF.agda` and `agents/probes/ExamplesF.agda` are renamed to
+`Bonak/νSet.agda` and `examples/Examples.agda`, and the 1-pragma tower
 they sat beside is removed. No `{-# TERMINATING #-}` remains outside
 the probes that exist to demonstrate it; the residue is
 `--termination-depth=3` in the tower's OPTIONS. Earlier sections use
@@ -512,8 +512,8 @@ isSet→Square, subst-filler} where the Id form consumed
 subst lemmas under it (substComposite, substCommSlice, ∙-assoc, J)
 are DELETED — RewLemmas is the PathP kit only — together with the
 probes that exercised it: the P02 Σ≡-composition pair (live on
-`globular`), V4-P05-fuel-no-proof (verdict recorded in V4-REPORT,
-"Can the fuel column shrink?"), and the broken-header V4-P00-rewrite
+`globular`), V4-P05-dimension-no-proof (verdict recorded in V4-REPORT,
+"Can the dimension column shrink?"), and the broken-header V4-P00-rewrite
 (its REWRITE story lives in Bonak/NatRew.agda and the build-results
 section above).  The pinned-implicit discipline carries
 over unchanged: the goal still exposes the chain endpoints only after
@@ -522,7 +522,7 @@ unfolding two nested restr-layer clauses.
 Measurements (Agda 2.8.0, this machine, marginal νSet check ×3):
 **0.69 s vs 0.80 s** Id-form; `--profile=conversion` 3,133 compare
 equal / 891 by reduction vs 3,271 / 952.  `frame4`'s normal form is
-byte-identical to the Id-form tower's (zero transp/hcomp); all fuel
+byte-identical to the Id-form tower's (zero transp/hcomp); all dimension
 probes green.  The globular νGpd files (νGpd, νGpdBase, GpdLemmas)
 and the P02 Σ≡-composition probes live on `globular`; the νGpd storey
 on `main` is to be built fresh on the V4 + V2 base.
@@ -586,9 +586,9 @@ Termination is now CHECKED (2026-08-20, later): the development
 checker at `--termination-depth=4` — green at 4 (311 s / 1.6 GB
 total, the analysis adds ~1–2 min over the type check) and at 5
 (589 s — larger matrices), rejected at 3 on the
-restr-frame..coh2-layer-suc group.  The boundary matches the fuel
+restr-frame..coh2-layer-suc group.  The boundary matches the dimension
 discipline exactly: the coh2 statements write occurrences up to suc⁴
-of the member's fuel, as νSet's suc³ statements need depth 3.
+of the member's dimension, as νSet's suc³ statements need depth 3.
 
 The `conv-cost` experiments concluded (2026-08-20, later) with a
 corrected diagnosis: the kit's checking cost is per-binding section
@@ -602,7 +602,7 @@ full-file check 766 → ~400 s (2×), lifted parameter order unchanged
 so νGpd needed no edit.  Details and receipts: `CONV-COST.md`,
 branch `conv-cost`.
 
-The νGpd gate is in (2026-08-20, latest): `probes/ExamplesGpd.agda`
+The νGpd gate is in (2026-08-20, latest): `examples/ExamplesGpd.agda`
 mirrors the νSet gate one storey up — νGpd at ⊤/Bool arity, the
 level-5 point prefix of `gunit` fillers, and the compute gate
 `frame5 = GDom (frame 5 5 0 tt pt5)`.  Marginal check 0.36 s / 42 MB;
