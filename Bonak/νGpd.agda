@@ -1,31 +1,30 @@
 ------------------------------------------------------------------------
--- Bonak.νGpd — the νGpd tower: the groupoid storey of Bonak.νSet, on
--- the same storage, index, dimension and equality disciplines (see that
--- file's header; everything said there carries over verbatim).
+-- Bonak.νGpd — the groupoid storey of the tower, with fillers-only
+-- storage, relative (p , k) indices, a checked dimension column, and
+-- PathP-shaped coherences.
 --
 -- What changes at the groupoid level:
 --
---   * Frames, layers and paintings are HGpds (gunit / gΣ / gΠ).
---   * The layer coherence can no longer close by square filling in an
---     HSet of frames: the square it needs — the three-face hexagon in
---     Square form — becomes the stored-by-computation 2-coherence
---     `coh2-frame`, and the mutual block grows one more storey:
---     coh2-frame / coh2-layer / coh2-painting, shaped exactly like
---     coh-frame / coh-layer / coh-painting one level up, with squares
---     for paths and dependent squares for dependent paths.
---   * The s = 0 painting 2-coherence is the FILLER of the layer
---     coherence's square composition (Bonak.GpdLemmas' cohLayer-fillP),
---     exactly as the r = 0 painting coherence is subst-filler of
---     restr-layer's transport one storey down.
---   * The only truncation site is isGroupoid→Cube inside coh2-layer:
---     the four-face permutahedron cube in the HGpd of frames, the
---     cubical form of Rocq's single GUIP use (νGpd.v:918).
---   * Termination stays checked, no pragma: the coh2 statements write
---     occurrences up to suc⁴ of the member's dimension (coh2-layer's
---     premise pack lives four storeys up), so the call matrices carry
---     +4 increases and the checker needs --termination-depth=4 —
---     rejected at 3 on the restr-frame..coh2-layer-suc group, exactly
---     as Bonak.νSet's +3 statements need depth 3.
+-- * Frames, layers and paintings are HGpds (gunit / gΣ / gΠ).
+-- * The layer coherence can no longer close by square filling in an
+--   HSet of frames: the square it needs — the three-face hexagon in
+--   Square form — becomes the stored-by-computation 2-coherence
+--   `coh2-frame`, and the mutual block grows one more storey:
+--   coh2-frame / coh2-layer / coh2-painting, shaped exactly like
+--   coh-frame / coh-layer / coh-painting one level up, with squares
+--   for paths and dependent squares for dependent paths.
+-- * The s = 0 painting 2-coherence is the filler of the layer
+--   coherence's square composition (Bonak.GpdLemmas' cohLayer-fillP),
+--   exactly as the r = 0 painting coherence is subst-filler of
+--   restr-layer's transport one storey down.
+-- * The only truncation site is isGroupoid→Cube inside coh2-layer: the
+--   four-face permutahedron cube in the HGpd of frames.
+-- * Termination stays checked, no pragma: the coh2 statements write
+--   occurrences up to suc⁴ of the member's dimension (coh2-layer's
+--   premise pack lives four storeys up), so the call matrices carry
+--   +4 increases and the checker needs --termination-depth=4, exactly
+--   as Bonak.νSet's +3 statements need depth 3; depth 3 rejects the
+--   restr-frame..coh2-layer-suc group.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting --termination-depth=4 #-}
@@ -41,7 +40,8 @@ open import Bonak.NatRew
 HGpd₀ : Set₁
 HGpd₀ = HGpd lzero
 
--- The prefix's cons cell, as in Bonak.νSet.
+-- The no-eta cons cell prevents fieldwise eta-expansion when prefixes are
+-- compared.
 record Snoc (A : Set₁) (B : A → Set₁) : Set₁ where
   no-eta-equality; pattern
   constructor _∷_
@@ -64,7 +64,7 @@ Pre (suc n) = Snoc (Pre n) (Fil n 0)
 -- frame(p) at dimension p + k, carried as the argument n ~ p + k.
 frame : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k)) → HGpd₀
 
--- A filler eats a point of the full frame AT ANY DIMENSION.
+-- A filler eats a point of the full frame at any dimension.
 Fil p k D = (m : ℕ) .(f : EqN m (p + k)) → GDom (frame m p k f D) → HGpd₀
 
 -- layer(p) at dimension p + k + 1; its dimension argument is its point's.
@@ -77,7 +77,7 @@ painting : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k))
            (d : GDom (frame n p k e D)) → HGpd₀
 
 -- The three restrictions: dimension p + k + 1 ↦ dimension p + k along
--- the q-th face (q ≤ k); the dimension argument is the OUTPUT's,
+-- the q-th face (q ≤ k); the dimension argument is the output's,
 -- the input's is suc of it.
 restr-frame : (n p k : ℕ) .(e : EqN n (p + k))
               (D : Pre (suc (p + k)))
@@ -152,7 +152,7 @@ coh-painting : (n p k : ℕ) .(e : EqN n (p + k))
                          Hq ε d c))
 
 -- The three 2-coherences: the faces q, r and s commute (s ≤ r ≤ q ≤ k);
--- the dimension argument is the final output's, three below the point's.  The
+-- the dimension argument is the final output's, three below the point's. The
 -- 2-dimensional frame coherence is the three-face hexagon in Square
 -- form — the square coh-layer's proof consumes, with the s-th face
 -- generalized from the layer direction (s = 0) to any s ≤ r: the
@@ -260,7 +260,7 @@ coh2-layer : (n p k : ℕ) .(e : EqN n (suc (p + k)))
                           (suc (suc q)) Hq ε d l)))
 
 -- The recursive layer 2-coherence at a fixed point of the arity: the
--- (i , j)-square of the goal's θ'-applied faces.  A separate member so
+-- (i , j)-square of the goal's θ'-applied faces. A separate member so
 -- that the interval directions are λ-bound rather than clause
 -- patterns: the giant body is then checked against its boundary once,
 -- by the path-abstraction rule, and coh2-layer's own clause is a
@@ -419,9 +419,9 @@ coh-frame n (suc p) k e D q Hq r Hr ε ω (d , l) i =
   coh-frame n p (suc k) e D (suc q) Hq (suc r) Hr ε ω d i ,
   coh-layer n p k e D q Hq r Hr ε ω d l i
 
--- The layer coherence.  As in Bonak.νSet, except that the closing
--- square — free there because frames are HSets — is here the s = 0
--- instance of the 2-dimensional frame coherence.
+-- The layer coherence closes with the s = 0 instance of the
+-- 2-dimensional frame coherence because frames are groupoids rather than
+-- sets.
 coh-layer zero    p k ()
 coh-layer (suc n) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l i θ =
   cohLayer-squareP
@@ -462,7 +462,15 @@ coh-layer (suc n) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l i
   b : (θ : arity) → GDom (frame (suc (suc n)) p (suc (suc k)) e P₂)
   b θ = restr-frame (suc (suc n)) p (suc (suc k)) e P₃ 0 tt θ d
 
--- The painting coherence: as in Bonak.νSet.
+-- The painting coherence. With Π-layers the r = 0 case is the filler
+-- of restr-layer's transport (both endpoints reduce to the same
+-- restr-painting composite, one transported); the r , q ≥ 1 case pairs
+-- the layer coherence with the recursive painting coherence — the pair
+-- path is the clause coh-frame unfolds to, so the alignment holds by
+-- clause unfolding rather than by a stored-term discipline.
+-- Without eta on the prefix the r = 0 reduction (`restr-painting … 0`
+-- ↦ `l ω`) fires only when the prefix is a constructor, so this
+-- clause has to match it even though the proof does not use it.
 coh-painting n p k e ((D ∷ E₁) ∷ E₂) E q Hq zero Hr ε ω d (l , c) =
   subst-filler (λ x → GDom (painting n p k e D E₁ x))
     (coh-frame n p k e ((D ∷ E₁) ∷ E₂) q Hq 0 tt ε ω d)
@@ -475,7 +483,7 @@ coh-painting n p (suc k) e ((D ∷ E₁) ∷ E₂) E (suc q) Hq (suc r) Hr ε ω
   coh-layer n p k e ((D ∷ E₁) ∷ E₂) q Hq r Hr ε ω d l i ,
   coh-painting n (suc p) k e ((D ∷ E₁) ∷ E₂) E q Hq r Hr ε ω (d , l) c i
 
--- The frame 2-coherence.  At suc p the single-cell faces and the
+-- The frame 2-coherence. At suc p the single-cell faces and the
 -- interior pair componentwise; the two composite faces are assembled
 -- by the decomposition lemma Σ≡hex.hex from the square of first
 -- components and the layer 2-coherence over it.
@@ -529,7 +537,7 @@ coh2-frame n (suc p) k e D q Hq r Hr s Hs ε ω θ (d , l) i j =
           θ d
   dSl = restr-layer (suc (suc n)) p (suc (suc k)) e D s HsS θ d l
 
--- The layer 2-coherence: the four-face permutahedron.  Pointwise in
+-- The layer 2-coherence: the four-face permutahedron. Pointwise in
 -- θ', the goal square is the coh2-painting premise at the
 -- θ'-restricted point, transported over the isGroupoid→Cube interior
 -- (the storey's one truncation site) along four lateral squares:
@@ -943,7 +951,7 @@ coh2-layer-suc n p k e D E₁ E₂ E₃ E₄ q Hq r Hr s Hs ε ω θ d l θ' =
                  Hs↑ ε θ d l ii))
     βD θ'
 
--- The painting 2-coherence.  The s = 0 case is the filler of the layer
+-- The painting 2-coherence. The s = 0 case is the filler of the layer
 -- coherence's square composition; the s, r, q ≥ 1 case at suc k pairs
 -- the layer 2-coherence with the recursive painting 2-coherence.
 coh2-painting n p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) E q Hq r Hr zero Hs ε ω θ

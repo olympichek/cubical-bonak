@@ -1,32 +1,29 @@
 ------------------------------------------------------------------------
--- agents.probes.V4-P03-output-dimension — the "output dimension"
--- route of V4-REPORT.md §"The dimension column" item 4: restrictions
--- and coherences take their result's dimension as a universally
--- quantified argument, so no signature ever writes `predℕ` and the
--- caller instantiates the output dimension with a pattern-derived
+-- Free output dimensions:
+-- restrictions and coherences take their result's dimension as a
+-- universally quantified argument, so no signature ever writes `predℕ`
+-- and the caller instantiates the output dimension with a pattern-derived
 -- value.
 --
--- This probe tests the route's CONVERSION obligations, on a mini-tower
--- with the real types (HSet frames, Π-layers, dimension-polymorphic
--- fillers) and the real bodies of the structural members; the members
+-- This probe tests definitional equality on a mini-tower with HSet
+-- frames, Π-layers, dimension-polymorphic fillers, and the tower's
+-- structural bodies. Members
 -- whose bodies are irrelevant to the question are closed with a
--- postulated inhabitant, and the block carries a TERMINATING pragma —
--- termination is NOT this probe's question, definitional equality is.
+-- postulated inhabitant, and the block carries a TERMINATING pragma
+-- because only definitional equality is under test.
 --
--- `Wall` is the route as sketched: every restriction takes its output
--- dimension `m` as a free variable.  Its `restr-painting` q = 0 clause is
--- `l ε` — and `l`'s type only reduces after matching the INPUT dimension as
+-- In `Wall`, every restriction takes its output
+-- dimension `m` as a free variable. Its `restr-painting` q = 0 clause is
+-- `l ε` — and `l`'s type only reduces after matching the input dimension as
 -- `suc n₀`, which pins the layer's components to the pattern dimension n₀,
--- while the signature promises them at the free dimension m.  n₀ and m are
+-- while the signature promises them at the free dimension m. n₀ and m are
 -- propositionally equal (both are EqN-related to p + k) but not
 -- convertible, and no cast between the two is expressible without the
 -- recursive coercions the fillers-only design exists to avoid.
 --
--- OUTCOME: the two walls force the single suc-written dimension per member
--- (dimension variant (a) of the report), whose statement-borne up-calls the
--- checker composes at --termination-depth ≥ 3 — see
--- agents/probes/V4-P04-depth.agda for the mechanism and Bonak.νSet for the
--- resulting pragma-free tower.
+-- Both failures require one suc-written dimension per member. The
+-- statement-borne calls at higher dimensions are accepted when the checker
+-- composes call matrices at sufficient termination depth.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting --termination-depth=2 #-}
@@ -42,8 +39,8 @@ postulate arity : Set
 -- Scaffold for bodies whose content is irrelevant to the probe.
 postulate ANY : ∀ {ℓ} {A : Set ℓ} → A
 
--- The recursive equality on ℕ (the dimension attempt's replacement for
--- `injSuc`-peeled paths): `EqN (suc n) (suc m)` REDUCES to `EqN n m`,
+-- The recursive equality on ℕ avoids transporting along `injSuc`-peeled
+-- paths: `EqN (suc n) (suc m)` reduces to `EqN n m`,
 -- so a proof is passed down verbatim, and it is used irrelevantly
 -- throughout, so no two proofs are ever compared.
 EqN : ℕ → ℕ → Set
@@ -53,7 +50,7 @@ EqN (suc n) zero    = ⊥
 EqN (suc n) (suc m) = EqN n m
 
 ------------------------------------------------------------------------
--- The route as sketched: free output dimensions.
+-- Free output dimensions.
 ------------------------------------------------------------------------
 
 module Wall where
@@ -129,23 +126,23 @@ module Wall where
 
   restr-layer n m p k e em D q ε d l = ANY
 
-  -- THE TEST.  The q = 0 clause: `l`'s type reduces only after the
+  -- In the q = 0 clause, `l`'s type reduces only after the
   -- input dimension is matched, which produces the layer's
   -- components at the pattern dimension n₀ where the signature
   -- demands the free dimension m.
-  -- REJECTED: `n₀ != m of type ℕ` — flip TEST-WALL to reproduce.
+  -- Replacing `wall` with `l ε` is rejected with `n₀ != m of type ℕ`.
   restr-painting zero     m p k ()
   restr-painting (suc n₀) m p k e em (D ∷ E₁) E zero    ε d (l , c) = wall
-    where postulate wall : _   -- TEST-WALL: replace by `l ε`
+    where postulate wall : _   -- Replace with `l ε` to expose the mismatch.
   restr-painting (suc n₀) m p k e em (D ∷ E₁) E (suc q) ε d c = ANY
 
 ------------------------------------------------------------------------
--- The repair forced by the wall: `restr-painting`'s single dimension
--- variable is its OUTPUT's, the input is written `suc m`.  Its q = 0
+-- Suc-written input dimensions. `restr-painting`'s single dimension
+-- variable is its output's, and the input is written `suc m`. Its q = 0
 -- clause then typechecks — `layer`'s clause fires at `suc m` and
--- produces components at exactly the promised dimension m.  The question is
--- whether the repair stops there: `restr-layer` still carries a free
--- output dimension here, and its own body meets the same wall.
+-- produces components at exactly the promised dimension m.
+-- `restr-layer` still carries a free output dimension, exposing the same
+-- non-convertibility in its body.
 ------------------------------------------------------------------------
 
 module Cascade where
@@ -189,7 +186,7 @@ module Cascade where
                 → Dom (layer m p k em (pre D)
                          (restr-frame n m p (suc k) e em D (suc q) ε d))
 
-  -- Repaired: input dimension written `suc m` from the output's variable.
+  -- The input dimension is `suc m`, determined by the output dimension.
   restr-painting : (m p k : ℕ) .(em : EqN m (p + k))
                    (D : Pre (suc (p + k))) (E : Fil (suc (p + k)) 0 D)
                    (q : ℕ) (ε : arity)
@@ -232,24 +229,25 @@ module Cascade where
     restr-frame n m p (suc k) e em D (suc q) ε d ,
     restr-layer n m p k e em D q ε d l
 
-  -- THE TEST.  The real body of restr-layer is a function of the arity
-  -- ω — but its result type `Dom (layer m …)` is STUCK at the free
+  -- The body of restr-layer is a function of the arity ω, but its result
+  -- type `Dom (layer m …)` is stuck at the free
   -- output dimension m, so the clause cannot even take ω:
   --
-  --   Cannot eliminate type Dom (layer m p k _ (D ∷ E₁) …)
-  --   with variable pattern ω
+  -- Cannot eliminate type Dom (layer m p k _ (D ∷ E₁) …)
+  -- with variable pattern ω
   --
-  -- (flip TEST-WALL to reproduce).  The body would have to match its
-  -- input dimension two deep — `l`'s layer fires at suc (suc n''), pinning
-  -- everything it builds to the n''-chain — while the goal lives on
-  -- the chain of m; the chains never meet.  So restr-layer must be
-  -- suc-written too, and then coh-frame's two intermediate dimensions are
-  -- forced equal (the outer restriction's input IS the inner's
-  -- output), collapsing the whole discipline into single suc-written
-  -- dimensions: variant (a) of the report, already rejected by the
-  -- termination checker.
+  -- Replacing `wall` with the body below reproduces this error. The body
+  -- matches its input dimension two constructors deep: `l`'s layer fires
+  -- at suc (suc n''), fixing its results at dimensions derived from n'',
+  -- while the goal remains at dimensions derived from m. These dimensions
+  -- are not convertible. Thus restr-layer must be suc-written too, and
+  -- then coh-frame's two intermediate dimensions are
+  -- forced equal because the outer restriction's input is the inner
+  -- restriction's output. Every member consequently uses one
+  -- suc-written dimension.
+  -- Replace `wall` with the body below to expose the mismatch.
   restr-layer n m p k e em D q ε d l = wall
-    where postulate wall : _   -- TEST-WALL: replace by the real body
+    where postulate wall : _
   {-
   restr-layer (suc (suc n'')) m p k e em ((D ∷ E₁) ∷ E₂) q ε d l ω =
     subst (λ x → Dom (painting n'' p k em D E₁ x))

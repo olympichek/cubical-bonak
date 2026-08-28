@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------
 -- Bonak.Prelude — self-contained mini cubical prelude.
 --
--- Builtin primitives only; provides exactly what the νSet/νGpd mirror
--- needs: paths, transport, funExt, Σ with η, and the h-level kit
+-- Builtin primitives only; provides exactly what the νSet and νGpd towers
+-- need: paths, transport, funExt, Σ with η, and the h-level kit
 -- (isProp/isSet, closure under ⊤, Σ, Π).
 ------------------------------------------------------------------------
 

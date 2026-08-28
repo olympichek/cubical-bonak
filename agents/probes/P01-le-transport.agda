@@ -1,9 +1,9 @@
 {-# OPTIONS --cubical --prop --guardedness #-}
 
--- P01: which representation of ≤ survives pattern matching on an
+-- Which representation of ≤ survives pattern matching on an
 -- indexed family (which makes Cubical Agda generate transport
--- clauses)?  Reproduces the CannotGenerateTransportClause error from
--- νSet.agda's mkRestrPainting and tests the alternatives.
+-- clauses)? This probe isolates CannotGenerateTransportClause and tests
+-- the alternatives.
 
 module agents.probes.P01-le-transport where
 
@@ -30,12 +30,12 @@ zero  ≤ˢ m     = ⊤
 suc n ≤ˢ zero  = ⊥
 suc n ≤ˢ suc m = n ≤ˢ m
 
--- A minimal indexed family in the shape of DepsCohsExtension
+-- A minimal indexed family whose constructor changes the index.
 data Fam : (k : ℕ) → Set where
   top : Fam 0
   add : {k : ℕ} → Fam k → Fam (suc k)
 
--- Gate 1 (expected FAIL, the νSet error): Prop-valued bound argument
+-- Gate 1 (expected failure): Prop-valued bound argument
 -- alongside an indexed match.
 -- gate1 : {k : ℕ} (f : Fam k) (q : ℕ) (Hq : (suc q) ≤ᴾ k) → ℕ
 -- gate1 (add f) q Hq = q
@@ -59,6 +59,6 @@ module _ (F : (q k : ℕ) .(h : q ≤ˢ k) → Set) where
   irr q k h g i = F q k h
 
 -- Gate 5: Prop bound argument but NO indexed match in scope — fine
--- (control; this is what P00 validated).
+-- (the control case).
 gate5 : (q k : ℕ) (Hq : (suc q) ≤ᴾ k) → ℕ
 gate5 q k Hq = q

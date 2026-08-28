@@ -14,14 +14,13 @@ branches, build discipline, and writing preferences.
   νSet tower and defines `frame4` (with `SemiSimplicial4` and its
   point prefix `pt4`); `ExamplesGpd.agda` does the same for νGpd with
   `frame5`. Printing (normalizing) `frame4` and `frame5` is done here:
-  each normalizes with every dimension argument closed, so the tower's bodies at the
-  lower dimensions must reduce away, which is what makes these files
-  the gates.
+  each normalizes with every dimension argument closed, so the tower's
+  bodies at the lower dimensions must reduce away, which is what makes
+  these files the gates.
 - `agents/probes/` — feasibility probes: small self-contained files
   that isolate one design question each (flag coexistence, `≤`
   transport, the V4 termination and dimension-column experiments).
-  Add new probes
-  here rather than experimenting inside `Bonak/`.
+  Add new probes here rather than experimenting inside `Bonak/`.
 - `agents/notes/` — working notes and status reports.
   `PORTING-NOTES.md` is the running record and resume kit — read it
   before touching `Bonak/`, and record durable findings there.
@@ -83,6 +82,7 @@ branches; port findings back via `agents/notes/PORTING-NOTES.md`.
 For code comments, PR descriptions, and durable documentation:
 
 - Check every technical claim against the code or a cited source.
+  Cite non-obvious metatheoretic claims when a reference is useful.
   Support measurable claims, especially performance claims, with
   concrete evidence and enough context to interpret the comparison.
 - Explain genuine insights — invariants, rationale, proof
@@ -90,19 +90,44 @@ For code comments, PR descriptions, and durable documentation:
   or the surrounding implementation already say.
 - State an idea once, at the narrowest scope that serves every
   relevant reader; remove nearby restatements.
-- Describe the code as it exists. No implementation history, no
-  references to earlier versions or anticipated refactors, and no
-  references to the Rocq/Lean/Agda-vanilla implementations in code
-  comments — relationships to those belong in PR descriptions, which
-  is also the place to credit their authors.
+- Use heading markup only for a genuine section.
+- Declarative documentation, especially code comments, describes the
+  code as it exists and uses terminology consistent with the
+  mathematical abstraction and surrounding development. Keep it
+  self-contained: explain the current invariants and design directly,
+  without requiring familiarity with earlier versions, other
+  repositories, or anticipated refactors.
+  Comparisons with another implementation do not belong in code
+  comments because that implementation can evolve independently and
+  make the comparison stale.
+- Temporal documentation, including commit messages and pull request
+  descriptions, records how and why the code changed. When work is
+  ported from or inspired by another project, name that project, cite
+  the relevant source, and credit its authors. Write from the positive
+  perspective of what the change introduces; mention behavior that
+  remains unchanged only when its preservation is important or
+  particularly non-obvious.
 - Plain English or established terminology; no unusual metaphors or
   ambiguous shorthand; avoid rhetorical "not X, but Y" contrasts
   unless the distinction is itself technical.
+- Avoid excessive qualifications when a supported high-level claim is
+  accurate enough. Distinguish mechanized results from mathematical
+  consequences when necessary, without foregrounding irrelevant
+  caveats.
+- Do not reference files under `agents/` from code comments or
+  `README.md`; they are working artifacts, not reader-facing support
+  for the code or project overview.
 - PR descriptions: focus on what the change introduces, match length
-  to scope. Include axiom dependencies, computation behavior, and
-  performance tradeoffs when they affect how the result should be
-  understood. Do not reference local checkouts or machine-specific
-  paths.
+  to scope, and omit unaffected behavior and routine compilation or
+  test commands that CI verifies. Explain the problem or context, the
+  change, and its impact. Include axiom dependencies, computation
+  behavior, and performance tradeoffs when they affect how the result
+  should be understood. Focus on the high-level result and central
+  proof architecture rather than inventories of supporting symbols.
+  Discuss future work only when it adds useful context, and state its
+  modality accurately. Pin remote links to a commit when a claim
+  depends on an exact revision. Do not reference local checkouts or
+  machine-specific paths.
 - Anything going to GitHub and viewed from it — PR descriptions,
   issue descriptions, `README.md` and other Markdown GitHub renders —
   is not hard-wrapped; GitHub handles the wrapping. Local notes

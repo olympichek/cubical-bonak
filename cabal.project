@@ -1,16 +1,10 @@
--- Build the Agda nightly this repository prefers.  Hackage carries
--- releases only (2.8.0 at the time of writing), and the interface-pass
--- fix analysed in DEADCODE-COST.md is on master, so the toolchain comes
--- from the source tarball of Agda's rolling `nightly` tag.  This
--- project builds the compiler; the Agda sources here are checked with
--- `agda --build-library` (see README.md).
+-- Select the rolling Agda nightly used for primary checks. This project
+-- builds the compiler; the library is checked separately with
+-- `agda --build-library`. Installation commands are in README.md.
 --
---   cabal install exe:agda -w ghc-9.12.2 --program-suffix=-nightly \
---         --installdir=~/.local/bin --overwrite-policy=always
---
--- `nightly` moves with master.  To make a build reproducible, replace
+-- `nightly` moves with master. To make a build reproducible, replace
 -- the tag in the URL with a commit sha:
 --
---   packages: https://github.com/agda/agda/archive/<sha>.tar.gz
+-- packages: https://github.com/agda/agda/archive/<sha>.tar.gz
 
 packages: https://github.com/agda/agda/archive/refs/tags/nightly.tar.gz

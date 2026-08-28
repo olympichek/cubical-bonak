@@ -45,14 +45,14 @@ Self-contained: everything is built from the builtin cubical primitives collecte
 
 ## Toolchain
 
-The tree checks with Agda 2.8.0; the preferred toolchain is an Agda 2.9.0 nightly, which carries the interface-pass fix that takes a cold build of the νGpd tower from ~39 min to ~5.5 min. The nightly is built from source: `cabal.project` holds the URL of Agda's rolling `nightly` tag, and building it from the repository root installs the compiler.
+The tree checks with Agda 2.8.0; the preferred toolchain is an Agda 2.9.0 nightly, which carries the interface-pass fix for the νGpd pasting kit's large telescopes. In cold sequential builds of the same checkout on the same machine, the νGpd tower took approximately 39 minutes with Agda 2.8.0 and 5.5 minutes with the nightly. The nightly is built from source: `cabal.project` holds the URL of Agda's rolling `nightly` tag, and building it from the repository root installs the compiler.
 
 ```sh
 cabal install exe:agda -w ghc-9.12.2 --program-suffix=-nightly \
       --installdir=~/.local/bin --overwrite-policy=always
 ```
 
-That leaves `agda-nightly` on the PATH beside whatever `agda` is. `-w` is optional and picks a GHC whose package store is already populated (Agda 2.9.0 supports 9.2.8 to 9.14.1); the tag moves with master, and `cabal.project` says how to pin a commit instead. `install` also builds `agda-mode` and the `agda-tests` executable with its tasty dependencies (14 units against 2); to build just the compiler, `cabal build exe:agda` with the same flags and symlink `cabal list-bin exe:agda` instead. Interfaces are cached per Agda version under `_build/<version>/agda/`, so a release and a nightly can be used alternately while keeping each other's caches intact.
+That leaves `agda-nightly` on the PATH beside whatever `agda` is. `-w` is optional and selects the GHC version. The tag moves with master, and `cabal.project` shows how to pin a commit instead. To build just the compiler, run `cabal build exe:agda -w ghc-9.12.2`, obtain its path with `cabal list-bin exe:agda`, and symlink it as `agda-nightly`. Interfaces are cached per Agda version under `_build/<version>/agda/`, so a release and a nightly can be used alternately while keeping each other's caches intact.
 
 ## Building
 

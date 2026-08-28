@@ -1,29 +1,26 @@
 ------------------------------------------------------------------------
--- agents.probes.V4-P04-depth — can --termination-depth rescue
--- dimension variant (a)?
+-- Can --termination-depth accept the single suc-written dimension
+-- discipline?
 --
--- V4-P03 shows that conversion forces the dimension discipline into variant
--- (a) of V4-REPORT.md's dimension section: one dimension variable per member,
--- every higher-dimensional occurrence written suc^j of it.  (a) was
--- rejected because the statement-borne calls — the point, layer and
+-- Conversion forces one dimension variable per member, with every
+-- higher-dimensional occurrence written suc^j of it. The
+-- statement-borne calls — the point, layer and
 -- restriction occurrences in a member's own statement, which reappear
--- in bodies as solved implicit arguments — carry dimensions ABOVE the
--- member's own, by up to three constructors.  Rejected at the file's
--- --termination-depth=2; higher depths track bounded increases, and
--- were never tried on (a).
+-- in bodies as solved implicit arguments — carry dimensions above the
+-- member's own, by up to three constructors. The block is rejected at
+-- --termination-depth=2; larger depths track these bounded increases.
 --
--- This probe decides that axis.  `UpCalls` is V4-P02's ACCEPTED
--- `DimPre` model — seven members, the ten loop calls, the dimension
--- column with e : n ≡ p + k — plus one explicit call per
--- statement-borne occurrence of the real variant-(a) signatures, at
--- its real dimension offset (frame@+1..+3, layer@+1/+2, restr-frame@+1/+2,
--- coh-frame@+1, restr-layer@+1), lifted into the dimension equation with
--- `cong suc`.  No TERMINATING pragma: the verdict at
+-- `UpCalls` isolates that termination question with seven members, ten
+-- loop calls, the dimension column e : n ≡ p + k, and one explicit call
+-- for every signature occurrence at its dimension offset
+-- (frame@+1..+3, layer@+1/+2, restr-frame@+1/+2, coh-frame@+1,
+-- restr-layer@+1), lifted into the dimension equation with `cong suc`.
+-- No TERMINATING pragma: the verdict at
 -- --termination-depth=N is the answer, and the OPTIONS pragma below is
 -- where N is set (a file pragma overrides the command line).
 --
--- VERDICT: rejected at depth 1, 2 and 3; ACCEPTED at depth 4 and
--- above.  Edit the pragma to reproduce.  On the real tower the
+-- Verdict: rejected at depth 1, 2 and 3; accepted at depth 4 and
+-- above. Edit the pragma to reproduce. On the real tower the
 -- threshold is 3 (Bonak.νSet): the model's explicit up-calls slightly
 -- overapproximate the solved-implicit calls the checker actually sees.
 ------------------------------------------------------------------------

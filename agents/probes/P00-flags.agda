@@ -1,11 +1,9 @@
 {-# OPTIONS --cubical --prop --guardedness #-}
 
--- P00: can one Agda 2.8.0 module combine the three features the V1
--- mirror needs?
---   (a) --cubical            (the whole point)
---   (b) --prop               (leR : ℕ → ℕ → Prop with definitional
---                             proof irrelevance, mirroring Rocq's SProp)
---   (c) --guardedness        (coinductive record for νSetFrom)
+-- Can one module combine the three flags the library enables?
+-- (a) --cubical: cubical primitives
+-- (b) --prop: leR : ℕ → ℕ → Prop with definitional proof irrelevance
+-- (c) --guardedness: coinductive record for νSetFrom
 -- Each gate is annotated PASS/FAIL after running.
 
 module agents.probes.P00-flags where
@@ -25,14 +23,14 @@ data ⊥ : Prop where
 record ⊤ : Prop where
   constructor tt
 
--- Gate 2: the recursive SProp-style leR.
+-- Gate 2: recursive Prop-valued leR.
 leR : ℕ → ℕ → Prop
 leR zero    m       = ⊤
 leR (suc n) zero    = ⊥
 leR (suc n) (suc m) = leR n m
 
--- Gate 3: definitional irrelevance across NEUTRAL proofs — the
--- load-bearing property.  Two abstract proofs of the same leR must be
+-- Gate 3: definitional irrelevance across neutral proofs — the
+-- load-bearing property. Two abstract proofs of the same leR must be
 -- interchangeable in a relevant position (here: an index of a family).
 module _ (F : (q k : ℕ) → leR q k → Set) where
   irr-in-index : (q k : ℕ) (h g : leR q k) → F q k h ≡ F q k g

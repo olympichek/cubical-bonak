@@ -57,8 +57,7 @@ compPathP-filler {P = P} {p = p} {q = q} {u = u} α β j i =
 -- Pairing does not commute with path composition definitionally: in a
 -- Σ-type, the components of an hcomp or comp′ are transp-decorated
 -- comps, so the composite of two pairings and the pairing of the
--- composites are two different terms — the cubical residue of the
--- Id-form's Σ≡-composition laws.  The squares below connect the two,
+-- composites are two different terms. The squares below connect them
 -- canonically (by fillers, with no truncation); they are what lets a
 -- pairing clause of the νGpd tower have a composite face.
 ------------------------------------------------------------------------
@@ -150,7 +149,7 @@ module _ {ℓa ℓb ℓm : Level} {A : Set ℓa} {B : A → Set ℓb}
 -- argument, against the pointwise composite of the applications: comp
 -- in a Π-type evaluates through the function direction, so the two
 -- are different terms — the Π-analogue of the pairing-vs-composition
--- squares above.  The base square simultaneously connects the
+-- squares above. The base square simultaneously connects the
 -- composite of the restricted base paths to the restriction of their
 -- composite, which likewise differ (cong does not distribute over ∙
 -- definitionally), so one cell corrects base and fiber together.
@@ -228,15 +227,13 @@ module ∙congF {ℓa ℓx ℓp : Level} {A : Set ℓa}
        (α i)
 
 ------------------------------------------------------------------------
--- The decomposition lemmas for squares of pairs (the cubical
--- eq_existT_curried_hex / eq_existT_curried_dep_hex): a square in a
--- Σ-type whose two composite faces are compositions of pairings,
+-- The decomposition lemmas for squares of pairs: a square in a Σ-type
+-- whose two composite faces are compositions of pairings,
 -- assembled from the square of first components and the dependent
--- square of second components.  The single-cell faces and the interior
+-- square of second components. The single-cell faces and the interior
 -- pair definitionally; only the composite faces need connecting, along
--- ∙-pairΣ (Rocq's eq_trans_eq_existT_curried — the one member of the
--- Σ≡-composition suite that does not hold definitionally in Cubical
--- Agda).
+-- ∙-pairΣ, because pairing does not commute definitionally with path
+-- composition.
 ------------------------------------------------------------------------
 
 module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
@@ -323,7 +320,7 @@ module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
 -- The pasting kit for the layer 2-coherence: vertical composition of
 -- squares and of dependent squares over them, the functoriality filler
 -- of a two-argument application over a composite, and pointwise
--- composition of connection squares.  All are Kan fillings — no
+-- composition of connection squares. All are Kan fillings — no
 -- truncation.
 ------------------------------------------------------------------------
 
@@ -397,7 +394,7 @@ cong²Funct {S = S} {W = W} h {x = x} {p = p} {q = q} {u = u} sp sq m i =
 
 -- Pointwise composition of two connection squares: at each stage m the
 -- compPathP of the two slices, over the pointwise composite of the base
--- slices.  The i0 side edge of the result is the first square's — the
+-- slices. The i0 side edge of the result is the first square's — the
 -- composite's comp′ keeps its (i = i0) branch there.
 module _ {ℓ : Level} {X : Set ℓ}
   {xu₀ xu₁ xm₀ xm₁ xv₀ xv₁ : X}
@@ -598,7 +595,7 @@ module _ {ℓ' ℓ'' : Level} {X : Set ℓ'} {P : X → Set ℓ''}
 -- The interior at fill stage k = i0 is rf of the (reversed) compPath
 -- filler of p and q, whose o-edges are rf ((p ∙ q) m) and rf (p m);
 -- the m = i1 wall is compPath-filler' (cong rf q) r, whose o-edges
--- are r and cong rf q ∙ r.  Composing against that wall makes the
+-- are r and cong rf q ∙ r. Composing against that wall makes the
 -- o = i0 face literally (cong rf (p ∙ q)) ∙ r and the o = i1 face
 -- literally cong rf p ∙ (cong rf q ∙ r), definitionally (hfill at i1
 -- is hcomp; compPath-filler' at j = i0 / j = i1 is r / cong rf q ∙ r).
@@ -648,8 +645,8 @@ module junctionP {ℓa ℓx ℓp : Level} {A : Set ℓa}
            (compPathP-filler {P = S} sp sq (~ o) m))
 
 -- Cubes in a groupoid: any two parallel squares with prescribed
--- matching sides are connected — the cubical form of Rocq's GUIP
--- (νGpd.v:918), the only truncation principle of the storey.
+-- matching sides are connected. This is the only truncation principle
+-- used by the νGpd storey.
 isGroupoid→Cube : {A : Set ℓ} (gA : isGroupoid A)
   {a₀₀ a₀₁ a₁₀ a₁₁ : I → A}
   {a₀₋ : (m : I) → a₀₀ m ≡ a₀₁ m} {a₁₋ : (m : I) → a₁₀ m ≡ a₁₁ m}
@@ -710,7 +707,7 @@ module _ {ℓ ℓ' : Level} {X : Set ℓ} {P : X → Set ℓ'} (gX : isGroupoid 
 -- The filler of the layer-coherence square: the dependent square whose
 -- i1 side is cohLayer-squareP's composition and whose other three
 -- sides are that composition's base (the painting coherence) and side
--- fillers.  The νGpd tower's s = 0 painting 2-coherence IS this
+-- fillers. The νGpd tower's s = 0 painting 2-coherence IS this
 -- square, exactly as the νSet tower's r = 0 painting coherence is
 -- subst-filler.
 cohLayer-fillP :
@@ -771,36 +768,34 @@ cohLayer-fillP {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
 -- Checked at the tower's types, every Kan operation in the mid-level
 -- fibers computes componentwise (the fibers are literal Σ/Π types
 -- there), so each face-compatibility check of the pasting
--- re-normalizes component trees with no sharing.  Stated over abstract
+-- re-normalizes component trees with no sharing. Stated over abstract
 -- families, the same fillers are neutral: the pasting is checked once,
 -- structurally, here; a use site checks leaf arguments against the
 -- instantiated parameter types and its boundary against the stated
 -- faces.
 --
--- The parameters are one storey of tower data.  X, Y, Z are the frame
+-- The parameters are one storey of tower data. X, Y, Z are the frame
 -- domains of three consecutive dimensions with painting families P, S,
 -- T̃; R restricts Y to X along an arity point t (w below); rfq/rfr/rfs
 -- with Fq/Fr/Fs are the q-, r- and s-face restrictions and paintings
 -- one storey down, w⁺/r̂fr/r̂fs/r̂fsq/r̂fsr/r̂ss the corresponding maps one
--- storey up.  The κ-families are the arity-point conjugators (the
+-- storey up. The κ-families are the arity-point conjugators (the
 -- q/r/s-face coherences against the 0-face), the K/H-families the
 -- face-commutation coherences and painting coherences between two
--- faces.  The six fillers enter as opaque dependent squares typed by
+-- faces. The six fillers enter as opaque dependent squares typed by
 -- cohLayer-fillP's stated output; all junction seams below are between
--- stated faces.  The exposed lemma is coh2Layer-cubeP, the closing
+-- stated faces. The exposed lemma is coh2Layer-cubeP, the closing
 -- form at the goal base: the pasting over the padded base (the private
 -- cube) carried back across the base pad along the given side cells.
 --
 -- The telescope is staged across three nested anonymous modules: the
 -- data through the six base squares first, then the four fillers the
--- laterals consume, then fillC/fillD and the premises.  Anonymous
+-- laterals consume, then fillC/fillD and the premises. Anonymous
 -- nesting leaves the lifted parameter order of coh2Layer-cubeP
--- unchanged; the staging exists because every definition in a section
--- is processed over its whole telescope, and the filler and premise
--- types are large enough that binding them late cuts the section's
--- checking time roughly in half (CONV-EXP-NOTES.md).  Each private
--- binding therefore lives in the innermost module whose parameters it
--- mentions.
+-- unchanged. Every definition in a section is processed over its whole
+-- telescope, so each private binding lives in the innermost module whose
+-- parameters it mentions and avoids the later, large filler and premise
+-- types.
 ------------------------------------------------------------------------
 module _
   {ℓx ℓy ℓz ℓa ℓp : Level}
@@ -1232,7 +1227,7 @@ module _
           L₀ L₁ LC LD σp
 
       -- the closing lemma: the cube carried back across the base pad, its
-      -- side faces bridged by the given cells.  The layer 2-coherence's
+      -- side faces bridged by the given cells. The layer 2-coherence's
       -- clause is one application of coh2Layer-cubeP, as the layer coherence's is
       -- one of cohLayer-squareP.
       coh2Layer-cubeP :

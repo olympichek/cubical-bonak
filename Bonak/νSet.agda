@@ -1,46 +1,46 @@
 ------------------------------------------------------------------------
 -- Bonak.νSet — the νSet tower, fillers-only storage with (p , k)
--- indexing and a CHECKED termination argument: the dimension column.
+-- indexing and a checked termination argument: the dimension column.
 --
--- Storage discipline: only the fillers are stored.  `Pre n` is the list
+-- Storage discipline: only the fillers are stored. `Pre n` is the list
 -- of the n fillers below the current level and every other notion —
 -- frame, layer, painting, the three restrictions, the three coherences —
--- is a FUNCTION of the indices and of that list, all in one mutual
--- block.  No Deps records, no Extension inductives, no stored strata.
+-- is a function of the indices and of that list, all in one mutual block.
 --
--- Index discipline: relative, (p , k).  The dimension n = p + k appears
--- only as the LENGTH of the prefix, never as an index of the tower's
+-- Index discipline: relative, (p , k). The dimension n = p + k appears
+-- only as the length of the prefix, never as an index of the tower's
 -- notions, and every bound is 2-place and relative (q ≤ k, r ≤ q) with
--- dot-irrelevant proofs (Bonak.LeProp).  Because `suc q ≤ suc k` reduces
+-- dot-irrelevant proofs (Bonak.LeProp). Because `suc q ≤ suc k` reduces
 -- to `q ≤ k`, a bound is passed to the next level verbatim: there are no
 -- raise/lower lemmas, no stored differences, and no `recover-nat-eq`.
 --
 -- The prefix's length is where the two disciplines meet: `frame p k`
--- needs p + k fillers, and both indices move.  See Bonak.NatRew for the
+-- needs p + k fillers, and both indices move. See Bonak.NatRew for the
 -- resulting obstruction and the two rewrite rules that remove it.
 --
 -- The prefix is the only record the construction has, and it is
--- declared without eta: eta-expansion of record comparisons is the
--- known conversion hazard of this development (THE ETA FIX, see
--- PORTING-NOTES), and a no-eta prefix measures ~1.8× cheaper than the
--- same construction over Agda's Σ, whose eta has no off switch.
+-- declared without eta so record comparisons do not eta-expand into
+-- fieldwise comparisons. Repeated fieldwise comparison multiplies the
+-- conversion work down the prefix, so this is a performance constraint,
+-- not a typing requirement. Agda's Σ eta cannot be disabled.
 -- Without eta a clause only fires on constructor form, so consumers
 -- must match the prefix as `(D ∷ E)` even where the proof does not use
 -- it (the r = 0 coherence cases).
 --
--- Layers are functions `(ε : arity) → B ε` (V1 decision 1), so `nth` is
--- application and the r = 0 restriction case is `l ε` — it reduces at a
--- variable prefix, which is what the bottom-index hazard demands.
+-- Layers are functions `(ε : arity) → B ε`, so component selection is
+-- application and the r = 0 restriction case is `l ε` — a
+-- definitional fact the construction leans on: it reduces at variable
+-- p, k and a variable prefix.
 --
--- Equality discipline: PathP-shaped (DESIGN-V2 in the pathp worktree).
+-- Equality discipline: PathP-shaped.
 -- The layer and painting coherences are dependent paths over the frame
--- coherence, so no statement contains a subst.  The Σ-assemblies
+-- coherence, so no statement contains a subst. The Σ-assemblies
 -- (coh-frame, coh-painting) are definitional pairing of component
 -- paths, the Π-layer step is definitional (a PathP of functions is a
 -- function into PathPs), the r = 0 painting coherence is the filler of
 -- restr-layer's transport, and the layer coherence is closed by one
 -- square filling in the HSet of frames (Bonak.RewLemmas'
--- cohLayer-squareP).  restr-layer still transports values along the
+-- cohLayer-squareP). restr-layer still transports values along the
 -- r = 0 frame coherence — the transport moves to the term level, where
 -- fillers connect it to the untransported side.
 --
@@ -49,36 +49,33 @@
 -- proof of the recursive equality `EqN n (p + k)` (Bonak.LeProp), so
 -- that the prefix's length — the well-founded measure the termination
 -- checker cannot read off a recursively defined `Pre` — becomes a
--- plain structural argument.  No `{-# TERMINATING #-}`.
+-- plain structural argument. No `{-# TERMINATING #-}`.
 --
--- The dimension discipline is forced by definitional equality
--- (agents/probes/V4-P03-output-dimension.agda): each member carries
--- exactly ONE dimension variable, that of its LOWEST-dimensional
--- occurrence, and
--- every higher-dimensional frame / layer / painting / restriction
--- occurrence in its statement is written `suc^j` of it.  A free
+-- The dimension discipline is forced by definitional equality: each
+-- member carries one dimension variable, that of its lowest-dimensional
+-- occurrence, and every higher-dimensional frame, layer, painting, or
+-- restriction occurrence in its statement is written `suc^j` of it. A free
 -- ("output") dimension variable is unusable: a layer's components only
 -- reduce at a constructor-form dimension, which pins everything a
 -- body builds to the pattern dimension, and a free dimension is not
--- convertible with it.  Fillers are the one dimension-polymorphic
+-- convertible with it. Fillers are the one dimension-polymorphic
 -- spot (`Fil` quantifies over the dimension of the point it eats): at
 -- k = 0 the point arrives at a variable dimension, and this is what
 -- lets `painting`'s base case apply a stored filler with no coercion.
 --
--- The EqN proof is computationally inert — it closes three
--- impossible-dimension clauses and guards `Fil`'s quantifier — and the
--- tower typechecks without it, with junk clauses instead (V4-REPORT,
--- "Can the dimension column shrink?").  It is kept because it is what
--- makes the wrong-dimension sector of `Fil` contractible (functions out of
--- an irrelevant ⊥): without it, wrong-dimension frames are inhabited
--- ⊤-towers and fillers carry genuine extra data there.
+-- The EqN proof is computationally inert: it closes three
+-- impossible-dimension clauses and guards `Fil`'s quantifier, and the
+-- tower typechecks with junk clauses in its place. It is kept because
+-- the guard makes the wrong-dimension sector of `Fil` contractible
+-- (functions out of an irrelevant ⊥); with junk clauses instead,
+-- wrong-dimension frames are inhabited ⊤-towers and fillers carry
+-- genuine extra data there.
 --
--- The suc-written occurrences make some calls carry dimensions ABOVE the
+-- The suc-written occurrences make some calls carry dimensions above the
 -- caller's own — by up to three constructors, in the coherences'
 -- statements — so the call matrices contain bounded increases, and the
 -- checker needs --termination-depth ≥ 3 to compose them (this file is
--- rejected at 2; agents/probes/V4-P04-depth.agda shows the mechanism on a
--- model of exactly these calls).  Proof obligations never grow: `EqN`
+-- rejected at 2). Proof obligations never grow: `EqN`
 -- proofs are irrelevant and `EqN (suc n) (suc m)` reduces to
 -- `EqN n m`, so the single proof each member holds is passed to every
 -- occurrence verbatim.
@@ -86,7 +83,7 @@
 -- The dimension is matched in exactly three places — `layer`,
 -- `restr-layer` and `coh-layer` peel one `suc` so their bodies can
 -- name the dimension below — and each match adds one absurd clause
--- (`EqN zero (suc _)` is ⊥).  Everything else receives its dimension
+-- (`EqN zero (suc _)` is ⊥). Everything else receives its dimension
 -- as a determined term, so at closed dimensions every dimension
 -- argument reduces away and the compute gate's normal forms carry none
 -- of them.
@@ -104,7 +101,7 @@ open import Bonak.NatRew
 HSet₀ : Set₁
 HSet₀ = HSet lzero
 
--- The prefix's cons cell.  Parameterized rather than recursive, so it
+-- The prefix's cons cell. Parameterized rather than recursive, so it
 -- needs no place in the mutual block below.
 record Snoc (A : Set₁) (B : A → Set₁) : Set₁ where
   no-eta-equality; pattern
@@ -117,7 +114,7 @@ open Snoc public
 ------------------------------------------------------------------------
 -- The block: signatures
 --
--- ARGUMENT LAYOUT.  The dimension is the FIRST argument of every member, so
+-- Argument layout. The dimension is the first argument of every member, so
 -- it occupies the same column throughout and the checker reads the
 -- descents positionally; then p, k, the irrelevant EqN proof, the
 -- prefix, and the member's own arguments.
@@ -126,8 +123,8 @@ open Snoc public
 -- but minimal as patterns: each index drives one of the block's three
 -- recursions — p is matched by the frame-family, k by the
 -- painting-family, n by the layer-family (the prefix peel, made
--- structural).  A member cannot match a derived index ("n = p" is not
--- a pattern), so none of the three can be dropped; see V4-REPORT.md.
+-- structural). A member cannot match a derived index ("n = p" is not
+-- a pattern), so all three indices are needed.
 ------------------------------------------------------------------------
 
 -- The prefix of fillers, and the filler over one.
@@ -140,7 +137,7 @@ Pre (suc n) = Snoc (Pre n) (Fil n 0)
 -- frame(p) at dimension p + k, carried as the argument n ~ p + k.
 frame : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k)) → HSet₀
 
--- A filler eats a point of the full frame AT ANY DIMENSION.
+-- A filler eats a point of the full frame at any dimension.
 Fil p k D = (m : ℕ) .(f : EqN m (p + k)) → Dom (frame m p k f D) → HSet₀
 
 -- layer(p) at dimension p + k + 1; its dimension argument is its point's.
@@ -153,7 +150,7 @@ painting : (n p k : ℕ) .(e : EqN n (p + k)) (D : Pre (p + k))
            (d : Dom (frame n p k e D)) → HSet₀
 
 -- The three restrictions: dimension p + k + 1 ↦ dimension p + k along
--- the q-th face (q ≤ k); the dimension argument is the OUTPUT's,
+-- the q-th face (q ≤ k); the dimension argument is the output's,
 -- the input's is suc of it.
 restr-frame : (n p k : ℕ) .(e : EqN n (p + k))
               (D : Pre (suc (p + k)))
@@ -269,15 +266,15 @@ coh-frame n (suc p) k e D q Hq r Hr ε ω (d , l) i =
   coh-frame n p (suc k) e D (suc q) Hq (suc r) Hr ε ω d i ,
   coh-layer n p k e D q Hq r Hr ε ω d l i
 
--- The layer coherence.  Layers are Π and a PathP of functions is a
+-- The layer coherence. Layers are Π and a PathP of functions is a
 -- function into PathPs, so the θ-component is taken definitionally;
 -- each component is one cohLayer-squareP: the two restr-layer
 -- transport chains connected along the frame coherence, with the
 -- painting coherence as the connecting PathP and the 2-dimensional
--- frame coherence a free Square (frames are HSets).  Every path
+-- frame coherence a free Square (frames are HSets). Every path
 -- implicit of cohLayer-squareP has to be given: the goal only
 -- exposes them after unfolding two nested restr-layer clauses, and
--- Agda's unifier gives up there (the V1 decision-8 spots, at scale).
+-- Agda's unifier does not solve them at that unfolding depth.
 coh-layer zero    p k ()
 coh-layer (suc n) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l i θ =
   cohLayer-squareP
@@ -318,11 +315,11 @@ coh-layer (suc n) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l i
   b : (θ : arity) → Dom (frame (suc (suc n)) p (suc (suc k)) e P₂)
   b θ = restr-frame (suc (suc n)) p (suc (suc k)) e P₃ 0 tt θ d
 
--- The painting coherence.  With Π-layers the r = 0 case is the filler
+-- The painting coherence. With Π-layers the r = 0 case is the filler
 -- of restr-layer's transport (both endpoints reduce to the same
 -- restr-painting composite, one transported); the r , q ≥ 1 case pairs
 -- the layer coherence with the recursive painting coherence — the pair
--- path IS the clause coh-frame unfolds to, so the alignment holds by
+-- path is the clause coh-frame unfolds to, so the alignment holds by
 -- clause unfolding rather than by a stored-term discipline.
 -- Without eta on the prefix the r = 0 reduction (`restr-painting … 0`
 -- ↦ `l ω`) fires only when the prefix is a constructor, so this

@@ -1,14 +1,13 @@
 ------------------------------------------------------------------------
--- agents.probes.V4-P02-dimension — can an explicit length argument
--- replace the TERMINATING pragma?
+-- Can an explicit length argument replace the TERMINATING pragma?
 --
--- `DimPre` is agents.probes.V4-P01-termination's rejected `FunPre` cycle —
--- same seven members, same ten calls, `Pre` still a type defined by
--- recursion on ℕ — with two arguments added to every member: the prefix
--- length `n : ℕ` and the equation `e : n ≡ p + k`.  `n` occurs in no
+-- `DimPre` isolates a rejected cycle with seven members, ten calls, and
+-- `Pre` defined by recursion on ℕ. It adds two arguments to every
+-- member: the prefix length `n : ℕ` and the equation `e : n ≡ p + k`.
+-- `n` occurs in no
 -- type: it is matched and peeled purely so the termination checker gets
 -- a single argument column that never increases and strictly decreases
--- on every descent edge.  The equation is what makes the bookkeeping
+-- on every descent edge. The equation is what makes the bookkeeping
 -- total: `injSuc e` peels it in step with `n`, and it refutes the
 -- `n ≡ zero` clauses that the extra match would otherwise leave open.
 -- The rewrite rules of Bonak.NatRew keep the equation's type normal
@@ -16,18 +15,16 @@
 -- `suc n`), so `e` is passed along unchanged on the p↔k trading edges
 -- and peeled exactly where `n` is.
 --
--- No TERMINATING pragma anywhere in this file.  ACCEPTED — and at the
--- default termination depth as well (the --termination-depth=2 below
--- only mirrors the main block's options): the dimension column alone
--- carries the argument, no depth is involved.
+-- No TERMINATING pragma anywhere in this file. The block is accepted at
+-- the default termination depth as well: the dimension column alone
+-- carries the argument, so termination depth is irrelevant here.
 --
 -- The scope of that result is set by the erasure: every member here
--- returns `Box`, so the dimension occurs in no type.  A tower whose members
+-- returns `Box`, so the dimension occurs in no type. A tower whose members
 -- take points and paths of the frames they build puts the dimension into the
 -- types of those arguments, and the column is then pinned: a statement
 -- names objects both above and below its own prefix, and one of the two
--- directions stops being expressible from a single dimension variable.  The
--- account is in V4-REPORT.md, "The dimension column".
+-- directions stops being expressible from a single dimension variable.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting --termination-depth=2 #-}

@@ -1,23 +1,23 @@
 ------------------------------------------------------------------------
--- agents.probes.V4-P01-termination — the decisive termination probe for the
--- fillers-only νSet block (V4-REPORT.md, "Termination established?").
+-- Termination probe for the fillers-only νSet block.
 --
--- `FunPre` below is the whole rejected cycle of Bonak.νSet and nothing
--- else: seven members, ten calls, the same argument columns, the same
--- index discipline, the same no-eta prefix, all results erased to `Box`.
+-- `FunPre` is the cycle obtained from the fillers-only tower by omitting
+-- the dimension column: seven members, ten calls, relative indices, a
+-- no-eta prefix, and all results erased to `Box`.
 -- It reproduces the rejection exactly — remove its `{-# TERMINATING #-}`
 -- to see it, and delete any single one of its ten calls to see the whole
--- block go green.
+-- block be accepted.
 --
 -- `IndPre` is the same ten calls with one change: the prefix is a
 -- length-indexed inductive family instead of a type defined by recursion
--- on ℕ.  It is ACCEPTED.  So the checker can follow this cycle when the
+-- on ℕ. It is ACCEPTED. So the checker can follow this cycle when the
 -- prefix's length is a constructor index it can read, and cannot when
 -- the length only appears as the argument of a recursive type former —
--- which is the fillers-only tower's situation.  (The full block is
--- rejected either way: see V4-REPORT.md; making Pre an inductive family
--- is necessary but not sufficient there, and it costs the reduction of
--- `frame` at a variable prefix plus a Cubical UnsupportedIndexedMatch.)
+-- which is the fillers-only tower's situation. In the corresponding
+-- block without an explicit dimension column, changing Pre to an
+-- inductive family is necessary but not sufficient, and it costs the
+-- reduction of `frame` at a variable prefix plus a Cubical
+-- UnsupportedIndexedMatch.
 ------------------------------------------------------------------------
 
 {-# OPTIONS --rewriting --termination-depth=2 -WnoUnsupportedIndexedMatch #-}

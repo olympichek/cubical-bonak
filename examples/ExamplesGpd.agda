@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 -- examples.ExamplesGpd — the νGpd gate: instantiations and the level-5
--- example.  Fillers are written with the dimension-polymorphic prefix
+-- example. Fillers are written with the dimension-polymorphic prefix
 -- `λ m f d → …`; the compute gate `frame5` normalizes with every
 -- dimension argument closed, so all of them — and the frame / layer /
 -- painting / restr-* / coh-* / coh2-* bodies at dimensions 0..4 they
