@@ -61,6 +61,16 @@ cabal install exe:agda -w ghc-9.12.2 --program-suffix=-nightly \
 
 That leaves `agda-nightly` on the PATH beside whatever `agda` is. `-w` selects the GHC version; write the install directory with `$HOME`, since the shell does not expand `~` inside `--installdir=`. The tag moves with master; to pin a commit, download `archive/<sha>.tar.gz` instead (it unpacks to `agda-<sha>`). Keeping the unpacked directory allows incremental rebuilds across nightly bumps: run `cabal build exe:agda -w ghc-9.12.2` there, obtain the binary's path with `cabal list-bin exe:agda`, and symlink it as `agda-nightly`. Interfaces are cached per Agda version under `_build/<version>/agda/`, so a release and a nightly can be used alternately while keeping each other's caches intact.
 
+### Editor
+
+The VS Code extension [agda-mode](https://marketplace.visualstudio.com/items?itemName=banacorn.agda-mode) chooses its Agda from the `agdaMode.connection.paths` list, trying the entries from the last to the first, so appending the nightly makes it the one used:
+
+```json
+"agdaMode.connection.paths": ["agda", "/home/<user>/.local/bin/agda-nightly"]
+```
+
+Give the absolute path: the extension host does not necessarily inherit the shell's `PATH`, so a bare `agda-nightly` may fail to resolve. The `Ctrl+X Ctrl+S` command in an Agda buffer edits the same list interactively, and "Agda: Restart" replaces the running Agda after a change.
+
 ## Building
 
 ```sh
