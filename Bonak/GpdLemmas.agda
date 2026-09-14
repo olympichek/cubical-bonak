@@ -52,35 +52,8 @@ compPathP-filler {P = P} {p = p} {q = q} {u = u} α β j i =
         (inS (α i)) j
 
 ------------------------------------------------------------------------
--- The pairing-vs-composition kit.
---
--- Pairing does not commute with path composition definitionally: in a
--- Σ-type, the components of an hcomp or comp′ are transp-decorated
--- comps, so the composite of two pairings and the pairing of the
--- composites are two different terms. The squares below connect them
--- canonically (by fillers, with no truncation); they are what lets a
--- pairing clause of the νGpd tower have a composite face.
+-- Dependent composition of pairs.
 ------------------------------------------------------------------------
-
-module _ {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
-  {x₁ y₁ z₁ : A} (a₁ : x₁ ≡ y₁) (a₂ : y₁ ≡ z₁)
-  {u : B x₁} {v : B y₁} {w : B z₁}
-  (b₁ : PathP (λ i → B (a₁ i)) u v) (b₂ : PathP (λ i → B (a₂ i)) v w)
-  where
-
-  ∙-pairΣ-fill : (j m i : I) → Σ A B
-  ∙-pairΣ-fill j m i =
-    hfill (λ j' → λ { (i = i0) → (x₁ , u)
-                    ; (i = i1) → (a₂ j' , b₂ j')
-                    ; (m = i1) → ( compPath-filler a₁ a₂ j' i
-                                 , compPathP-filler {P = B} b₁ b₂
-                                     j' i ) })
-          (inS (a₁ i , b₁ i)) j
-
-  ∙-pairΣ : PathP (λ m → PathP (λ _ → Σ A B) (x₁ , u) (z₁ , w))
-      ((λ i → (a₁ i , b₁ i)) ∙ (λ i → (a₂ i , b₂ i)))
-      (λ i → ((a₁ ∙ a₂) i , compPathP {P = B} b₁ b₂ i))
-  ∙-pairΣ m i = ∙-pairΣ-fill i1 m i
 
 -- The doubly dependent composite: paths in a second-storey family,
 -- composed over a base composite and the compPathP of a first-storey
@@ -123,27 +96,6 @@ module _ {ℓx ℓl ℓm : Level} {X : Set ℓx} {L : X → Set ℓl}
                    ; (m = i1) → ( compPathP-filler {P = L} f₁ f₂ j i
                                 , compPathPᵈ-fill j i ) })
           ((f₁ i , g₁ i))
-
--- The composite-of-pairings square of ∙-pairΣ, one storey up: over it,
--- the compPathP of the second-storey paths against their compPathPᵈ.
-module _ {ℓa ℓb ℓm : Level} {A : Set ℓa} {B : A → Set ℓb}
-  {M : Σ A B → Set ℓm}
-  {x₁ y₁ z₁ : A} {a₁ : x₁ ≡ y₁} {a₂ : y₁ ≡ z₁}
-  {u : B x₁} {v : B y₁} {w : B z₁}
-  {b₁ : PathP (λ i → B (a₁ i)) u v} {b₂ : PathP (λ i → B (a₂ i)) v w}
-  {mu : M (x₁ , u)} {mv : M (y₁ , v)} {mw : M (z₁ , w)}
-  (g₁ : PathP (λ i → M (a₁ i , b₁ i)) mu mv)
-  (g₂ : PathP (λ i → M (a₂ i , b₂ i)) mv mw)
-  where
-
-  ∙-pairΣᵈ : PathP (λ m → PathP (λ i → M (∙-pairΣ a₁ a₂ b₁ b₂ m i))
-               mu mw)
-      (compPathP {P = M} g₁ g₂)
-      (compPathPᵈ {M = λ x l → M (x , l)} b₁ b₂ g₁ g₂)
-  ∙-pairΣᵈ m i =
-    comp′ (λ j → M (∙-pairΣ-fill a₁ a₂ b₁ b₂ j m i))
-          (λ j → λ { (i = i0) → mu ; (i = i1) → g₂ j })
-          (g₁ i)
 
 -- Application of a composite in a Π-family of restrictions at a fixed
 -- argument, against the pointwise composite of the applications: comp
@@ -227,13 +179,8 @@ module ∙congF {ℓa ℓx ℓp : Level} {A : Set ℓa}
        (α i)
 
 ------------------------------------------------------------------------
--- The decomposition lemmas for squares of pairs: a square in a Σ-type
--- whose two composite faces are compositions of pairings,
--- assembled from the square of first components and the dependent
--- square of second components. The single-cell faces and the interior
--- pair definitionally; only the composite faces need connecting, along
--- ∙-pairΣ, because pairing does not commute definitionally with path
--- composition.
+-- A dependent square of pairs over X. Its interior pairs Lsq and Csq;
+-- the two composite faces require the dependent pairing comparison.
 ------------------------------------------------------------------------
 
 module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
@@ -255,24 +202,7 @@ module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
            (compPathP {P = B} b₁ b₂) (compPathP {P = B} b₁' b₂'))
   where
 
-  fill : (m i j : I) → Σ A B
-  fill m i j =
-    hfill (λ m' → λ { (i = i0) → (kA j , kB j)
-                    ; (i = i1) → (e1A j , e1B j)
-                    ; (j = i0) → ∙-pairΣ a₁ a₂ b₁ b₂ (~ m') i
-                    ; (j = i1) → ∙-pairΣ a₁' a₂' b₁' b₂' (~ m') i })
-          (inS (X i j , Lsq i j)) m
-
-  hex : Square (λ j → (kA j , kB j)) (λ j → (e1A j , e1B j))
-          ((λ i → (a₁ i , b₁ i)) ∙ (λ i → (a₂ i , b₂ i)))
-          ((λ i → (a₁' i , b₁' i)) ∙ (λ i → (a₂' i , b₂' i)))
-  hex i j = fill i1 i j
-
-  -- The dependent version, one fibration storey up: a square of pairs
-  -- in the Σ of a second-storey family M over Σ A B, from the square
-  -- Csq of second components — which lives over `hex` itself, exactly
-  -- as the tower's painting 2-coherence at suc p lives over the frame
-  -- 2-coherence at suc p.
+  -- The second-storey square lies over the pointwise pair of X and Lsq.
   module Dep {ℓm : Level} {M : Σ A B → Set ℓm}
     {muc : M (xc , uc)} {mvc : M (yc , vc)} {mwc : M (zc , wc)}
     (g₁ : PathP (λ i → M (a₁ i , b₁ i)) muc mvc)
@@ -282,7 +212,7 @@ module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
     (g₂' : PathP (λ i → M (a₂' i , b₂' i)) mvd mwd)
     (gK : PathP (λ j → M (kA j , kB j)) muc mud)
     (gE1 : PathP (λ j → M (e1A j , e1B j)) mwc mwd)
-    (Csq : SquareP (λ i j → M (hex i j)) gK gE1
+    (Csq : SquareP (λ i j → M (X i j , Lsq i j)) gK gE1
              (compPathP {P = M} g₁ g₂) (compPathP {P = M} g₁' g₂'))
     where
 
@@ -306,15 +236,7 @@ module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
                        b₁ b₂ g₁ g₂ (~ m) i
         ; (j = i1) → compPathP-pairΣ {L = B} {M = λ x b → M (x , b)}
                        b₁' b₂' g₁' g₂' (~ m) i })
-        ( Lsq i j
-        , comp′ (λ m → M (fill (~ m) i j))
-            (λ m → λ { (i = i0) → gK j
-                     ; (i = i1) → gE1 j
-                     ; (j = i0) → ∙-pairΣᵈ {M = M} {a₁ = a₁} {a₂ = a₂}
-                                    {b₁ = b₁} {b₂ = b₂} g₁ g₂ m i
-                     ; (j = i1) → ∙-pairΣᵈ {M = M} {a₁ = a₁'} {a₂ = a₂'}
-                                    {b₁ = b₁'} {b₂ = b₂'} g₁' g₂' m i })
-            (Csq i j) )
+        (Lsq i j , Csq i j)
 
 ------------------------------------------------------------------------
 -- The pasting kit for the layer 2-coherence: vertical composition of

@@ -657,3 +657,55 @@ or exceeds the bounded trial, so those inference hints are retained.
 
 Detailed logs, compiler identity, source snapshots, inference experiments
 and reproduction scripts are in this worktree’s `.work/REPORT.md`.
+
+## Native composition with the record hcomp patch (2026-09-14)
+
+Branch `record-hcomp-simplification` starts at native-composition commit
+`21e4dcd`. The structural-composition alternative is preserved separately
+at `83cab6f` on `structural-sigma-composition`.
+
+The recursive `coh2-frame` clause pairs `coh2-frame` and `coh2-layer`
+directly. The ordinary `Σ≡hex.hex` and its filler, `∙-pairΣ-fill`,
+`∙-pairΣ`, and `∙-pairΣᵈ` are removed. The dependent `Σ≡hex.Dep.hexᵈ`
+takes its second-storey square over the pointwise pair of the first two
+squares and fills only the dependent composite boundary. Its interior
+is `(Lsq i j , Csq i j)`; no transport across an ordinary Sigma hexagon
+is needed. `compPathP-pairΣ` remains necessary for dependent composition
+in a varying Sigma type.
+
+The compiler is Agda b9097ba1608d3f564e0e2b8d20ac73ff63374757 with the
+[record hcomp patch](https://github.com/olympichek/agda/commit/73af34a10759777a858aad2835e0da2a7f69eb17). The Sigma rule has prior art in Agda issue #5885:
+https://github.com/agda/agda/issues/5885
+
+Validation uses separate patched primitive interfaces and fresh project
+interfaces in this worktree. Gate output is recorded in
+`.work/patched-gates.log`; the exit status is recorded in
+`.work/patched-gates.exit`. These artifacts, rather than the existence
+of this note, establish whether the integrated tower checks.
+
+
+## Mechanical νGpd cleanup on record-hcomp-simplification (2026-09-25)
+
+The successor type/helper are inlined with lambda-bound interval
+arguments. The other coherence clauses use interval lambdas too.
+The native composition proofs are retained. Of 178 named implicit
+applications, 137 are removed; the retained hints include the painting
+families and restriction functions, and `B`/`M` for the dependent Sigma
+assembly. Unused aliases, eta-expansions, and two single-use arity
+wrappers are removed. The remaining local aliases use `let` bindings.
+
+All twelve core signatures are unchanged, and termination checks at
+depth 3. Both example gates pass; explicit `frame5` normalization is
+byte-identical to baseline. The source is 625 lines, down from 863.
+
+With imported interfaces cached, νGpd checks in 8.03, 8.00, 8.00 s
+(mean 8.01 s), versus 232.42 s before. Cold project builds of the
+library and both example gates take 289.83 → 57.47 s. All runs are
+sequential and memory-capped at 16 GiB; experimental probes are excluded.
+
+These measurements use the required record-hcomp compiler at
+`73af34a10759777a858aad2835e0da2a7f69eb17`, with its own primitive
+library and fresh project caches. The stock compiler is not used.
+
+Detailed logs, compiler identity, source snapshots, inference experiments
+and reproduction scripts are in this worktree’s `.work/REPORT.md`.

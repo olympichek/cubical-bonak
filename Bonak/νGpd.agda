@@ -356,47 +356,12 @@ coh-painting n p (k +1) e ((D ∷ E₁) ∷ E₂) E (q +1) Hq (r +1) Hr ε ω d 
   coh-layer n p k e ((D ∷ E₁) ∷ E₂) q Hq r Hr ε ω d l i ,
   coh-painting n (p +1) k e ((D ∷ E₁) ∷ E₂) E q Hq r Hr ε ω (d , l) c i
 
--- The frame 2-coherence. At suc p the single-cell faces and the
--- interior pair componentwise; the two composite faces are assembled
--- by the decomposition lemma Σ≡hex.hex from the square of first
--- components and the layer 2-coherence over it.
+-- The frame 2-coherence pairs the recursive frame square with the
+-- layer square; its composite boundaries compute componentwise.
 coh2-frame n zero    k e D q Hq r Hr s Hs ε ω θ d = λ _ _ → tt
 coh2-frame n (p +1) k e D q Hq r Hr s Hs ε ω θ (d , l) = λ i j →
-  let
-    H₁ = le-trans r q (k +1) Hr (le-up q k Hq)
-    H₂ = le-trans r q k Hr Hq
-    HsHr = le-trans s r q Hs Hr
-    Hs↑ = le-up s q HsHr
-    HsB = le-trans s r k Hs H₂
-    HsS = le-up s (k +1) (le-up s k HsB)
-    C2f = coh-frame (n +1) p (k +2) e D (r +1) H₁ (s +1) Hs ω θ d
-    C2s = coh-layer (n +1) p (k +1) e D r H₁ s Hs ω θ d l
-    D2f = coh-frame (n +1) p (k +2) e D (q +2) Hq (s +1) Hs↑ ε θ d
-    D2s = coh-layer (n +1) p (k +1) e D (q +1) Hq s Hs↑ ε θ d l
-    E1f = coh-frame (n +1) p (k +2) e D (q +2) Hq (r +2) Hr ε ω d
-    E1s = coh-layer (n +1) p (k +1) e D (q +1) Hq (r +1) Hr ε ω d l
-    dR = restr-frame (n +2) p (k +3) e D (r +2) H₁ ω d
-    dRl = restr-layer (n +2) p (k +2) e D (r +1) H₁ ω d l
-    dE = restr-frame (n +2) p (k +3) e D (q +3) Hq ε d
-    dEl = restr-layer (n +2) p (k +2) e D (q +2) Hq ε d l
-    dSf = restr-frame (n +2) p (k +3) e D (s +1) HsS θ d
-    dSl = restr-layer (n +2) p (k +2) e D s HsS θ d l
-  in
-  Σ≡hex.hex
-    (λ i' → restr-frame n p (k +1) e (pre (pre D)) (q +1) Hq ε (C2f i'))
-    (coh-frame n p (k +1) e (pre D) (q +1) Hq (s +1) HsHr ε θ dR)
-    (λ i' → restr-layer n p k e (pre (pre D)) q Hq ε (C2f i') (C2s i'))
-    (coh-layer n p k e (pre D) q Hq s HsHr ε θ dR dRl)
-    (λ i' → restr-frame n p (k +1) e (pre (pre D)) (r +1) H₂ ω (D2f i'))
-    (coh-frame n p (k +1) e (pre D) (r +1) H₂ (s +1) Hs ω θ dE)
-    (λ i' → restr-layer n p k e (pre (pre D)) r H₂ ω (D2f i') (D2s i'))
-    (coh-layer n p k e (pre D) r H₂ s Hs ω θ dE dEl)
-    (coh-frame n p (k +1) e (pre D) (q +1) Hq (r +1) Hr ε ω dSf)
-    (coh-layer n p k e (pre D) q Hq r Hr ε ω dSf dSl)
-    (λ i' → restr-frame n p (k +1) e (pre (pre D)) (s +1) HsB θ (E1f i'))
-    (λ i' → restr-layer n p k e (pre (pre D)) s HsB θ (E1f i') (E1s i'))
-    (coh2-frame n p (k +1) e D (q +1) Hq (r +1) Hr (s +1) Hs ε ω θ d)
-    (coh2-layer n p k e D q Hq r Hr s Hs ε ω θ d l) i j
+  coh2-frame n p (k +1) e D (q +1) Hq (r +1) Hr (s +1) Hs ε ω θ d i j ,
+  coh2-layer n p k e D q Hq r Hr s Hs ε ω θ d l i j
 
 -- The layer 2-coherence: the four-face permutahedron. Pointwise in
 -- θ', the goal square is the coh2-painting premise at the
