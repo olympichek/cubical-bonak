@@ -629,3 +629,28 @@ total ~3,200 s → 428 s) with a byte-identical interface — the
 upstreamable fix, replacing both the bypass and the "store less"
 program for the default configuration.  Full data:
 `DEADCODE-COST.md`.
+
+## Native composition with the record hcomp patch (2026-09-14)
+
+Branch `record-hcomp-simplification` starts at native-composition commit
+`21e4dcd`. The structural-composition alternative is preserved separately
+at `83cab6f` on `structural-sigma-composition`.
+
+The recursive `coh2-frame` clause pairs `coh2-frame` and `coh2-layer`
+directly. The ordinary `Σ≡hex.hex` and its filler, `∙-pairΣ-fill`,
+`∙-pairΣ`, and `∙-pairΣᵈ` are removed. The dependent `Σ≡hex.Dep.hexᵈ`
+takes its second-storey square over the pointwise pair of the first two
+squares and fills only the dependent composite boundary. Its interior
+is `(Lsq i j , Csq i j)`; no transport across an ordinary Sigma hexagon
+is needed. `compPathP-pairΣ` remains necessary for dependent composition
+in a varying Sigma type.
+
+The compiler is Agda b9097ba1608d3f564e0e2b8d20ac73ff63374757 with the
+[record hcomp patch](https://github.com/olympichek/agda/commit/73af34a10759777a858aad2835e0da2a7f69eb17). The Sigma rule has prior art in Agda issue #5885:
+https://github.com/agda/agda/issues/5885
+
+Validation uses separate patched primitive interfaces and fresh project
+interfaces in this worktree. Gate output is recorded in
+`.work/patched-gates.log`; the exit status is recorded in
+`.work/patched-gates.exit`. These artifacts, rather than the existence
+of this note, establish whether the integrated tower checks.

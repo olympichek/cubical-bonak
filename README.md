@@ -20,18 +20,18 @@ The **νGpd tower** (`Bonak/νGpd.agda`) sits on the same base: HGpd-valued fram
 
 ### The recursive structure of the coherences
 
-The coherences of the Bonak construction decompose recursively, in the same way at both coherence levels: a frame coherence is assembled from a frame coherence, recursively, and a layer coherence; a painting coherence from a layer coherence and a painting coherence, recursively; and a layer coherence from painting coherences and a frame coherence one homotopy level up, which at the truncation level is supplied by the truncation itself (UIP in the Rocq implementation). In Rocq each of these steps is a decomposition lemma; in Cubical Agda a path in a Σ-type is a pair of paths under an interval lambda, so the level-1 assemblies are definitional and only their level-2 forms and the layer closings remain lemmas:
+The coherences of the Bonak construction decompose recursively, in the same way at both coherence levels: a frame coherence is assembled from a frame coherence, recursively, and a layer coherence; a painting coherence from a layer coherence and a painting coherence, recursively; and a layer coherence from painting coherences and a frame coherence one homotopy level up, which at the truncation level is supplied by the truncation itself (UIP in the Rocq implementation). In Rocq each of these steps is a decomposition lemma; in Cubical Agda a path in a Σ-type is a pair of paths under an interval lambda, so the level-1 assemblies and, with the compiler patch used on this branch, the level-2 frame assembly are definitional. The dependent level-2 painting assembly and the layer closings remain lemmas:
 
 | coherence | Rocq | this port |
 |---|---|---|
 | coh-frame | `eq_existT_curried` | definitional pairing |
 | coh-painting | `eq_existT_curried_dep` | definitional pairing |
 | coh-layer | `rew_cohLayer33` | `cohLayer-squareP` (`Bonak/RewLemmas.agda`) |
-| coh2-frame | `eq_existT_curried_hex` | `Σ≡hex.hex` (`Bonak/GpdLemmas.agda`) |
+| coh2-frame | `eq_existT_curried_hex` | Definitional pairing |
 | coh2-painting | `eq_existT_curried_dep_hex` | `Σ≡hex.Dep.hexᵈ` (`Bonak/GpdLemmas.agda`) |
 | coh2-layer | `rew_coh2Layer` | `coh2Layer-cubeP` (`Bonak/GpdLemmas.agda`) |
 
-At level 2 the single-cell faces and the interior still pair definitionally; the hex lemmas assemble squares whose composite faces are compositions of pairings, and exist because `∙-pairΣ` (Rocq's `eq_trans_eq_existT_curried`) is the one Σ≡-composition law that is propositional rather than definitional in Cubical Agda. The layer closings are where the truncation enters: `cohLayer-squareP` fills the level-1 square in the HSet of frames, and `coh2Layer-cubeP` fills the level-2 cube through `isGroupoid→Cube`, the cubical forms of the Rocq implementation's UIP and GUIP discharges.
+At level 2 the frame square pairs its recursive frame and layer squares directly: ordinary path composition in a Σ-type computes componentwise. The painting square still needs a boundary filling, since dependent path composition in a varying Σ-type does not compute componentwise. Its interior is the pair of the layer and recursive painting squares; `compPathP-pairΣ` connects that pair to the required composite faces. The layer closings are where the truncation enters: `cohLayer-squareP` fills the level-1 square in the HSet of frames, and `coh2Layer-cubeP` fills the level-2 cube through `isGroupoid→Cube`, the cubical forms of the Rocq implementation's UIP and GUIP discharges.
 
 Self-contained: everything is built from the builtin cubical primitives collected in `Bonak/Prelude.agda`.
 
@@ -45,36 +45,49 @@ Self-contained: everything is built from the builtin cubical primitives collecte
 
 ## Toolchain
 
-The tree checks with Agda 2.8.0; the preferred toolchain is an Agda 2.9.0 nightly, which carries the interface-pass fix for the νGpd pasting kit's large telescopes. In cold sequential builds of the same checkout on the same machine, the νGpd tower took approximately 39 minutes with Agda 2.8.0 and 5.5 minutes with the nightly. The nightly is built from the source archive of Agda's rolling `nightly` tag.
+This branch requires the [record hcomp patch](https://github.com/olympichek/agda/commit/73af34a10759777a858aad2835e0da2a7f69eb17), published on the [record-hcomp-patch compiler branch](https://github.com/olympichek/agda/tree/record-hcomp-patch) and based on [Agda commit b9097ba](https://github.com/agda/agda/commit/b9097ba1608d3f564e0e2b8d20ac73ff63374757). The patch uses `hcomp` for record fields whose types and universe levels are independent of the composition direction. The Sigma instance was proposed in [Agda issue #5885](https://github.com/agda/agda/issues/5885), following Huber's composition rule. The compiler revision tested with this branch is `73af34a10759777a858aad2835e0da2a7f69eb17`; an unpatched release or nightly cannot check this branch.
 
-Starting from a bare machine, [GHCup](https://www.haskell.org/ghcup/) provides the Haskell toolchain; the versions below are the ones this sequence is verified with, and the nightly's own `tested-with` currently spans GHC 9.4 through 9.14. Unpack the archive anywhere outside this repository — `agda --build-library` checks every Agda file under the library root, so the compiler's own test files must not land there — and install from the unpacked directory:
+Starting from a bare machine, [GHCup](https://www.haskell.org/ghcup/) provides the Haskell toolchain. Clone the compiler outside this repository: `agda-record-hcomp --build-library` checks every Agda file under the library root, so the compiler's own test files must not land there.
 
 ```sh
 ghcup install ghc 9.12.2
 ghcup install cabal 3.18.1.0 --set
 cabal update
-curl -L https://github.com/agda/agda/archive/refs/tags/nightly.tar.gz | tar xz
-cd agda-nightly
-cabal install exe:agda -w ghc-9.12.2 --program-suffix=-nightly \
-      --installdir="$HOME/.local/bin" --overwrite-policy=always
+git clone --branch record-hcomp-patch --single-branch \
+  https://github.com/olympichek/agda.git "$HOME/agda-record-hcomp-patch"
+cd "$HOME/agda-record-hcomp-patch"
+cabal install exe:agda -w ghc-9.12.2 --program-suffix=-record-hcomp \
+  --installdir="$HOME/.local/bin" --overwrite-policy=always
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-That leaves `agda-nightly` on the PATH beside whatever `agda` is. `-w` selects the GHC version; write the install directory with `$HOME`, since the shell does not expand `~` inside `--installdir=`. The tag moves with master; to pin a commit, download `archive/<sha>.tar.gz` instead (it unpacks to `agda-<sha>`). Keeping the unpacked directory allows incremental rebuilds across nightly bumps: run `cabal build exe:agda -w ghc-9.12.2` there, obtain the binary's path with `cabal list-bin exe:agda`, and symlink it as `agda-nightly`. Interfaces are cached per Agda version under `_build/<version>/agda/`, so a release and a nightly can be used alternately while keeping each other's caches intact.
+This installs `agda-record-hcomp` alongside any existing `agda`. To reproduce the tested compiler exactly, run `git checkout 73af34a10759777a858aad2835e0da2a7f69eb17` in the compiler checkout before `cabal install`. The `-w` option selects the GHC version; use `$HOME` in the install directory because the shell does not expand `~` inside `--installdir=`.
+
+Use fresh project interfaces when switching between stock and patched compilers: start with a fresh Bonak worktree or remove its `_build/` cache. Interfaces are cached by Agda version, which need not distinguish a patched compiler from its stock counterpart. Likewise, do not point `Agda_datadir` at a stock compiler's primitive library; its interfaces must be generated by the patched compiler.
 
 ### Editor
 
-The VS Code extension [agda-mode](https://marketplace.visualstudio.com/items?itemName=banacorn.agda-mode) chooses its Agda from the `agdaMode.connection.paths` list, trying the entries from the last to the first, so appending the nightly makes it the one used:
+Configure the VS Code extension [agda-mode](https://marketplace.visualstudio.com/items?itemName=banacorn.agda-mode) to use the custom executable:
 
 ```json
-"agdaMode.connection.paths": ["agda", "/home/<user>/.local/bin/agda-nightly"]
+"agdaMode.connection.paths": ["/home/<user>/.local/bin/agda-record-hcomp"]
 ```
 
-Give the absolute path: the extension host does not necessarily inherit the shell's `PATH`, so a bare `agda-nightly` may fail to resolve. The `Ctrl+X Ctrl+S` command in an Agda buffer edits the same list interactively, and "Agda: Restart" replaces the running Agda after a change.
+Replace `<user>` with your login name. Give the absolute path because the extension host does not necessarily inherit the shell's `PATH`. Run "Agda: Restart" after changing the setting. Using only the patched executable in this list avoids falling back to an incompatible stock compiler.
 
 ## Building
 
+From the Bonak worktree root, check the whole library with:
+
 ```sh
-agda-nightly --build-library
+agda-record-hcomp --build-library
 ```
 
-checks every module the `.agda-lib` includes. Individual roots check with `agda-nightly examples/Examples.agda` (the νSet examples) and `agda-nightly examples/ExamplesGpd.agda` (the νGpd examples), each pulling in what it imports.
+This checks every module the `.agda-lib` includes. To check the two example roots individually, each with its imports:
+
+```sh
+agda-record-hcomp examples/Examples.agda
+agda-record-hcomp examples/ExamplesGpd.agda
+```
+
+The first checks the nu-set examples and the second checks the nu-groupoid examples.
