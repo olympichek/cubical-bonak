@@ -703,3 +703,26 @@ in 64.38 s, with a peak RSS of 7,703,152 KiB, under a 16 GiB cap.
 Project interfaces were cold. Installation and verification logs, the
 compiler identity, and source archive metadata are retained in
 `.work/nightly-update/` in the `make-build` worktree.
+
+
+## GpdLemmas argument and abbreviation cleanup (2026-09-25)
+
+Redundant boundary arguments in the pasting kit are inferred. Seven
+private assembly aliases are removed; existing transported-value aliases
+are reused in the filler types. The four lateral signatures, staged
+telescope, and explicit decomposition components are retained. Named
+implicit applications decrease from 381 to 165; the file shrinks from
+1251 to 1138 lines.
+
+With nightly source 9c1bd18, the kit takes 53.95 → 49.59 s with imports
+cached (two alternating samples), νGpd takes 7.80 → 8.00 s, and the
+library plus both examples takes 61.90 → 60.60 s with cold project
+interfaces. The full-build figure averages two samples per variant; the
+νGpd figure has one. Checks run sequentially with a 16 GiB cap; probes
+are excluded. Both gates and identical frame5 normalization pass.
+
+Dropping the lateral signatures timed out at 180 s on main's nightly.
+Broader family inference either raises a metavariable-scope error or
+exceeds 90 s, so those hints remain. Exact compiler identity, source
+snapshots, logs, inference trials and reproduction scripts are saved in
+`.work/REPORT.md` in the `gpd-lemmas-cleanup` worktree.

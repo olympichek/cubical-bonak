@@ -73,8 +73,7 @@ module _ {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
     hfill (λ j' → λ { (i = i0) → (x₁ , u)
                     ; (i = i1) → (a₂ j' , b₂ j')
                     ; (m = i1) → ( compPath-filler a₁ a₂ j' i
-                                 , compPathP-filler {P = B} b₁ b₂
-                                     j' i ) })
+                                 , compPathP-filler {P = B} b₁ b₂ j' i ) })
           (inS (a₁ i , b₁ i)) j
 
   ∙-pairΣ : PathP (λ m → PathP (λ _ → Σ A B) (x₁ , u) (z₁ , w))
@@ -317,10 +316,8 @@ module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
         , comp′ (λ m → M (fill X Lsq (~ m) i j))
             (λ m → λ { (i = i0) → gK j
                      ; (i = i1) → gE1 j
-                     ; (j = i0) → ∙-pairΣᵈ {M = M} {a₁ = a₁} {a₂ = a₂}
-                                    {b₁ = b₁} {b₂ = b₂} g₁ g₂ m i
-                     ; (j = i1) → ∙-pairΣᵈ {M = M} {a₁ = a₁'} {a₂ = a₂'}
-                                    {b₁ = b₁'} {b₂ = b₂'} g₁' g₂' m i })
+                     ; (j = i0) → ∙-pairΣᵈ {M = M} g₁ g₂ m i
+                     ; (j = i1) → ∙-pairΣᵈ {M = M} g₁' g₂' m i })
             (Csq i j) )
 
 ------------------------------------------------------------------------
@@ -445,7 +442,7 @@ module _ {ℓ ℓ' : Level} {X : Set ℓ} {P : X → Set ℓ'}
 -- The left composition filler, and its dependent version.
 compPath-filler' : {ℓ' : Level} {A : Set ℓ'} {x y z : A}
   (p : x ≡ y) (q : y ≡ z) → PathP (λ j → p (~ j) ≡ z) q (p ∙ q)
-compPath-filler' {x = x} p q j i =
+compPath-filler' p q j i =
   hcomp′ (λ k → λ { (i = i0) → p (~ j)
                   ; (i = i1) → q k
                   ; (j = i0) → q (i ∧ k) })
@@ -453,7 +450,7 @@ compPath-filler' {x = x} p q j i =
 
 compPath-filler'-fill : {ℓ' : Level} {A : Set ℓ'} {x y z : A}
   (p : x ≡ y) (q : y ≡ z) (k j i : I) → A
-compPath-filler'-fill {x = x} p q k j i =
+compPath-filler'-fill p q k j i =
   hfill (λ k' → λ { (i = i0) → p (~ j)
                   ; (i = i1) → q k'
                   ; (j = i0) → q (i ∧ k') })
@@ -661,7 +658,7 @@ isGroupoid→Cube : {A : Set ℓ} (gA : isGroupoid A)
   (sq₀ : Square (a₀₋ i0) (a₁₋ i0) (a₋₀ i0) (a₋₁ i0))
   (sq₁ : Square (a₀₋ i1) (a₁₋ i1) (a₋₀ i1) (a₋₁ i1))
   → PathP (λ m → Square (a₀₋ m) (a₁₋ m) (a₋₀ m) (a₋₁ m)) sq₀ sq₁
-isGroupoid→Cube {A = A} gA {a₀₋ = a₀₋} {a₁₋} {a₋₀} {a₋₁} sq₀ sq₁ =
+isGroupoid→Cube gA {a₀₋ = a₀₋} {a₁₋} {a₋₀} {a₋₁} sq₀ sq₁ =
   isProp→PathP
     (λ m → isSet→isPropPathP (λ i → a₋₀ m i ≡ a₋₁ m i)
              (gA (a₋₀ m i1) (a₋₁ m i1)) (a₀₋ m) (a₁₋ m))
@@ -736,34 +733,27 @@ cohLayer-fillP :
           (cong rfF C2 ∙ C1) (cong rfG D2 ∙ D1))
   → SquareP (λ j i → P (sq j i))
       HCP
-      (cohLayer-squareP {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0}
-        {rfF = rfF} {rfG = rfG} {F = F} {G = G} {E1 = E1}
-        {m1 = m1} {m2 = m2} {C2 = C2} {n1 = n1} {n2 = n2} {D2 = D2}
-        {C1 = C1} {D1 = D1} {K = K} {aL = aL} {aR = aR} HCP sq)
+      (cohLayer-squareP {P = P} {rf0 = rf0} {F = F} {G = G} HCP sq)
       (compPathP {P = P}
         (λ j → F (C2 j) (subst-filler S2 C2 aL j))
         (subst-filler P C1 (F m2 (subst S2 C2 aL))))
       (compPathP {P = P}
         (λ j → G (D2 j) (subst-filler S3 D2 aR j))
         (subst-filler P D1 (G n2 (subst S3 D2 aR))))
-cohLayer-fillP {P = P} {S2 = S2} {S3 = S3} {rf0 = rf0} {rfF = rfF}
-  {rfG = rfG} {F = F} {G = G} {E1 = E1} {m1 = m1} {m2 = m2} {C2 = C2}
-  {n1 = n1} {n2 = n2} {D2 = D2} {C1 = C1} {D1 = D1} {K = K}
+cohLayer-fillP {P = P} {S2 = S2} {S3 = S3} {F = F} {G = G}
+  {m2 = m2} {C2 = C2} {n2 = n2} {D2 = D2} {C1 = C1} {D1 = D1}
   {aL = aL} {aR = aR} HCP sq j i =
+  let
+    α = compPathP {P = P}
+      (λ j → F (C2 j) (subst-filler S2 C2 aL j))
+      (subst-filler P C1 (F m2 (subst S2 C2 aL)))
+    β = compPathP {P = P}
+      (λ j → G (D2 j) (subst-filler S3 D2 aR j))
+      (subst-filler P D1 (G n2 (subst S3 D2 aR)))
+  in
   fill′ (λ j' → P (sq j' i))
-        (λ j' → λ { (i = i0) → α j' ; (i = i1) → β j' })
-        (inS (HCP i)) j
-  where
-  α : PathP (λ j → P ((cong rfF C2 ∙ C1) j))
-        (F m1 aL) (subst P C1 (F m2 (subst S2 C2 aL)))
-  α = compPathP {P = P}
-        (λ j → F (C2 j) (subst-filler S2 C2 aL j))
-        (subst-filler P C1 (F m2 (subst S2 C2 aL)))
-  β : PathP (λ j → P ((cong rfG D2 ∙ D1) j))
-        (G n1 aR) (subst P D1 (G n2 (subst S3 D2 aR)))
-  β = compPathP {P = P}
-        (λ j → G (D2 j) (subst-filler S3 D2 aR j))
-        (subst-filler P D1 (G n2 (subst S3 D2 aR)))
+    (λ j' → λ { (i = i0) → α j' ; (i = i1) → β j' })
+    (inS (HCP i)) j
 
 ------------------------------------------------------------------------
 -- The fused assembly lemma for the layer 2-coherence, stated over
@@ -919,57 +909,45 @@ module _
   module _
     -- the six fillers, at cohLayer-fillP's stated output types
     (fillK : SquareP (λ j i → P (sqK j i))
-        (Hqr bK (subst T̃ κ' cS̃))
-        (cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = λ y → R y t}
-          {rfF = rfq} {rfG = rfr} {F = Fq} {G = Fr} {E1 = E1K}
-          {C2 = C2K} {D2 = D2K} {C1 = κqf dRK} {D1 = κrf dEK}
-          {K = Kqr bK} {aL = F̂r bK (subst T̃ κ' cS̃)} {aR = F̂sq bK (subst T̃ κ' cS̃)}
-          (Hqr bK (subst T̃ κ' cS̃)) sqK)
+        (Hqr bK aSK)
+        (cohLayer-squareP {P = P} {rf0 = λ y → R y t} {F = Fq} {G = Fr}
+          (Hqr bK aSK) sqK)
         (compPathP {P = P}
-          (λ j → Fq (C2K j) (subst-filler S C2K (F̂r bK (subst T̃ κ' cS̃)) j))
-          (subst-filler P (κqf dRK) (Fq (w⁺ dRK) (subst S C2K (F̂r bK (subst T̃ κ' cS̃))))))
+          (λ j → Fq (C2K j) (subst-filler S C2K aLK j))
+          (subst-filler P (κqf dRK) (Fq (w⁺ dRK) (subst S C2K aLK))))
         (compPathP {P = P}
-          (λ j → Fr (D2K j) (subst-filler S D2K (F̂sq bK (subst T̃ κ' cS̃)) j))
-          (subst-filler P (κrf dEK) (Fr (w⁺ dEK) (subst S D2K (F̂sq bK (subst T̃ κ' cS̃)))))))
+          (λ j → Fr (D2K j) (subst-filler S D2K aRK j))
+          (subst-filler P (κrf dEK) (Fr (w⁺ dEK) (subst S D2K aRK)))))
     (fillPE1 : SquareP (λ j i → S (sqE1 j i))
         HCPE1
-        (cohLayer-squareP {P = S} {S2 = T̃} {S3 = T̃} {rf0 = w⁺}
-          {rfF = r̂fsq} {rfG = r̂fsr} {F = F̂sq} {G = F̂sr} {E1 = E1f}
-          {C2 = κ'C} {D2 = κ'E} {C1 = D2C} {D1 = D1E1}
-          {K = KE1} {aL = c̃C} {aR = c̃E}
+        (cohLayer-squareP {P = S} {rf0 = w⁺} {F = F̂sq} {G = F̂sr}
           HCPE1 sqE1)
         (compPathP {P = S}
           (λ j → F̂sq (κ'C j) (subst-filler T̃ κ'C c̃C j))
-          (subst-filler S D2C (F̂sq bC (subst T̃ κ'C c̃C))))
+          (subst-filler S D2C aRC))
         (compPathP {P = S}
           (λ j → F̂sr (κ'E j) (subst-filler T̃ κ'E c̃E j))
-          (subst-filler S D1E1 (F̂sr bD (subst T̃ κ'E c̃E)))))
+          (subst-filler S D1E1 aRD)))
     (fillC2 : SquareP (λ j i → S (sqC2' j i))
         HCPC2
-        (cohLayer-squareP {P = S} {S2 = T̃} {S3 = T̃} {rf0 = w⁺}
-          {rfF = r̂fr} {rfG = r̂fs} {F = F̂r} {G = Ĝs} {E1 = C2f'}
-          {C2 = κ'} {D2 = κ'C} {C1 = C2K} {D1 = sC}
-          {K = KC2} {aL = cS̃} {aR = c̃C}
+        (cohLayer-squareP {P = S} {rf0 = w⁺} {F = F̂r} {G = Ĝs}
           HCPC2 sqC2')
         (compPathP {P = S}
           (λ j → F̂r (κ' j) (subst-filler T̃ κ' cS̃ j))
-          (subst-filler S C2K (F̂r bK (subst T̃ κ' cS̃))))
+          (subst-filler S C2K aLK))
         (compPathP {P = S}
           (λ j → Ĝs (κ'C j) (subst-filler T̃ κ'C c̃C j))
-          (subst-filler S sC (Ĝs bC (subst T̃ κ'C c̃C)))))
+          (subst-filler S sC XC)))
     (fillD2 : SquareP (λ j i → S (sqD2' j i))
         HCPD2
-        (cohLayer-squareP {P = S} {S2 = T̃} {S3 = T̃} {rf0 = w⁺}
-          {rfF = r̂fsq} {rfG = r̂fs} {F = F̂sq} {G = Ĝs} {E1 = D2f'}
-          {C2 = κ'} {D2 = κ'E} {C1 = D2K} {D1 = sD}
-          {K = KD2} {aL = cS̃} {aR = c̃E}
+        (cohLayer-squareP {P = S} {rf0 = w⁺} {F = F̂sq} {G = Ĝs}
           HCPD2 sqD2')
         (compPathP {P = S}
           (λ j → F̂sq (κ' j) (subst-filler T̃ κ' cS̃ j))
-          (subst-filler S D2K (F̂sq bK (subst T̃ κ' cS̃))))
+          (subst-filler S D2K aRK))
         (compPathP {P = S}
           (λ j → Ĝs (κ'E j) (subst-filler T̃ κ'E c̃E j))
-          (subst-filler S sD (Ĝs bD (subst T̃ κ'E c̃E)))))
+          (subst-filler S sD XD)))
     where
     private
 
@@ -983,20 +961,13 @@ module _
       -- the i = i0 lateral: the K-side conjugation composed with fillK
       L₀ : SquareP (λ m jj → P (L₀b m jj))
         (Hqr mSb cS̃)
-        (cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = w}
-          {rfF = rfq} {rfG = rfr} {F = Fq} {G = Fr} {E1 = E1K}
-          {C2 = C2K} {D2 = D2K} {C1 = κqf dRK} {D1 = κrf dEK}
-          {K = Kqr bK} {aL = aLK} {aR = aRK}
+        (cohLayer-squareP {P = P} {rf0 = w} {F = Fq} {G = Fr}
           (Hqr bK aSK) sqK)
         (compPathP {P = P} (λ m → Hqr (κ' m) (ŝf m) i0)
            (λ m → fillK m i0))
         (compPathP {P = P} (λ m → Hqr (κ' m) (ŝf m) i1)
            (λ m → fillK m i1))
-      L₀ = ∙vP {P = P}
-        {B₁ = λ m jj → Kqr (κ' m) jj}
-        {B₂ = sqK}
-        (λ m jj → Hqr (κ' m) (ŝf m) jj)
-        fillK
+      L₀ = ∙vP {P = P} (λ m jj → Hqr (κ' m) (ŝf m) jj) fillK
 
       -- the i = i1 lateral: the s-side application of fillPE1 composed
       -- with the arity-point transport
@@ -1008,15 +979,11 @@ module _
         (compPathP {P = P} (λ m → Fs (sqE1 m i1) (fillPE1 m i1))
            (λ m → subst-filler P (κE1 i1) (aE1 i1) m))
       L₁ = ∙vP {P = P}
-        {B₁ = λ m jj → rfs (sqE1 m jj)}
-        {B₂ = λ m jj → κE1 jj m}
         (λ m jj → Fs (sqE1 m jj) (fillPE1 m jj))
         (λ m jj → subst-filler P (κE1 jj) (aE1 jj) m)
 
       -- the j = i0 lateral (the C face)
       σu = ∙vP {P = P}
-        {B₁ = λ m ii → rfq (sqC2' m ii)}
-        {B₂ = λ m ii → κC ii m}
         (λ m ii → Fq (sqC2' m ii) (fillC2 m ii))
         (λ m ii → subst-filler P (κC ii) (aC ii) m)
       ccK = junctionP.cell {P = P} rfq (cong r̂fr κ') C2K (κqf dRK) Fq
@@ -1031,8 +998,6 @@ module _
       σu' = padP {P = P} σu (λ o m → σu m i0) ccMC
       -- the j = i1 lateral (the D face)
       σd = ∙vP {P = P}
-        {B₁ = λ m ii → rfr (sqD2' m ii)}
-        {B₂ = λ m ii → κD ii m}
         (λ m ii → Fr (sqD2' m ii) (fillD2 m ii))
         (λ m ii → subst-filler P (κD ii) (aD ii) m)
       cc0D = junctionP.cell {P = P} rfr (cong r̂fsq κ') D2K (κrf dEK) Fr
@@ -1046,33 +1011,8 @@ module _
         (subst-filler P (κsf dED) (aE1 i1))
       σd' = padP {P = P} σd (λ o m → σd m i0) ccMD
 
-      -- the cube's corner edges, named and stated
-      g00 : PathP (λ m → P (L₀b m i0))
-          (Fq (r̂fr mSb) (F̂r mSb cS̃))
-          (subst P (κqf dRK) (Fq (w⁺ dRK) (subst S C2K aLK)))
-      g00 = compPathP {P = P} (λ m → Hqr (κ' m) (ŝf m) i0)
-              (λ m → fillK m i0)
-      g01 : PathP (λ m → P (L₀b m i1))
-          (Fr (r̂fsq mSb) (F̂sq mSb cS̃))
-          (subst P (κrf dEK) (Fr (w⁺ dEK) (subst S D2K aRK)))
-      g01 = compPathP {P = P} (λ m → Hqr (κ' m) (ŝf m) i1)
-              (λ m → fillK m i1)
-      g10 : PathP (λ m → P (L₁b m i0))
-          (Fs (r̂fsq nRb) (F̂sq nRb c̃C))
-          (subst P (κE1 i0) (aE1 i0))
-      g10 = compPathP {P = P} (λ m → Fs (sqE1 m i0) (fillPE1 m i0))
-              (λ m → subst-filler P (κE1 i0) (aE1 i0) m)
-      g11 : PathP (λ m → P (L₁b m i1))
-          (Fs (r̂fsr nEb) (F̂sr nEb c̃E))
-          (subst P (κE1 i1) (aE1 i1))
-      g11 = compPathP {P = P} (λ m → Fs (sqE1 m i1) (fillPE1 m i1))
-              (λ m → subst-filler P (κE1 i1) (aE1 i1) m)
-
       -- the cube's stated output faces, named
-      F0c = cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = w}
-            {rfF = rfq} {rfG = rfr} {F = Fq} {G = Fr} {E1 = E1K}
-            {C2 = C2K} {D2 = D2K} {C1 = κqf dRK} {D1 = κrf dEK}
-            {K = Kqr bK} {aL = aLK} {aR = aRK}
+      F0c = cohLayer-squareP {P = P} {rf0 = w} {F = Fq} {G = Fr}
             (Hqr bK aSK) sqK
       F1c : PathP (λ jj → P (R (r̂ss (E1f jj)) t))
           (subst P (κE1 i0) (aE1 i0)) (subst P (κE1 i1) (aE1 i1))
@@ -1082,55 +1022,41 @@ module _
           (subst P (κqf dRK) (aC i0))
           (subst P (κsf dEC) (Fs (w⁺ dEC) (subst S D2C aRC)))
       FCc = compPathP {P = P} (λ ii → subst P (κC ii) (aC ii))
-            (cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = w}
-              {rfF = rfq} {rfG = rfs} {F = Fq} {G = Fs} {E1 = qCb}
-              {C2 = sC} {D2 = D2C} {C1 = κqf dRC} {D1 = κsf dEC}
-              {K = Kqs bC} {aL = XC} {aR = aRC}
+            (cohLayer-squareP {P = P} {rf0 = w} {F = Fq} {G = Fs}
               (Hqs bC lRC) sqC)
       FDc : PathP (λ ii → P (((λ i' → R (r̂fsr (D2f' i')) t)
                               ∙ (λ i' → R (qDb i') t)) ii))
           (subst P (κrf dEK) (aD i0))
           (subst P (κsf dED) (Fs (w⁺ dED) (subst S D1E1 aRD)))
       FDc = compPathP {P = P} (λ ii → subst P (κD ii) (aD ii))
-            (cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = w}
-              {rfF = rfr} {rfG = rfs} {F = Fr} {G = Fs} {E1 = qDb}
-              {C2 = sD} {D2 = D1E1} {C1 = κrf dRD} {D1 = κsf dED}
-              {K = Krs bD} {aL = XD} {aR = aRD}
+            (cohLayer-squareP {P = P} {rf0 = w} {F = Fr} {G = Fs}
               (Hrs bD lED) sqD)
 
     module _
       (fillC : SquareP (λ j i → P (sqC j i))
-          (Hqs bC (subst T̃ κ'C c̃C))
-          (cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = λ y → R y t}
-            {rfF = rfq} {rfG = rfs} {F = Fq} {G = Fs} {E1 = qCb}
-            {C2 = sC} {D2 = D2C} {C1 = κqf dRC} {D1 = κsf dEC}
-            {K = Kqs bC} {aL = Ĝs bC (subst T̃ κ'C c̃C)}
-            {aR = F̂sq bC (subst T̃ κ'C c̃C)}
-            (Hqs bC (subst T̃ κ'C c̃C)) sqC)
+          (Hqs bC lRC)
+          (cohLayer-squareP {P = P} {rf0 = λ y → R y t} {F = Fq} {G = Fs}
+            (Hqs bC lRC) sqC)
           (compPathP {P = P}
-            (λ j → Fq (sC j) (subst-filler S sC (Ĝs bC (subst T̃ κ'C c̃C)) j))
+            (λ j → Fq (sC j) (subst-filler S sC XC j))
             (subst-filler P (κqf dRC)
-              (Fq (w⁺ dRC) (subst S sC (Ĝs bC (subst T̃ κ'C c̃C))))))
+              (Fq (w⁺ dRC) (subst S sC XC))))
           (compPathP {P = P}
-            (λ j → Fs (D2C j) (subst-filler S D2C (F̂sq bC (subst T̃ κ'C c̃C)) j))
+            (λ j → Fs (D2C j) (subst-filler S D2C aRC j))
             (subst-filler P (κsf dEC)
-              (Fs (w⁺ dEC) (subst S D2C (F̂sq bC (subst T̃ κ'C c̃C)))))))
+              (Fs (w⁺ dEC) (subst S D2C aRC)))))
       (fillD : SquareP (λ j i → P (sqD j i))
-          (Hrs bD (subst T̃ κ'E c̃E))
-          (cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = λ y → R y t}
-            {rfF = rfr} {rfG = rfs} {F = Fr} {G = Fs} {E1 = qDb}
-            {C2 = sD} {D2 = D1E1} {C1 = κrf dRD} {D1 = κsf dED}
-            {K = Krs bD} {aL = Ĝs bD (subst T̃ κ'E c̃E)}
-            {aR = F̂sr bD (subst T̃ κ'E c̃E)}
-            (Hrs bD (subst T̃ κ'E c̃E)) sqD)
+          (Hrs bD lED)
+          (cohLayer-squareP {P = P} {rf0 = λ y → R y t} {F = Fr} {G = Fs}
+            (Hrs bD lED) sqD)
           (compPathP {P = P}
-            (λ j → Fr (sD j) (subst-filler S sD (Ĝs bD (subst T̃ κ'E c̃E)) j))
+            (λ j → Fr (sD j) (subst-filler S sD XD j))
             (subst-filler P (κrf dRD)
-              (Fr (w⁺ dRD) (subst S sD (Ĝs bD (subst T̃ κ'E c̃E))))))
+              (Fr (w⁺ dRD) (subst S sD XD))))
           (compPathP {P = P}
-            (λ j → Fs (D1E1 j) (subst-filler S D1E1 (F̂sr bD (subst T̃ κ'E c̃E)) j))
+            (λ j → Fs (D1E1 j) (subst-filler S D1E1 aRD j))
             (subst-filler P (κsf dED)
-              (Fs (w⁺ dED) (subst S D1E1 (F̂sr bD (subst T̃ κ'E c̃E)))))))
+              (Fs (w⁺ dED) (subst S D1E1 aRD)))))
       -- the premise: the painting 2-coherence at the arity-point-restricted
       -- point, with the faces spelled as the laterals' premise-side faces
       {B₀ : Square (Kqr mSb) (cong rfs KE1)
@@ -1155,74 +1081,35 @@ module _
       where
       private
 
-        -- the cube's far base square: the goal base padded to the laterals'
-        -- m = i1 base edges
-        sq₁b : Square (cong (λ y → R y t) E1K)
-            (λ jj → R (r̂ss (E1f jj)) t)
-            ((λ ii → R (r̂fsq (C2f' ii)) t) ∙ (λ ii → R (qCb ii) t))
-            ((λ ii → R (r̂fsr (D2f' ii)) t) ∙ (λ ii → R (qDb ii) t))
-        sq₁b = pad {X = X} BG BCL BCR
-        σv = ∙vP {P = P}
-          {B₁ = λ m ii → Kqs (κ'C m) ii}
-          {B₂ = sqC}
-          (λ m ii → Hqs (κ'C m) (ŝfC m) ii)
-          fillC
-        σe = ∙vP {P = P}
-          {B₁ = λ m ii → Krs (κ'E m) ii}
-          {B₂ = sqD}
-          (λ m ii → Hrs (κ'E m) (ŝfE m) ii)
-          fillD
         LC : SquareP (λ m ii → P (LCb m ii))
           (compPathP {P = P} (λ ii → Fq (KC2 ii) (HCPC2 ii)) (Hqs nRb c̃C))
           (compPathP {P = P} (λ ii → subst P (κC ii) (aC ii))
-            (cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = w}
-              {rfF = rfq} {rfG = rfs} {F = Fq} {G = Fs} {E1 = qCb}
-              {C2 = sC} {D2 = D2C} {C1 = κqf dRC} {D1 = κsf dEC}
-              {K = Kqs bC} {aL = XC} {aR = aRC}
+            (cohLayer-squareP {P = P} {rf0 = w} {F = Fq} {G = Fs}
               (Hqs bC lRC) sqC))
           (compPathP {P = P} (λ m → Hqr (κ' m) (ŝf m) i0)
              (λ m → fillK m i0))
           (compPathP {P = P} (λ m → Fs (sqE1 m i0) (fillPE1 m i0))
              (λ m → subst-filler P (κE1 i0) (aE1 i0) m))
-        LC = padP {P = P} (∙sliceP {P = P} σu' σv) ccK (λ o m → ccE (~ o) m)
+        LC = padP {P = P}
+          (∙sliceP {P = P} σu'
+            (∙vP {P = P} (λ m ii → Hqs (κ'C m) (ŝfC m) ii) fillC))
+          ccK (λ o m → ccE (~ o) m)
         LD : SquareP (λ m ii → P (LDb m ii))
           (compPathP {P = P} (λ ii → Fr (KD2 ii) (HCPD2 ii)) (Hrs nEb c̃E))
           (compPathP {P = P} (λ ii → subst P (κD ii) (aD ii))
-            (cohLayer-squareP {P = P} {S2 = S} {S3 = S} {rf0 = w}
-              {rfF = rfr} {rfG = rfs} {F = Fr} {G = Fs} {E1 = qDb}
-              {C2 = sD} {D2 = D1E1} {C1 = κrf dRD} {D1 = κsf dED}
-              {K = Krs bD} {aL = XD} {aR = aRD}
+            (cohLayer-squareP {P = P} {rf0 = w} {F = Fr} {G = Fs}
               (Hrs bD lED) sqD))
           (compPathP {P = P} (λ m → Hqr (κ' m) (ŝf m) i1) (λ m → fillK m i1))
           (compPathP {P = P} (λ m → Fs (sqE1 m i1) (fillPE1 m i1))
              (λ m → subst-filler P (κE1 i1) (aE1 i1) m))
-        LD = padP {P = P} (∙sliceP {P = P} σd' σe) cc0D (λ o m → cc1D (~ o) m)
+        LD = padP {P = P}
+          (∙sliceP {P = P} σd'
+            (∙vP {P = P} (λ m ii → Hrs (κ'E m) (ŝfE m) ii) fillD))
+          cc0D (λ o m → cc1D (~ o) m)
 
         -- the cube: the painting 2-coherence premise transported across the
         -- isGroupoid interior along the four laterals
-        cube = squarePOverCube {X = X} {P = P} gX
-          {a₀₀ = λ m → L₀b m i0} {a₀₁ = λ m → L₀b m i1}
-          {a₁₀ = λ m → L₁b m i0} {a₁₁ = λ m → L₁b m i1}
-          {a₀₋ = λ m → L₀b m} {a₁₋ = λ m → L₁b m}
-          {a₋₀ = λ m → LCb m} {a₋₁ = λ m → LDb m}
-          B₀ sq₁b
-          {v₀₀ = Fq (r̂fr mSb) (F̂r mSb cS̃)}
-          {v₀₁ = Fr (r̂fsq mSb) (F̂sq mSb cS̃)}
-          {v₁₀ = Fs (r̂fsq nRb) (F̂sq nRb c̃C)}
-          {v₁₁ = Fs (r̂fsr nEb) (F̂sr nEb c̃E)}
-          {V₀₀ = subst P (κqf dRK) (Fq (w⁺ dRK) (subst S C2K aLK))}
-          {V₀₁ = subst P (κrf dEK) (Fr (w⁺ dEK) (subst S D2K aRK))}
-          {V₁₀ = subst P (κE1 i0) (aE1 i0)}
-          {V₁₁ = subst P (κE1 i1) (aE1 i1)}
-          {g₀₀ = g00} {g₀₁ = g01} {g₁₀ = g10} {g₁₁ = g11}
-          {f₀ = Hqr mSb cS̃}
-          {f₁ = λ jj → Fs (KE1 jj) (HCPE1 jj)}
-          {fC = compPathP {P = P} (λ ii → Fq (KC2 ii) (HCPC2 ii))
-                  (Hqs nRb c̃C)}
-          {fD = compPathP {P = P} (λ ii → Fr (KD2 ii) (HCPD2 ii))
-                  (Hrs nEb c̃E)}
-          {F₀ = F0c} {F₁ = F1c} {FC = FCc} {FD = FDc}
-          L₀ L₁ LC LD σp
+        cube = squarePOverCube {P = P} gX B₀ (pad BG BCL BCR) L₀ L₁ LC LD σp
 
       -- the closing lemma: the cube carried back across the base pad, its
       -- side faces bridged by the given cells. The layer 2-coherence's
@@ -1242,7 +1129,7 @@ module _
             (λ _ → subst P (κrf dEK) (aD i0))
             (λ _ → subst P (κsf dED) (Fs (w⁺ dED) (subst S D1E1 aRD))))
         → SquareP (λ i j → P (BG i j)) F0c F1c gC gD
-      coh2Layer-cubeP {gC} {gD} CL CR i j =
+      coh2Layer-cubeP CL CR i j =
         comp′ (λ m → P (pad-fill BG BCL BCR (~ m) i j))
           (λ m → λ { (i = i0) → F0c j
                    ; (i = i1) → F1c j
