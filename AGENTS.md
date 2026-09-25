@@ -33,6 +33,10 @@ branches, build discipline, and writing preferences.
 
 ## Branches and worktrees
 
+- Each worktree's directory name must match its checked-out branch. Keep `main/` on `main` and each experiment's worktree on its matching branch.
+- Do not switch an established worktree to another branch to start a task: use or create the matching worktree with `git worktree add`, specifying the intended base explicitly when creating a branch.
+- Before editing, check `git branch --show-current` and `git worktree list`. Report and resolve any mismatch before development, preserving uncommitted and ignored working files; do not use a mismatched checkout's `HEAD` as the implicit base for new work.
+
 Alternative designs are kept on branches, usually checked out as
 sibling worktrees (`git worktree list` shows them):
 
