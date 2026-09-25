@@ -155,7 +155,7 @@ module _ {ℓa ℓb ℓm : Level} {A : Set ℓa} {B : A → Set ℓb}
 -- definitionally), so one cell corrects base and fiber together.
 module ∙Πapp {ℓa ℓt ℓx ℓp : Level} {A : Set ℓa} {T : Set ℓt}
   {X : Set ℓx} {P : X → Set ℓp} (R : A → T → X)
-  {x y z : A} (p : x ≡ y) (q : y ≡ z)
+  {x y z : A} {p : x ≡ y} {q : y ≡ z}
   {u : (t : T) → P (R x t)} {v : (t : T) → P (R y t)}
   {w : (t : T) → P (R z t)}
   (α : PathP (λ i → (t : T) → P (R (p i) t)) u v)
@@ -238,51 +238,58 @@ module ∙congF {ℓa ℓx ℓp : Level} {A : Set ℓa}
 
 module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
   -- the a₋₀ face's two factors
-  {xc yc zc : A} (a₁ : xc ≡ yc) (a₂ : yc ≡ zc)
+  {xc yc zc : A} {a₁ : xc ≡ yc} {a₂ : yc ≡ zc}
   {uc : B xc} {vc : B yc} {wc : B zc}
-  (b₁ : PathP (λ i → B (a₁ i)) uc vc) (b₂ : PathP (λ i → B (a₂ i)) vc wc)
+  {b₁ : PathP (λ i → B (a₁ i)) uc vc} {b₂ : PathP (λ i → B (a₂ i)) vc wc}
   -- the a₋₁ face's two factors
-  {xd yd zd : A} (a₁' : xd ≡ yd) (a₂' : yd ≡ zd)
+  {xd yd zd : A} {a₁' : xd ≡ yd} {a₂' : yd ≡ zd}
   {ud : B xd} {vd : B yd} {wd : B zd}
-  (b₁' : PathP (λ i → B (a₁' i)) ud vd)
-  (b₂' : PathP (λ i → B (a₂' i)) vd wd)
+  {b₁' : PathP (λ i → B (a₁' i)) ud vd}
+  {b₂' : PathP (λ i → B (a₂' i)) vd wd}
   -- the two single-cell faces (a₀₋ and a₁₋)
-  (kA : xc ≡ xd) (kB : PathP (λ j → B (kA j)) uc ud)
-  (e1A : zc ≡ zd) (e1B : PathP (λ j → B (e1A j)) wc wd)
+  {kA : xc ≡ xd} {kB : PathP (λ j → B (kA j)) uc ud}
+  {e1A : zc ≡ zd} {e1B : PathP (λ j → B (e1A j)) wc wd}
   -- the square of first components and the square over it
-  (X : Square kA e1A (a₁ ∙ a₂) (a₁' ∙ a₂'))
-  (Lsq : SquareP (λ i j → B (X i j)) kB e1B
-           (compPathP {P = B} b₁ b₂) (compPathP {P = B} b₁' b₂'))
   where
 
-  fill : (m i j : I) → Σ A B
-  fill m i j =
-    hfill (λ m' → λ { (i = i0) → (kA j , kB j)
-                    ; (i = i1) → (e1A j , e1B j)
-                    ; (j = i0) → ∙-pairΣ a₁ a₂ b₁ b₂ (~ m') i
-                    ; (j = i1) → ∙-pairΣ a₁' a₂' b₁' b₂' (~ m') i })
-          (inS (X i j , Lsq i j)) m
+  module _
+    (X : Square kA e1A (a₁ ∙ a₂) (a₁' ∙ a₂'))
+    (Lsq : SquareP (λ i j → B (X i j)) kB e1B
+             (compPathP {P = B} b₁ b₂) (compPathP {P = B} b₁' b₂'))
+    where
 
-  hex : Square (λ j → (kA j , kB j)) (λ j → (e1A j , e1B j))
-          ((λ i → (a₁ i , b₁ i)) ∙ (λ i → (a₂ i , b₂ i)))
-          ((λ i → (a₁' i , b₁' i)) ∙ (λ i → (a₂' i , b₂' i)))
-  hex i j = fill i1 i j
+    fill : (m i j : I) → Σ A B
+    fill m i j =
+      hfill (λ m' → λ { (i = i0) → (kA j , kB j)
+                      ; (i = i1) → (e1A j , e1B j)
+                      ; (j = i0) → ∙-pairΣ a₁ a₂ b₁ b₂ (~ m') i
+                      ; (j = i1) → ∙-pairΣ a₁' a₂' b₁' b₂' (~ m') i })
+            (inS (X i j , Lsq i j)) m
+
+    hex : Square (λ j → (kA j , kB j)) (λ j → (e1A j , e1B j))
+            ((λ i → (a₁ i , b₁ i)) ∙ (λ i → (a₂ i , b₂ i)))
+            ((λ i → (a₁' i , b₁' i)) ∙ (λ i → (a₂' i , b₂' i)))
+    hex i j = fill i1 i j
 
   -- The dependent version, one fibration storey up: a square of pairs
   -- in the Σ of a second-storey family M over Σ A B, from the square
   -- Csq of second components — which lives over `hex` itself, exactly
   -- as the tower's painting 2-coherence at suc p lives over the frame
   -- 2-coherence at suc p.
-  module Dep {ℓm : Level} {M : Σ A B → Set ℓm}
+  module Dep
+    {X : Square kA e1A (a₁ ∙ a₂) (a₁' ∙ a₂')}
+    {ℓm : Level} {M : Σ A B → Set ℓm}
+    (Lsq : SquareP (λ i j → B (X i j)) kB e1B
+             (compPathP {P = B} b₁ b₂) (compPathP {P = B} b₁' b₂'))
     {muc : M (xc , uc)} {mvc : M (yc , vc)} {mwc : M (zc , wc)}
-    (g₁ : PathP (λ i → M (a₁ i , b₁ i)) muc mvc)
-    (g₂ : PathP (λ i → M (a₂ i , b₂ i)) mvc mwc)
+    {g₁ : PathP (λ i → M (a₁ i , b₁ i)) muc mvc}
+    {g₂ : PathP (λ i → M (a₂ i , b₂ i)) mvc mwc}
     {mud : M (xd , ud)} {mvd : M (yd , vd)} {mwd : M (zd , wd)}
-    (g₁' : PathP (λ i → M (a₁' i , b₁' i)) mud mvd)
-    (g₂' : PathP (λ i → M (a₂' i , b₂' i)) mvd mwd)
-    (gK : PathP (λ j → M (kA j , kB j)) muc mud)
-    (gE1 : PathP (λ j → M (e1A j , e1B j)) mwc mwd)
-    (Csq : SquareP (λ i j → M (hex i j)) gK gE1
+    {g₁' : PathP (λ i → M (a₁' i , b₁' i)) mud mvd}
+    {g₂' : PathP (λ i → M (a₂' i , b₂' i)) mvd mwd}
+    {gK : PathP (λ j → M (kA j , kB j)) muc mud}
+    {gE1 : PathP (λ j → M (e1A j , e1B j)) mwc mwd}
+    (Csq : SquareP (λ i j → M (hex X Lsq i j)) gK gE1
              (compPathP {P = M} g₁ g₂) (compPathP {P = M} g₁' g₂'))
     where
 
@@ -307,7 +314,7 @@ module Σ≡hex {ℓa ℓb : Level} {A : Set ℓa} {B : A → Set ℓb}
         ; (j = i1) → compPathP-pairΣ {L = B} {M = λ x b → M (x , b)}
                        b₁' b₂' g₁' g₂' (~ m) i })
         ( Lsq i j
-        , comp′ (λ m → M (fill (~ m) i j))
+        , comp′ (λ m → M (fill X Lsq (~ m) i j))
             (λ m → λ { (i = i0) → gK j
                      ; (i = i1) → gE1 j
                      ; (j = i0) → ∙-pairΣᵈ {M = M} {a₁ = a₁} {a₂ = a₂}
@@ -811,60 +818,60 @@ module _
   (Fr : (y : Y) → S y → P (rfr y))
   (Fs : (y : Y) → S y → P (rfs y))
   -- Z-to-Y restrictions and paintings
-  (w⁺ r̂fr r̂fs r̂fsq r̂fsr r̂ss : Z → Y)
-  (F̂r  : (z : Z) → T̃ z → S (r̂fr z))
-  (Ĝs  : (z : Z) → T̃ z → S (r̂fs z))
-  (F̂sq : (z : Z) → T̃ z → S (r̂fsq z))
-  (F̂sr : (z : Z) → T̃ z → S (r̂fsr z))
+  {w⁺ r̂fr r̂fs r̂fsq r̂fsr r̂ss : Z → Y}
+  {F̂r  : (z : Z) → T̃ z → S (r̂fr z)}
+  {Ĝs  : (z : Z) → T̃ z → S (r̂fs z)}
+  {F̂sq : (z : Z) → T̃ z → S (r̂fsq z)}
+  {F̂sr : (z : Z) → T̃ z → S (r̂fsr z)}
   -- arity-point conjugator families
   (κqf : (z : Z) → rfq (w⁺ z) ≡ R (r̂fsq z) t)
   (κrf : (z : Z) → rfr (w⁺ z) ≡ R (r̂fsr z) t)
   (κsf : (z : Z) → rfs (w⁺ z) ≡ R (r̂ss z) t)
   -- face-commutation and painting-coherence families
-  (Kqr : (z : Z) → rfq (r̂fr z) ≡ rfr (r̂fsq z))
+  {Kqr : (z : Z) → rfq (r̂fr z) ≡ rfr (r̂fsq z)}
   (Hqr : (z : Z) (c : T̃ z)
          → PathP (λ i → P (Kqr z i)) (Fq (r̂fr z) (F̂r z c))
              (Fr (r̂fsq z) (F̂sq z c)))
-  (Kqs : (z : Z) → rfq (r̂fs z) ≡ rfs (r̂fsq z))
+  {Kqs : (z : Z) → rfq (r̂fs z) ≡ rfs (r̂fsq z)}
   (Hqs : (z : Z) (c : T̃ z)
          → PathP (λ i → P (Kqs z i)) (Fq (r̂fs z) (Ĝs z c))
              (Fs (r̂fsq z) (F̂sq z c)))
-  (Krs : (z : Z) → rfr (r̂fs z) ≡ rfs (r̂fsr z))
+  {Krs : (z : Z) → rfr (r̂fs z) ≡ rfs (r̂fsr z)}
   (Hrs : (z : Z) (c : T̃ z)
          → PathP (λ i → P (Krs z i)) (Fr (r̂fs z) (Ĝs z c))
              (Fs (r̂fsr z) (F̂sr z c)))
   -- the Z-level points, conjugators and transported elements
   {mSb bK nRb bC nEb bD : Z}
   {dRK dEK dRC dRD dEC dED : Z}
-  (κ'  : mSb ≡ bK) (cS̃ : T̃ mSb)
-  (κ'C : nRb ≡ bC) (c̃C : T̃ nRb)
-  (κ'E : nEb ≡ bD) (c̃E : T̃ nEb)
+  {κ'  : mSb ≡ bK} {cS̃ : T̃ mSb}
+  {κ'C : nRb ≡ bC} {c̃C : T̃ nRb}
+  {κ'E : nEb ≡ bD} {c̃E : T̃ nEb}
   -- the Z- and Y-level paths of the six filler packs
-  (C2f' : dRK ≡ dRC) (D2f' : dEK ≡ dRD) (E1f : dEC ≡ dED)
-  (C2K : r̂fr bK ≡ w⁺ dRK) (D2K : r̂fsq bK ≡ w⁺ dEK)
-  (sC : r̂fs bC ≡ w⁺ dRC) (sD : r̂fs bD ≡ w⁺ dRD)
-  (D2C : r̂fsq bC ≡ w⁺ dEC) (D1E1 : r̂fsr bD ≡ w⁺ dED)
-  (KC2 : r̂fr mSb ≡ r̂fs nRb) (KD2 : r̂fsq mSb ≡ r̂fs nEb)
-  (KE1 : r̂fsq nRb ≡ r̂fsr nEb)
-  (E1K : r̂fsq dRK ≡ r̂fsr dEK)
-  (qCb : r̂fsq dRC ≡ r̂ss dEC) (qDb : r̂fsr dRD ≡ r̂ss dED)
+  {C2f' : dRK ≡ dRC} {D2f' : dEK ≡ dRD} {E1f : dEC ≡ dED}
+  {C2K : r̂fr bK ≡ w⁺ dRK} {D2K : r̂fsq bK ≡ w⁺ dEK}
+  {sC : r̂fs bC ≡ w⁺ dRC} {sD : r̂fs bD ≡ w⁺ dRD}
+  {D2C : r̂fsq bC ≡ w⁺ dEC} {D1E1 : r̂fsr bD ≡ w⁺ dED}
+  {KC2 : r̂fr mSb ≡ r̂fs nRb} {KD2 : r̂fsq mSb ≡ r̂fs nEb}
+  {KE1 : r̂fsq nRb ≡ r̂fsr nEb}
+  {E1K : r̂fsq dRK ≡ r̂fsr dEK}
+  {qCb : r̂fsq dRC ≡ r̂ss dEC} {qDb : r̂fsr dRD ≡ r̂ss dED}
   -- the mid-level painting-coherence premises of the upper fillers
-  (HCPC2 : PathP (λ i → S (KC2 i)) (F̂r mSb cS̃) (Ĝs nRb c̃C))
-  (HCPD2 : PathP (λ i → S (KD2 i)) (F̂sq mSb cS̃) (Ĝs nEb c̃E))
-  (HCPE1 : PathP (λ i → S (KE1 i)) (F̂sq nRb c̃C) (F̂sr nEb c̃E))
+  {HCPC2 : PathP (λ i → S (KC2 i)) (F̂r mSb cS̃) (Ĝs nRb c̃C)}
+  {HCPD2 : PathP (λ i → S (KD2 i)) (F̂sq mSb cS̃) (Ĝs nEb c̃E)}
+  {HCPE1 : PathP (λ i → S (KE1 i)) (F̂sq nRb c̃C) (F̂sr nEb c̃E)}
   -- the six base squares
-  (sqK : Square (Kqr bK) (cong (λ y → R y t) E1K)
-           (cong rfq C2K ∙ κqf dRK) (cong rfr D2K ∙ κrf dEK))
-  (sqE1 : Square KE1 (cong w⁺ E1f)
-            (cong r̂fsq κ'C ∙ D2C) (cong r̂fsr κ'E ∙ D1E1))
-  (sqC2' : Square KC2 (cong w⁺ C2f')
-             (cong r̂fr κ' ∙ C2K) (cong r̂fs κ'C ∙ sC))
-  (sqD2' : Square KD2 (cong w⁺ D2f')
-             (cong r̂fsq κ' ∙ D2K) (cong r̂fs κ'E ∙ sD))
-  (sqC : Square (Kqs bC) (cong (λ y → R y t) qCb)
-           (cong rfq sC ∙ κqf dRC) (cong rfs D2C ∙ κsf dEC))
-  (sqD : Square (Krs bD) (cong (λ y → R y t) qDb)
-           (cong rfr sD ∙ κrf dRD) (cong rfs D1E1 ∙ κsf dED))
+  {sqK : Square (Kqr bK) (cong (λ y → R y t) E1K)
+           (cong rfq C2K ∙ κqf dRK) (cong rfr D2K ∙ κrf dEK)}
+  {sqE1 : Square KE1 (cong w⁺ E1f)
+            (cong r̂fsq κ'C ∙ D2C) (cong r̂fsr κ'E ∙ D1E1)}
+  {sqC2' : Square KC2 (cong w⁺ C2f')
+             (cong r̂fr κ' ∙ C2K) (cong r̂fs κ'C ∙ sC)}
+  {sqD2' : Square KD2 (cong w⁺ D2f')
+             (cong r̂fsq κ' ∙ D2K) (cong r̂fs κ'E ∙ sD)}
+  {sqC : Square (Kqs bC) (cong (λ y → R y t) qCb)
+           (cong rfq sC ∙ κqf dRC) (cong rfs D2C ∙ κsf dEC)}
+  {sqD : Square (Krs bD) (cong (λ y → R y t) qDb)
+           (cong rfr sD ∙ κrf dRD) (cong rfs D1E1 ∙ κsf dED)}
   where
   private
 
@@ -1126,8 +1133,8 @@ module _
               (Fs (w⁺ dED) (subst S D1E1 (F̂sr bD (subst T̃ κ'E c̃E)))))))
       -- the premise: the painting 2-coherence at the arity-point-restricted
       -- point, with the faces spelled as the laterals' premise-side faces
-      (B₀ : Square (Kqr mSb) (cong rfs KE1)
-              (cong rfq KC2 ∙ Kqs nRb) (cong rfr KD2 ∙ Krs nEb))
+      {B₀ : Square (Kqr mSb) (cong rfs KE1)
+              (cong rfq KC2 ∙ Kqs nRb) (cong rfr KD2 ∙ Krs nEb)}
       (σp : SquareP (λ i j → P (B₀ i j))
               (Hqr mSb cS̃)
               (λ jj → Fs (KE1 jj) (HCPE1 jj))
@@ -1139,12 +1146,12 @@ module _
               (λ jj → R (r̂ss (E1f jj)) t)
               (λ ii → R ((cong r̂fsq C2f' ∙ qCb) ii) t)
               (λ ii → R ((cong r̂fsr D2f' ∙ qDb) ii) t))
-      (BCL : Square (λ ii → R ((cong r̂fsq C2f' ∙ qCb) ii) t)
+      {BCL : Square (λ ii → R ((cong r̂fsq C2f' ∙ qCb) ii) t)
                ((λ ii → R (r̂fsq (C2f' ii)) t) ∙ (λ ii → R (qCb ii) t))
-               (λ _ → R (r̂fsq dRK) t) (λ _ → R (r̂ss dEC) t))
-      (BCR : Square (λ ii → R ((cong r̂fsr D2f' ∙ qDb) ii) t)
+               (λ _ → R (r̂fsq dRK) t) (λ _ → R (r̂ss dEC) t)}
+      {BCR : Square (λ ii → R ((cong r̂fsr D2f' ∙ qDb) ii) t)
                ((λ ii → R (r̂fsr (D2f' ii)) t) ∙ (λ ii → R (qDb ii) t))
-               (λ _ → R (r̂fsr dEK) t) (λ _ → R (r̂ss dED) t))
+               (λ _ → R (r̂fsr dEK) t) (λ _ → R (r̂ss dED) t)}
       where
       private
 
