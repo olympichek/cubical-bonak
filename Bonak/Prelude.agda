@@ -11,9 +11,9 @@ module Bonak.Prelude where
 open import Agda.Primitive public
   using (Level; lzero; lsuc; _⊔_; Set)
 open import Agda.Primitive.Cubical public
-  renaming ( primIMin to _∧_ ; primIMax to _∨_ ; primINeg to ~_
-           ; primTransp to transp ; primHComp to hcomp′
-           ; primComp to comp′ )
+  renaming ( primIMin to infixr 20 _∧_ ; primIMax to infixr 20 _∨_
+           ; primINeg to infix 30 ~_ ; primTransp to transp
+           ; primHComp to hcomp′ ; primComp to comp′ )
   using    ( I; i0; i1; Partial; IsOne; itIsOne )
 open import Agda.Builtin.Cubical.Path public
   using (PathP; _≡_)

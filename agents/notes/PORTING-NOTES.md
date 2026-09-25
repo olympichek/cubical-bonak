@@ -684,3 +684,22 @@ Sources, compiler identity, individual timings, inference trials and
 reproduction scripts are retained in `.work/REPORT.md` in the
 `coherence-argument-inference` worktree. The earlier
 one-component API measurements are preserved separately there.
+
+
+## Interval operator fixities (2026-09-25)
+
+Agda removed the fixity declarations for its named cubical primitives in
+[commit 9f2e184](https://github.com/agda/agda/commit/9f2e1843e6ca266a694e3681a8d64c1975249ae4).
+Renaming those primitives without explicit fixities leaves both `∨`
+and `~` at precedence 20, so `i ∨ ~ j` no longer parses. Prelude now
+assigns `infixr 20` to `∧` and `∨`, and `infix 30` to `~`, in the
+renaming clause. These are the fixities the older compiler supplied.
+
+`make install` successfully installed nightly source revision
+`9c1bd18a31ae1f5168055735424aa2881e7747ca`. With that compiler, an isolated
+probe reproduces the original parse error. After the fix, `make clean`
+followed by `make build` checks both example roots and their dependencies
+in 64.38 s, with a peak RSS of 7,703,152 KiB, under a 16 GiB cap.
+Project interfaces were cold. Installation and verification logs, the
+compiler identity, and source archive metadata are retained in
+`.work/nightly-update/` in the `make-build` worktree.
