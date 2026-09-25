@@ -23,12 +23,21 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Cache Cabal packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Locate Cabal cache directories
+        id: cabal-paths
+        run: |
+          cabal_store=$(cabal path -v0 --store-dir)
+          cabal_packages=$(cabal path -v0 --remote-repo-cache)
+          echo "store=$cabal_store" >> "$GITHUB_OUTPUT"
+          echo "packages=$cabal_packages" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Cabal packages
+        id: cabal-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.cabal/packages
-            ~/.cabal/store
+            ${{ steps.cabal-paths.outputs.packages }}
+            ${{ steps.cabal-paths.outputs.store }}
           key: ${{ runner.os }}-${{ runner.arch }}-cabal-${{ hashFiles('Makefile', '.github/workflows/build.yml') }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-cabal-${{ hashFiles('Makefile', '.github/workflows/build.yml') }}-
@@ -38,6 +47,16 @@ jobs:
         run: |
           make install
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # Preserve the toolchain even when a later Bonak check fails.
+      - name: Save Cabal packages
+        if: steps.cabal-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ${{ steps.cabal-paths.outputs.packages }}
+            ${{ steps.cabal-paths.outputs.store }}
+          key: ${{ steps.cabal-cache.outputs.cache-primary-key }}
 
       - name: Show compiler and Make targets
         run: |
