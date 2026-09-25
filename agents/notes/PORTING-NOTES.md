@@ -736,3 +736,27 @@ Sources, compiler identity, individual timings, inference trials and
 reproduction scripts are retained in `.work/REPORT.md` in the
 `coherence-argument-inference-record` worktree. The earlier
 one-component API measurements are preserved separately there.
+
+
+## GpdLemmas argument and abbreviation cleanup (2026-09-25)
+
+Redundant boundary arguments in the pasting kit are inferred. Seven
+private assembly aliases are removed; existing transported-value aliases
+are reused in the filler types. The four lateral signatures, staged
+telescope, and explicit decomposition components are retained. Named
+implicit applications decrease from 365 to 157; the file shrinks from
+1166 to 1056 lines.
+
+With the patched record-hcomp compiler, the kit takes 54.69 → 49.98 s
+with imports cached (two alternating samples), νGpd takes 7.81 → 7.90 s,
+and the library plus both examples takes 65.05 → 58.25 s with cold
+project interfaces. The full-build figure averages one sample per
+variant; the νGpd figure has one. Checks run sequentially with a 16 GiB
+cap; probes are excluded. Both gates and identical frame5 normalization
+pass.
+
+Dropping the lateral signatures timed out at 180 s on main's nightly.
+Broader family inference either raises a metavariable-scope error or
+exceeds 90 s, so those hints remain. Exact compiler identity, source
+snapshots, logs, inference trials and reproduction scripts are saved in
+`.work/REPORT.md` in the `gpd-lemmas-cleanup-record` worktree.
