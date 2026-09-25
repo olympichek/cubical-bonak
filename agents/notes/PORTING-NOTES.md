@@ -629,3 +629,31 @@ total ~3,200 s → 428 s) with a byte-identical interface — the
 upstreamable fix, replacing both the bypass and the "store less"
 program for the default configuration.  Full data:
 `DEADCODE-COST.md`.
+
+
+## Mechanical νGpd cleanup on main (2026-09-25)
+
+The successor type/helper are inlined with lambda-bound interval
+arguments. The other coherence clauses use interval lambdas too.
+The native composition proofs are retained. Of 178 named implicit
+applications, 137 are removed; the retained hints include the painting
+families and restriction functions, and `B`/`M` for the dependent Sigma
+assembly. Unused aliases, eta-expansions, and two single-use arity
+wrappers are removed. The remaining local aliases use `let` bindings.
+
+All twelve core signatures are unchanged, and termination checks at
+depth 3. Both example gates pass; explicit `frame5` normalization is
+byte-identical to baseline. The source is 660 lines, down from 896.
+
+With imported interfaces cached, νGpd checks in 7.80, 7.70, 7.90 s
+(mean 7.80 s), versus 270.71 s before. Cold project builds of the
+library and both example gates take 315.87 → 52.74 s. All runs are
+sequential and memory-capped at 16 GiB; experimental probes are excluded.
+
+These measurements use the unmodified installed Agda nightly 2.9.0.
+The extra local-alias cleanup lowered the intermediate check from
+22.31 s to 7.81 s. Broader family omission either leaves unsolved metas
+or exceeds the bounded trial, so those inference hints are retained.
+
+Detailed logs, compiler identity, source snapshots, inference experiments
+and reproduction scripts are in this worktree’s `.work/REPORT.md`.
