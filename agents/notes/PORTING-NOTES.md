@@ -709,3 +709,30 @@ library and fresh project caches. The stock compiler is not used.
 
 Detailed logs, compiler identity, source snapshots, inference experiments
 and reproduction scripts are in this worktree’s `.work/REPORT.md`.
+
+
+## Coherence argument inference (2026-09-25)
+
+The cube assembly infers 46 previously explicit parameters. The Sigma
+assembly infers its boundary paths while keeping both decomposition
+components explicit: frame and layer squares for `Σ≡hex.hex`, layer
+and painting squares for `Σ≡hex.Dep.hexᵈ`. The dependent assembly
+infers its base square. On record-hcomp, the frame coherence pairs its
+components directly. `∙Πapp` infers its two base paths. `BG` and the
+existing family hints remain explicit. Local value bindings in
+`coh2-layer` decrease from 80 to 36, with two expanded transports
+replaced by the existing layer restrictions.
+
+All twelve tower signatures are unchanged. Termination at depth 3,
+both example gates, and byte-identical `frame5` normalization pass.
+With record-hcomp patched Agda 2.9.0, marginal νGpd means are
+8.23 → 7.56 s (three samples each). Cold project builds,
+including the library and both example gates but excluding probes,
+take 62.96 → 61.80 s (one sample each). Baseline samples are retained
+from the preceding comparison. External dependencies remain cached;
+all runs are sequential under a 16 GiB cap.
+
+Sources, compiler identity, individual timings, inference trials and
+reproduction scripts are retained in `.work/REPORT.md` in the
+`coherence-argument-inference-record` worktree. The earlier
+one-component API measurements are preserved separately there.

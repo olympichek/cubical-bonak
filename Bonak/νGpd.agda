@@ -396,8 +396,6 @@ coh2-layer (n +1) p k e ((((D ∷ E₁) ∷ E₂) ∷ E₃) ∷ E₄) q Hq r Hr 
     P' = λ x → GDom (painting n p k e D E₁ x)
     S' : GDom (frame (n +1) p (k +1) e P₁) → Set
     S' = λ y → GDom (painting (n +1) p (k +1) e P₁ E₂ y)
-    S̃ : GDom (frame (n +2) p (k +2) e P₂) → Set
-    S̃ = λ z → GDom (painting (n +2) p (k +2) e P₂ E₃ z)
     w = restr-frame n p k e P₁ 0 tt θ'
     rfq = restr-frame n p k e P₁ q Hq ε
     rfr = restr-frame n p k e P₁ r H₂ ω
@@ -406,124 +404,73 @@ coh2-layer (n +1) p k e ((((D ∷ E₁) ∷ E₂) ∷ E₃) ∷ E₄) q Hq r Hr 
     Fr = restr-painting n p k e P₁ E₂ r H₂ ω
     Fs = restr-painting n p k e P₁ E₂ s HsB θ
     w⁺ = restr-frame (n +1) p (k +1) e P₂ 0 tt θ'
-    -- the premise's base square and the goal's
-    b' = restr-frame (n +3) p (k +3) e P₄ 0 tt θ' d
-    B₀ = coh2-frame n p k e P₃ q Hq r Hr s Hs ε ω θ b'
-    E2 = coh2-frame (n +1) p (k +1) e P₄ (q +1) Hq (r +1) Hr (s +1) Hs ε ω θ d
     -- the K face: pack, filler, conjugation
     dSf = restr-frame (n +3) p (k +3) e P₄ (s +1) HsS θ d
     dSl = restr-layer (n +3) p (k +2) e P₄ s HsS θ d l
-    bK = restr-frame (n +2) p (k +2) e P₃ 0 tt θ' dSf
-    E1K = coh-frame (n +1) p (k +1) e P₃ (q +1) Hq (r +1) Hr ε ω dSf
-    C2K = coh-frame (n +1) p (k +1) e P₃ r H₁ 0 tt ω θ' dSf
-    D2K = coh-frame (n +1) p (k +1) e P₃ (q +1) Hq 0 tt ε θ' dSf
-    HCPK = coh-painting n p k e P₂ E₃ q Hq r Hr ε ω bK (dSl θ')
-    sqK = coh2-frame n p k e P₃ q Hq r Hr 0 tt ε ω θ' dSf
     fillK = cohLayer-fillP {P = P'} {rf0 = w}
-      {F = Fq} {G = Fr} HCPK sqK
-    κ' = coh-frame (n +2) p (k +2) e P₄ s HsS 0 tt θ θ' d
-    cS̃ = restr-painting (n +2) p (k +2) e P₃ E₄ s HsS θ b' (l θ')
+      {F = Fq} {G = Fr}
+      (coh-painting n p k e P₂ E₃ q Hq r Hr ε ω _ (dSl θ'))
+      (coh2-frame n p k e P₃ q Hq r Hr 0 tt ε ω θ' dSf)
     -- the E1 face: conjugation and transport filler
-    E1f' = coh-frame (n +2) p (k +2) e P₄ (q +2) Hq (r +2) Hr ε ω d
-    sqE1 = coh2-frame (n +1) p (k +1) e P₄ (q +1) Hq (r +1) Hr 0 tt ε ω θ' d
     dRf' = restr-frame (n +3) p (k +3) e P₄ (r +2) H₁ ω d
     dEf' = restr-frame (n +3) p (k +3) e P₄ (q +3) Hq ε d
-    bC = restr-frame (n +2) p (k +2) e P₃ 0 tt θ' dRf'
-    bD = restr-frame (n +2) p (k +2) e P₃ 0 tt θ' dEf'
-    κ'C = coh-frame (n +2) p (k +2) e P₄ (r +1) H₁ 0 tt ω θ' d
-    c̃C = restr-painting (n +2) p (k +2) e P₃ E₄ (r +1) H₁ ω b' (l θ')
-    κ'E = coh-frame (n +2) p (k +2) e P₄ (q +2) Hq 0 tt ε θ' d
-    c̃E = restr-painting (n +2) p (k +2) e P₃ E₄ (q +2) Hq ε b' (l θ')
-    D2C = coh-frame (n +1) p (k +1) e P₃ (q +1) Hq 0 tt ε θ' dRf'
-    D1E1 = coh-frame (n +1) p (k +1) e P₃ (r +1) H₂ 0 tt ω θ' dEf'
+    dRl' = restr-layer (n +3) p (k +2) e P₄ (r +1) H₁ ω d l
+    dEl' = restr-layer (n +3) p (k +2) e P₄ (q +2) Hq ε d l
     fillPE1 = cohLayer-fillP {P = S'} {rf0 = w⁺}
-      {F = restr-painting (n +1) p (k +1) e P₂ E₃ (q +1) Hq
-                     ε}
+      {F = restr-painting (n +1) p (k +1) e P₂ E₃ (q +1) Hq ε}
       {G = restr-painting (n +1) p (k +1) e P₂ E₃ (r +1) H₂ ω}
-      (coh-painting (n +1) p (k +1) e P₃ E₄ (q +1) Hq (r +1) Hr ε ω b' (l θ')) sqE1
+      (coh-painting (n +1) p (k +1) e P₃ E₄ (q +1) Hq (r +1) Hr ε ω _ (l θ'))
+      (coh2-frame (n +1) p (k +1) e P₄ (q +1) Hq (r +1) Hr 0 tt ε ω θ' d)
     -- shared (suc n)-level maps and values
-    r̂fr = restr-frame (n +1) p (k +1) e P₂ r H₁ ω
-    r̂fs = restr-frame (n +1) p (k +1) e P₂ s (le-trans s r (k +1) Hs H₁) θ
-    r̂fsq = restr-frame (n +1) p (k +1) e P₂ (q +1) Hq ε
-    r̂fsr = restr-frame (n +1) p (k +1) e P₂ (r +1) H₂ ω
-    r̂ss = restr-frame (n +1) p (k +1) e P₂ (s +1) HsB θ
     F̂r = restr-painting (n +1) p (k +1) e P₂ E₃ r H₁ ω
     Ĝs = restr-painting (n +1) p (k +1) e P₂ E₃ s (le-trans s r (k +1) Hs H₁) θ
     F̂sq = restr-painting (n +1) p (k +1) e P₂ E₃ (q +1) Hq ε
-    F̂sr = restr-painting (n +1) p (k +1) e P₂ E₃ (r +1) H₂ ω
-    lRC = subst S̃ κ'C c̃C
-    lED = subst S̃ κ'E c̃E
     -- the C face
-    sC = coh-frame (n +1) p (k +1) e P₃ s (le-trans s r (k +1) Hs H₁) 0 tt θ θ' dRf'
-    C2f' = coh-frame (n +2) p (k +2) e P₄ (r +1) H₁ (s +1) Hs ω θ d
-    sqC2' = coh2-frame (n +1) p (k +1) e P₄ r H₁ s Hs 0 tt ω θ θ' d
     fillPC2s' = cohLayer-fillP {P = S'} {rf0 = w⁺}
       {F = F̂r} {G = Ĝs}
-      (coh-painting (n +1) p (k +1) e P₃ E₄ r H₁ s Hs ω θ b' (l θ')) sqC2'
-    sqC = coh2-frame n p k e P₃ q Hq s HsHr 0 tt ε θ θ' dRf'
+      (coh-painting (n +1) p (k +1) e P₃ E₄ r H₁ s Hs ω θ _ (l θ'))
+      (coh2-frame (n +1) p (k +1) e P₄ r H₁ s Hs 0 tt ω θ θ' d)
     fillC = cohLayer-fillP {P = P'} {rf0 = w}
       {F = Fq} {G = Fs}
-      (coh-painting n p k e P₂ E₃ q Hq s HsHr ε θ bC lRC) sqC
-    -- junction cells of the C face
+      (coh-painting n p k e P₂ E₃ q Hq s HsHr ε θ _ (dRl' θ'))
+      (coh2-frame n p k e P₃ q Hq s HsHr 0 tt ε θ θ' dRf')
     -- the D face
-    sD = coh-frame (n +1) p (k +1) e P₃ s (le-trans s r (k +1) Hs H₁) 0 tt θ θ' dEf'
     Hs↑ = le-up s q HsHr
-    D2f' = coh-frame (n +2) p (k +2) e P₄ (q +2) Hq (s +1) Hs↑ ε θ d
-    sqD2' = coh2-frame (n +1) p (k +1) e P₄ (q +1) Hq s Hs↑ 0 tt ε θ θ' d
     fillPD2s' = cohLayer-fillP {P = S'} {rf0 = w⁺}
       {F = F̂sq} {G = Ĝs}
-      (coh-painting (n +1) p (k +1) e P₃ E₄ (q +1) Hq s Hs↑ ε θ b' (l θ')) sqD2'
-    sqD = coh2-frame n p k e P₃ r H₂ s Hs 0 tt ω θ θ' dEf'
+      (coh-painting (n +1) p (k +1) e P₃ E₄ (q +1) Hq s Hs↑ ε θ _ (l θ'))
+      (coh2-frame (n +1) p (k +1) e P₄ (q +1) Hq s Hs↑ 0 tt ε θ θ' d)
     fillD = cohLayer-fillP {P = P'} {rf0 = w}
       {F = Fr} {G = Fs}
-      (coh-painting n p k e P₂ E₃ r H₂ s Hs ω θ bD lED) sqD
-    -- junction cells of the D face
+      (coh-painting n p k e P₂ E₃ r H₂ s Hs ω θ _ (dEl' θ'))
+      (coh2-frame n p k e P₃ r H₂ s Hs 0 tt ω θ θ' dEf')
     -- the goal's composite-face factors, their pointwise composites
     -- (the cube's j-faces), and the ∙Πapp correction cells
-    dRl' = restr-layer (n +3) p (k +2) e P₄ (r +1) H₁ ω d l
-    dEl' = restr-layer (n +3) p (k +2) e P₄ (q +2) Hq ε d l
-    pC = cong r̂fsq C2f'
-    qC = coh-frame (n +1) p (k +1) e P₃ (q +1) Hq (s +1) HsHr ε θ dRf'
-    βC = coh-layer (n +1) p k e P₃ q Hq s HsHr ε θ dRf' dRl'
-    pD = cong r̂fsr D2f'
-    qD = coh-frame (n +1) p (k +1) e P₃ (r +1) H₂ (s +1) Hs ω θ dEf'
-    βD = coh-layer (n +1) p k e P₃ r H₂ s Hs ω θ dEf' dEl'
     Rθ = λ y t → restr-frame n p k e P₁ 0 tt t y
-    module ΠC = ∙Πapp {P = P'} Rθ pC qC
-      (λ ii → restr-layer (n +1) p k e P₂ q Hq ε (C2f' ii)
-                (coh-layer (n +2) p (k +1) e P₄ r H₁ s Hs ω θ d l ii)) βC θ'
-    module ΠD = ∙Πapp {P = P'} Rθ pD qD
-      (λ ii → restr-layer (n +1) p k e P₂ r H₂ ω (D2f' ii)
+    module ΠC = ∙Πapp {P = P'} Rθ
+      (λ ii → restr-layer (n +1) p k e P₂ q Hq ε _
+                (coh-layer (n +2) p (k +1) e P₄ r H₁ s Hs ω θ d l ii))
+      (coh-layer (n +1) p k e P₃ q Hq s HsHr ε θ dRf' dRl') θ'
+    module ΠD = ∙Πapp {P = P'} Rθ
+      (λ ii → restr-layer (n +1) p k e P₂ r H₂ ω _
                 (coh-layer (n +2) p (k +1) e P₄ (q +1) Hq s
-                   Hs↑ ε θ d l ii)) βD θ'
+                   Hs↑ ε θ d l ii))
+      (coh-layer (n +1) p k e P₃ r H₂ s Hs ω θ dEf' dEl') θ'
   in
-  coh2Layer-cubeP {P = P'}
-    (isGroupoidDom (frame n p k e D)) Rθ θ' rfq rfr rfs Fq Fr Fs
-    w⁺ r̂fr r̂fs r̂fsq r̂fsr r̂ss F̂r Ĝs F̂sq F̂sr
+  coh2Layer-cubeP
+    {P = P'}
+    (isGroupoidDom (frame n p k e D))
+    Rθ θ' rfq rfr rfs Fq Fr Fs
     (coh-frame n p k e P₂ q Hq 0 tt ε θ')
     (coh-frame n p k e P₂ r H₂ 0 tt ω θ')
     (coh-frame n p k e P₂ s HsB 0 tt θ θ')
-    (coh-frame n p k e P₂ q Hq r Hr ε ω)
     (coh-painting n p k e P₂ E₃ q Hq r Hr ε ω)
-    (coh-frame n p k e P₂ q Hq s HsHr ε θ)
     (coh-painting n p k e P₂ E₃ q Hq s HsHr ε θ)
-    (coh-frame n p k e P₂ r H₂ s Hs ω θ)
     (coh-painting n p k e P₂ E₃ r H₂ s Hs ω θ)
-    κ' cS̃ κ'C c̃C κ'E c̃E C2f' D2f' E1f' C2K D2K sC sD D2C D1E1
-    (coh-frame (n +1) p (k +1) e P₃ r H₁ s Hs ω θ b')
-    (coh-frame (n +1) p (k +1) e P₃ (q +1) Hq s Hs↑ ε θ b')
-    (coh-frame (n +1) p (k +1) e P₃ (q +1) Hq (r +1) Hr ε ω b') E1K
-    (coh-frame (n +1) p (k +1) e P₃ (q +1) Hq (s +1) HsHr ε θ dRf')
-    (coh-frame (n +1) p (k +1) e P₃ (r +1) H₂ (s +1) Hs ω θ dEf')
-    (coh-painting (n +1) p (k +1) e P₃ E₄ r H₁ s Hs ω θ b' (l θ'))
-    (coh-painting (n +1) p (k +1) e P₃ E₄ (q +1) Hq s Hs↑ ε θ b' (l θ'))
-    (coh-painting (n +1) p (k +1) e P₃ E₄ (q +1) Hq (r +1) Hr ε ω b' (l θ'))
-    sqK sqE1 sqC2' sqD2' sqC sqD
-    fillK fillPE1 fillPC2s' fillPD2s' fillC fillD B₀
-    (coh2-painting n p k e P₃ E₄ q Hq r Hr s Hs ε ω θ b' (l θ'))
-    (λ ii jj → w (E2 ii jj))
-    (λ o ii → ΠC.csq (~ o) ii)
-    (λ o ii → ΠD.csq (~ o) ii)
+    fillK fillPE1 fillPC2s' fillPD2s' fillC fillD
+    (coh2-painting n p k e P₃ E₄ q Hq r Hr s Hs ε ω θ _ (l θ'))
+    (λ ii jj → w (coh2-frame (n +1) p (k +1) e P₄ (q +1) Hq (r +1) Hr
+                     (s +1) Hs ε ω θ d ii jj))
     (λ o ii → ΠC.csqP (~ o) ii)
     (λ o ii → ΠD.csqP (~ o) ii) i j
 
@@ -551,56 +498,10 @@ coh2-painting n p k e D E zero    Hq (r +1) ()
 coh2-painting n p zero    e D E (q +1) ()
 coh2-painting n p (k +1) e (((D ∷ E₁) ∷ E₂) ∷ E₃) E (q +1) Hq (r +1)
               Hr (s +1) Hs ε ω θ d (l , c) = λ i j →
-  let
-    PP = (((D ∷ E₁) ∷ E₂) ∷ E₃)
-    H₁ = le-trans r q (k +1) Hr (le-up q k Hq)
-    H₂ = le-trans r q k Hr Hq
-    HsHr = le-trans s r q Hs Hr
-    Hs↑ = le-up s q HsHr
-    HsB = le-trans s r k Hs H₂
-    HsS = le-up s (k +1) (le-up s k HsB)
-    C2f = coh-frame (n +1) p (k +2) e PP (r +1) H₁ (s +1) Hs ω θ d
-    C2s = coh-layer (n +1) p (k +1) e PP r H₁ s Hs ω θ d l
-    C2c = coh-painting (n +1) (p +1) (k +1) e PP E r H₁ s Hs ω θ (d , l) c
-    D2f = coh-frame (n +1) p (k +2) e PP (q +2) Hq (s +1) Hs↑ ε θ d
-    D2s = coh-layer (n +1) p (k +1) e PP (q +1) Hq s Hs↑ ε θ d l
-    D2c = coh-painting (n +1) (p +1) (k +1) e PP E (q +1) Hq s Hs↑ ε θ (d , l) c
-    E1f = coh-frame (n +1) p (k +2) e PP (q +2) Hq (r +2) Hr ε ω d
-    E1s = coh-layer (n +1) p (k +1) e PP (q +1) Hq (r +1) Hr ε ω d l
-    E1c = coh-painting (n +1) (p +1) (k +1) e PP E (q +1) Hq (r +1) Hr ε ω (d , l) c
-    dRf = restr-frame (n +2) p (k +3) e PP (r +2) H₁ ω d
-    dRl = restr-layer (n +2) p (k +2) e PP (r +1) H₁ ω d l
-    dRc = restr-painting (n +2) (p +1) (k +2) e PP E (r +1) H₁ ω (d , l) c
-    dEf = restr-frame (n +2) p (k +3) e PP (q +3) Hq ε d
-    dEl = restr-layer (n +2) p (k +2) e PP (q +2) Hq ε d l
-    dEc = restr-painting (n +2) (p +1) (k +2) e PP E (q +2) Hq ε (d , l) c
-    dSf = restr-frame (n +2) p (k +3) e PP (s +1) HsS θ d
-    dSl = restr-layer (n +2) p (k +2) e PP s HsS θ d l
-    dSc = restr-painting (n +2) (p +1) (k +2) e PP E s HsS θ (d , l) c
-  in
   Σ≡hex.Dep.hexᵈ
     {B = λ d' → GDom (layer n p k e D d')}
-    (λ i' → restr-frame n p (k +1) e (D ∷ E₁) (q +1) Hq ε (C2f i'))
-    (coh-frame n p (k +1) e ((D ∷ E₁) ∷ E₂) (q +1) Hq (s +1) HsHr ε θ dRf)
-    (λ i' → restr-layer n p k e (D ∷ E₁) q Hq ε (C2f i') (C2s i'))
-    (coh-layer n p k e ((D ∷ E₁) ∷ E₂) q Hq s HsHr ε θ dRf dRl)
-    (λ i' → restr-frame n p (k +1) e (D ∷ E₁) (r +1) H₂ ω (D2f i'))
-    (coh-frame n p (k +1) e ((D ∷ E₁) ∷ E₂) (r +1) H₂ (s +1) Hs ω θ dEf)
-    (λ i' → restr-layer n p k e (D ∷ E₁) r H₂ ω (D2f i') (D2s i'))
-    (coh-layer n p k e ((D ∷ E₁) ∷ E₂) r H₂ s Hs ω θ dEf dEl)
-    (coh-frame n p (k +1) e ((D ∷ E₁) ∷ E₂) (q +1) Hq (r +1) Hr ε ω dSf)
-    (coh-layer n p k e ((D ∷ E₁) ∷ E₂) q Hq r Hr ε ω dSf dSl)
-    (λ i' → restr-frame n p (k +1) e (D ∷ E₁) (s +1) HsB θ (E1f i'))
-    (λ i' → restr-layer n p k e (D ∷ E₁) s HsB θ (E1f i') (E1s i'))
-    (coh2-frame n p (k +1) e (((D ∷ E₁) ∷ E₂) ∷ E₃) (q +1) Hq (r +1) Hr (s +1) Hs ε ω θ d)
-    (coh2-layer n p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr s Hs ε ω θ d l)
     {M = λ x → GDom (painting n (p +1) k e D E₁ x)}
-    (λ i' → restr-painting n (p +1) k e (D ∷ E₁) E₂ q Hq ε (C2f i' , C2s i') (C2c i'))
-    (coh-painting n (p +1) k e ((D ∷ E₁) ∷ E₂) E₃ q Hq s HsHr ε θ (dRf , dRl) dRc)
-    (λ i' → restr-painting n (p +1) k e (D ∷ E₁) E₂ r H₂ ω (D2f i' , D2s i') (D2c i'))
-    (coh-painting n (p +1) k e ((D ∷ E₁) ∷ E₂) E₃ r H₂ s Hs ω θ (dEf , dEl) dEc)
-    (coh-painting n (p +1) k e ((D ∷ E₁) ∷ E₂) E₃ q Hq r Hr ε ω (dSf , dSl) dSc)
-    (λ i' → restr-painting n (p +1) k e (D ∷ E₁) E₂ s HsB θ (E1f i' , E1s i') (E1c i'))
+    (coh2-layer n p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr s Hs ε ω θ d l)
     (coh2-painting n (p +1) k e (((D ∷ E₁) ∷ E₂) ∷ E₃) E
        q Hq r Hr s Hs ε ω θ (d , l) c) i j
 
