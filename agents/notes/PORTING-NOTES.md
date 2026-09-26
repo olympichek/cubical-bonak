@@ -760,3 +760,31 @@ Broader family inference either raises a metavariable-scope error or
 exceeds 90 s, so those hints remain. Exact compiler identity, source
 snapshots, logs, inference trials and reproduction scripts are saved in
 `.work/REPORT.md` in the `gpd-lemmas-cleanup-record` worktree.
+
+
+## Direct νSet coherence cleanup (2026-09-26)
+
+The successor coherences use interval lambdas. The `coh-layer` clause
+has six local bindings and nine named implicit arguments: four
+family/map hints and five frame paths. The closing `isSet→Square`
+application infers all four boundaries, including their congruences and
+compositions. Relative to the published source, named implicit
+applications decrease from 20 to 9 and local bindings from eight to
+six. No component wrapper is introduced. The nine core signatures are
+unchanged, and νSet checks at termination depth 2.
+
+Both gates and byte-identical frame4/frame5 normalization pass. With
+patched Agda 2.9.0 source 73af34a, imports-cached νSet
+checks average 0.30 → 0.30 s (three runs per variant), comparing the
+preceding explicit-square draft with the five-path form. Cold library
+and both example builds take 90.62 → 90.48 s (single samples; the
+whole-project difference is too noisy to attribute to this small edit).
+Checks run sequentially under a 16 GiB cap, excluding probes.
+
+The named terminal frame coherence experiment was rolled back in both
+towers because the concrete four-face νGpd statement increased checking
+cost. Sources, timings, profiles and rollback receipts remain under
+`.work/` in the experiment worktree
+`nuset-mechanical-simplification-record`.
+The retained cleanup is documented in `.work/REPORT.md`, with current
+measurements and source snapshots in `.work/explicit-frame-paths/`.

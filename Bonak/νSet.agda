@@ -73,9 +73,9 @@
 --
 -- The suc-written occurrences make some calls carry dimensions above the
 -- caller's own — by up to three constructors, in the coherences'
--- statements — so the call matrices contain bounded increases, and the
--- checker needs --termination-depth ≥ 3 to compose them (this file is
--- rejected at 2). Proof obligations never grow: `EqN`
+-- statements — so the call matrices contain bounded increases. The
+-- block checks at termination depth 2 (and is rejected at 1).
+-- Proof obligations never grow: `EqN`
 -- proofs are irrelevant and `EqN (suc n) (suc m)` reduces to
 -- `EqN n m`, so the single proof each member holds is passed to every
 -- occurrence verbatim.
@@ -89,7 +89,7 @@
 -- of them.
 ------------------------------------------------------------------------
 
-{-# OPTIONS --rewriting --termination-depth=3 #-}
+{-# OPTIONS --rewriting --termination-depth=2 #-}
 
 module Bonak.νSet (arity : Set) where
 
@@ -258,7 +258,7 @@ restr-painting n p (k +1) e (D ∷ E₁) E (q +1) Hq ε d (l , c) =
   restr-painting n (p +1) k e (D ∷ E₁) E q Hq ε (d , l) c
 
 coh-frame n zero    k e D q Hq r Hr ε ω d         = refl
-coh-frame n (p +1) k e D q Hq r Hr ε ω (d , l) i =
+coh-frame n (p +1) k e D q Hq r Hr ε ω (d , l) = λ i →
   coh-frame n p (k +1) e D (q +1) Hq (r +1) Hr ε ω d i ,
   coh-layer n p k e D q Hq r Hr ε ω d l i
 
@@ -267,46 +267,31 @@ coh-frame n (p +1) k e D q Hq r Hr ε ω (d , l) i =
 -- each component is one cohLayer-squareP: the two restr-layer
 -- transport chains connected along the frame coherence, with the
 -- painting coherence as the connecting PathP and the 2-dimensional
--- frame coherence a free Square (frames are HSets). Every path
--- implicit of cohLayer-squareP has to be given: the goal only
--- exposes them after unfolding two nested restr-layer clauses, and
--- Agda's unifier does not solve them at that unfolding depth.
+-- frame coherence a free Square (frames are HSets).
 coh-layer zero    p k ()
-coh-layer (n +1) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l i θ =
+coh-layer (n +1) p k e (((D ∷ E₁) ∷ E₂) ∷ E₃) q Hq r Hr ε ω d l = λ i θ →
+  let
+    P₁ = (D ∷ E₁)
+    P₂ = ((D ∷ E₁) ∷ E₂)
+    P₃ = (((D ∷ E₁) ∷ E₂) ∷ E₃)
+    H₁ = le-trans r q (k +1) Hr (le-up q k Hq)
+    H₂ = le-trans r q k Hr Hq
+    b = restr-frame (n +2) p (k +2) e P₃ 0 tt θ d
+  in
   cohLayer-squareP
     {P = λ x → Dom (painting n p k e D E₁ x)}
-    {S2 = λ m → Dom (painting (n +1) p (k +1) e P₁ E₂ m)}
-    {S3 = λ m → Dom (painting (n +1) p (k +1) e P₁ E₂ m)}
-    {rf0 = λ x → restr-frame n p k e P₁ 0 tt θ x}
-    {rfF = λ m → restr-frame n p k e P₁ q Hq ε m}
-    {rfG = λ m → restr-frame n p k e P₁ r H₂ ω m}
-    {F = λ m c → restr-painting n p k e P₁ E₂ q Hq ε m c}
-    {G = λ m c → restr-painting n p k e P₁ E₂ r H₂ ω m c}
+    {rf0 = restr-frame n p k e P₁ 0 tt θ}
+    {F = restr-painting n p k e P₁ E₂ q Hq ε}
+    {G = restr-painting n p k e P₁ E₂ r H₂ ω}
     {E1 = coh-frame (n +1) p (k +1) e P₃ (q +1) Hq (r +1) Hr ε ω d}
-    {m1 = restr-frame (n +1) p (k +1) e P₂ r H₁ ω (b θ)}
-    {m2 = restr-frame (n +1) p (k +1) e P₂ 0 tt θ dR}
     {C2 = coh-frame (n +1) p (k +1) e P₃ r H₁ 0 tt ω θ d}
-    {n1 = restr-frame (n +1) p (k +1) e P₂ (q +1) Hq ε (b θ)}
-    {n2 = restr-frame (n +1) p (k +1) e P₂ 0 tt θ dE}
     {D2 = coh-frame (n +1) p (k +1) e P₃ (q +1) Hq 0 tt ε θ d}
-    {C1 = coh-frame n p k e P₂ q Hq 0 tt ε θ dR}
-    {D1 = coh-frame n p k e P₂ r H₂ 0 tt ω θ dE}
-    {K = coh-frame n p k e P₂ q Hq r Hr ε ω (b θ)}
-    {aL = restr-painting (n +1) p (k +1) e P₂ E₃ r H₁ ω (b θ) (l θ)}
-    {aR = restr-painting (n +1) p (k +1) e P₂ E₃ (q +1) Hq ε (b θ) (l θ)}
-    (coh-painting n p k e P₂ E₃ q Hq r Hr ε ω (b θ) (l θ))
-    (isSet→Square (isSetDom (frame n p k e D)) _ _ _ _) i where
-  P₁ = (D ∷ E₁)
-  P₂ = ((D ∷ E₁) ∷ E₂)
-  P₃ = (((D ∷ E₁) ∷ E₂) ∷ E₃)
-  H₁ = le-trans r q (k +1) Hr (le-up q k Hq)
-  H₂ = le-trans r q k Hr Hq
-  -- the ω-restriction of d used by the outer restr-layer on each side,
-  dR = restr-frame (n +2) p (k +2) e P₃ (r +1) H₁ ω d
-  dE = restr-frame (n +2) p (k +2) e P₃ (q +2) Hq ε d
-  -- and its θ-restriction, where the painting coherence applies.
-  b : (θ : arity) → Dom (frame (n +2) p (k +2) e P₂)
-  b θ = restr-frame (n +2) p (k +2) e P₃ 0 tt θ d
+    {C1 = coh-frame n p k e P₂ q Hq 0 tt ε θ
+            (restr-frame (n +2) p (k +2) e P₃ (r +1) H₁ ω d)}
+    {D1 = coh-frame n p k e P₂ r H₂ 0 tt ω θ
+            (restr-frame (n +2) p (k +2) e P₃ (q +2) Hq ε d)}
+    (coh-painting n p k e P₂ E₃ q Hq r Hr ε ω b (l θ))
+    (isSet→Square (isSetDom (frame n p k e D)) _ _ _ _) i
 
 -- The painting coherence. With Π-layers the r = 0 case is the filler
 -- of restr-layer's transport (both endpoints reduce to the same
@@ -324,7 +309,8 @@ coh-painting n p k e ((D ∷ E₁) ∷ E₂) E q Hq zero Hr ε ω d (l , c) =
       (restr-frame (n +1) p (k +1) e ((D ∷ E₁) ∷ E₂) 0 tt ω d) (l ω))
 coh-painting n p k e       D          E zero    Hq (r +1) ()
 coh-painting n p zero    e D        E (q +1) ()
-coh-painting n p (k +1) e ((D ∷ E₁) ∷ E₂) E (q +1) Hq (r +1) Hr ε ω d (l , c) i =
+coh-painting n p (k +1) e ((D ∷ E₁) ∷ E₂) E (q +1) Hq (r +1) Hr
+             ε ω d (l , c) = λ i →
   coh-layer n p k e ((D ∷ E₁) ∷ E₂) q Hq r Hr ε ω d l i ,
   coh-painting n (p +1) k e ((D ∷ E₁) ∷ E₂) E q Hq r Hr ε ω (d , l) c i
 
