@@ -45,28 +45,21 @@ Self-contained: everything is built from the builtin cubical primitives collecte
 
 ## Toolchain
 
-The tree checks with Agda 2.8.0; the preferred toolchain is an Agda 2.9.0 nightly, which carries the interface-pass fix for the νGpd pasting kit's large telescopes. In cold sequential builds of the same checkout on the same machine, the νGpd tower took approximately 39 minutes with Agda 2.8.0 and 5.5 minutes with the nightly. The nightly is built from the source archive of Agda's rolling `nightly` tag.
+Use [Agda 2.9.0](https://github.com/agda/agda/releases/tag/v2.9.0). It includes the [interface-writing optimization](https://github.com/agda/agda/pull/8675) for the large telescopes in `Bonak/GpdLemmas.agda`. The compiler's builtins are the only Agda library dependency.
 
-Install [GHCup](https://www.haskell.org/ghcup/) and put its commands on your `PATH`; GNU Make, `curl`, and `tar` are also required. Then run:
+From the repository root on x86-64 Linux or macOS (Intel or Apple silicon), run:
 
 ```sh
 make install
 export PATH="$HOME/.local/bin:$PATH"
+agda --version
 ```
 
-`make install` installs GHC 9.12.2, installs and selects Cabal 3.18.1.0, updates the Cabal package index, and builds the nightly as `$HOME/.local/bin/agda-nightly`. It downloads and unpacks Agda into a fresh directory under `$HOME/.cache/cubical-bonak/`, outside the library tree, and retains that directory for inspecting or reusing the compiler build. Add the `PATH` setting to your shell configuration for future sessions.
-
-The nightly tag moves with master. Use `make install AGDA_REF=<commit-sha>` to build a pinned revision. The defaults can also be overridden with `GHC_VERSION`, `CABAL_VERSION`, and `PREFIX`; the executable is installed in `$(PREFIX)/bin`, with `PREFIX` defaulting to `$HOME/.local`.
+`make install` downloads the official release binary, verifies its SHA-256 checksum, and installs it as `$HOME/.local/bin/agda`. It requires GNU Make, `curl`, `tar` with xz support, and either `sha256sum` or `shasum`. The version output should start with `Agda version 2.9.0`. Add the `PATH` setting to your shell configuration to keep using this installation. For a different installation prefix, set `PREFIX` when running `make install` and add its `bin` directory to `PATH`. If you already have Agda 2.9.0, you can skip installation.
 
 ### Editor
 
-The VS Code extension [agda-mode](https://marketplace.visualstudio.com/items?itemName=banacorn.agda-mode) chooses its Agda from the `agdaMode.connection.paths` list, trying the entries from the last to the first, so appending the nightly makes it the one used:
-
-```json
-"agdaMode.connection.paths": ["agda", "/home/<user>/.local/bin/agda-nightly"]
-```
-
-Give the absolute path: the extension host does not necessarily inherit the shell's `PATH`, so a bare `agda-nightly` may fail to resolve. The `Ctrl+X Ctrl+S` command in an Agda buffer edits the same list interactively, and "Agda: Restart" replaces the running Agda after a change.
+For the [VS Code agda-mode extension](https://marketplace.visualstudio.com/items?itemName=banacorn.agda-mode), add the absolute path printed by `command -v agda` as the last entry in `agdaMode.connection.paths`, then run **Agda: Restart**.
 
 ## Building
 
@@ -80,4 +73,4 @@ make help         # list targets and overrides
 
 The default build checks both example roots and all their `Bonak/` dependencies sequentially. Agda reuses interfaces under `_build/<version>/agda/`; `make clean` removes the caches for all versions, so the next build is cold.
 
-Builds use `agda-nightly` by default. Select another compiler with `make AGDA=agda` or `make AGDA=/absolute/path/to/agda`. Pass additional compiler options with `AGDA_FLAGS`, for example `make build-set AGDA_FLAGS=--ignore-interfaces`.
+Builds use `agda` on `PATH` by default. Select a specific executable with `make AGDA=/absolute/path/to/agda`. Pass additional compiler options with `AGDA_FLAGS`, for example `make build-set AGDA_FLAGS=--ignore-interfaces`.
