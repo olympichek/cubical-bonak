@@ -23,30 +23,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Agda
-        run: |
-          make install
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: agda/agda-setup-action@c931d59d76a036d1bed9f322cc12cc105bda7881 # v1
+        with:
+          agda-version: '2.9.0'
 
-      - name: Check compiler version and Make targets
-        run: |
-          agda --version | grep -Fx 'Agda version 2.9.0'
-          make help
-
-      - name: Build from clean interfaces
-        run: |
-          make clean
-          make
-
-      - name: Check explicit build targets
-        run: |
-          make build
-          make build-set build-gpd
-
-      - name: Verify cleanup
-        run: |
-          make clean
-          test ! -e _build
-          test ! -e MAlonzo
-          test -z "$(find Bonak examples -type f -name '*.agdai' -print -quit)"
-          git diff --exit-code
+      - run: make

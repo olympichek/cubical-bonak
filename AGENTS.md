@@ -65,9 +65,7 @@ branches; port findings back via `agents/notes/PORTING-NOTES.md`.
 
 - Gates: `agda examples/Examples.agda` (νSet) and
   `agda examples/ExamplesGpd.agda` (νGpd); `agda --build-library`
-  checks everything. Prefer `agda-nightly` (2.9.0) — see README for
-  why and how it is installed. Build sequentially: `--parallel`/`-j`
-  loses on this tree (`agents/notes/PARALLEL-BUILD.md`).
+  checks everything. Use Agda 2.9.0 as documented in the README.
 - Heavy files legitimately spend minutes inside a single definition
   (`mkCohPainting` and the νGpd kit are conversion-bound), with no
   output in between. Do not conclude a check is wedged from silence;

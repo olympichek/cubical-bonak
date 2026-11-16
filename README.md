@@ -43,34 +43,15 @@ Self-contained: everything is built from the builtin cubical primitives collecte
 - `--termination-depth` — coherence statements mention members a bounded number of dimensions above their own, so the call matrices contain bounded increases; `Bonak/νSet.agda` checks at depth 2 and `Bonak/νGpd.agda` at depth 3.
 - `--prop` — the definitionally irrelevant `Prop` universe; the tower's own proof relations (`≤` and `EqN` in `Bonak/LeProp`) are `Set`-valued with irrelevance annotations (`.`), which keeps them transportable while retaining `SProp`-like conversion.
 
-## Toolchain
-
-Use [Agda 2.9.0](https://github.com/agda/agda/releases/tag/v2.9.0). It includes the [interface-writing optimization](https://github.com/agda/agda/pull/8675) for the large telescopes in `Bonak/GpdLemmas.agda`. The compiler's builtins are the only Agda library dependency.
-
-From the repository root on x86-64 Linux or macOS (Intel or Apple silicon), run:
-
-```sh
-make install
-export PATH="$HOME/.local/bin:$PATH"
-agda --version
-```
-
-`make install` downloads the official release binary, verifies its SHA-256 checksum, and installs it as `$HOME/.local/bin/agda`. It requires GNU Make, `curl`, `tar` with xz support, and either `sha256sum` or `shasum`. The version output should start with `Agda version 2.9.0`. Add the `PATH` setting to your shell configuration to keep using this installation. For a different installation prefix, set `PREFIX` when running `make install` and add its `bin` directory to `PATH`. If you already have Agda 2.9.0, you can skip installation.
-
-### Editor
-
-For the [VS Code agda-mode extension](https://marketplace.visualstudio.com/items?itemName=banacorn.agda-mode), add the absolute path printed by `command -v agda` as the last entry in `agdaMode.connection.paths`, then run **Agda: Restart**.
-
 ## Building
 
+We recommend [Agda 2.9.0](https://github.com/agda/agda/releases/tag/v2.9.0) because it includes a [compiler fix](https://github.com/agda/agda/pull/8675) that speeds up the νGpd build.
+
+With Agda installed and `agda` on your `PATH`, run the following from the repository root:
+
 ```sh
-make              # or: make build
-make build-set    # νSet examples and their dependencies
-make build-gpd    # νGpd examples and their dependencies
-make clean        # remove local interfaces and generated Haskell output
-make help         # list targets and overrides
+agda --version
+make
 ```
 
-The default build checks both example roots and all their `Bonak/` dependencies sequentially. Agda reuses interfaces under `_build/<version>/agda/`; `make clean` removes the caches for all versions, so the next build is cold.
-
-Builds use `agda` on `PATH` by default. Select a specific executable with `make AGDA=/absolute/path/to/agda`. Pass additional compiler options with `AGDA_FLAGS`, for example `make build-set AGDA_FLAGS=--ignore-interfaces`.
+`make` checks the νSet and νGpd examples and their dependencies. Use `make build-set` or `make build-gpd` to check just one, and `make clean` to remove generated files.
